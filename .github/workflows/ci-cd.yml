@@ -1,0 +1,202 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  # =============================================
+  # Backend: Build + Test
+  # =============================================
+  backend:
+    name: Backend (API)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: schoolmanagement_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+        working-directory: school-management-api
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+        working-directory: school-management-api
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --logger trx --results-directory ./test-results
+        working-directory: school-management-api
+        env:
+          ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=schoolmanagement_test;Username=test;Password=test"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: school-management-api/test-results/*.trx
+
+  # =============================================
+  # Frontend: Lint + Build + Unit Test
+  # =============================================
+  frontend:
+    name: Frontend (Build & Test)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: school-management-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: school-management-ui
+
+      - name: Lint
+        run: npm run lint
+        working-directory: school-management-ui
+        continue-on-error: true
+
+      - name: Build
+        run: npm run build -- --configuration production
+        working-directory: school-management-ui
+
+      - name: Unit Test (Karma/Jasmine)
+        run: npx ng test --no-watch --no-progress --browsers=ChromeHeadless --code-coverage
+        working-directory: school-management-ui
+        continue-on-error: true
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: school-management-ui/coverage/
+
+  # =============================================
+  # E2E Tests (Cypress)
+  # =============================================
+  e2e:
+    name: E2E Tests (Cypress)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: school-management-ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: school-management-ui
+
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: school-management-ui
+          start: npm run start:e2e
+          wait-on: 'http://127.0.0.1:4200'
+          wait-on-timeout: 120
+          record: false
+        env:
+          CYPRESS_BASE_URL: http://127.0.0.1:4200
+
+      - name: Upload Cypress screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: school-management-ui/cypress/screenshots
+
+      - name: Upload Cypress videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos
+          path: school-management-ui/cypress/videos
+
+  # =============================================
+  # Deploy (só na main)
+  # =============================================
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: [backend, frontend, e2e]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: school-management-ui/package-lock.json
+
+      # Build API
+      - name: Publish API
+        run: |
+          dotnet publish school-management-api/src/SchoolManagement/SchoolManagement.csproj \
+            -c Release -o ./publish/api
+        working-directory: .
+
+      # Build UI
+      - name: Build UI
+        run: |
+          npm ci
+          npm run build -- --configuration production
+        working-directory: school-management-ui
+
+      # Build Docker images
+      - name: Build Docker images
+        run: |
+          docker build -t schoolmanagement-api:latest -f school-management-api/Dockerfile school-management-api/
+          docker build -t schoolmanagement-ui:latest -f school-management-ui/Dockerfile school-management-ui/
+
+      - name: Deployment summary
+        run: |
+          echo "✅ Build completed successfully"
+          echo "📦 API: ./publish/api"
+          echo "🌐 UI: school-management-ui/dist/"
+          echo "🐳 Docker images: schoolmanagement-api:latest, schoolmanagement-ui:latest"
