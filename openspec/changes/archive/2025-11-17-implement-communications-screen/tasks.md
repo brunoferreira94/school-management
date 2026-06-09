@@ -1,0 +1,24 @@
+# Tasks — Implementar tela de Comunicações
+
+- [x] Backend: templates CRUD, send API, logs and retry queue. (owner: backend)
+  - [x] Domain entities: CommunicationTemplate, CommunicationLog
+  - [x] Repository interfaces with EF Core implementation
+  - [x] Use cases for CRUD, send and logs with pagination
+  - [x] Segment filtering logic (students and guardians by filters)
+  - [x] REST API controller with 6 endpoints
+  - [x] Service registration in Program.cs
+  - [x] Backend compilation validated (0 errors, 16 warnings)
+- [x] Frontend: templates editor (WYSIWYG), send UI, segmentation builder. (owner: frontend)
+  - [x] TypeScript models for all communication types
+  - [x] Angular service with HttpClient
+  - [x] CommunicationsManagerComponent with send/logs tabs
+  - [x] Complete SCSS styling
+  - [x] Route registration in app.routes.ts
+- [ ] Integrate with email/SMS/push providers (owner: infra)
+  - Pending: Actual integration with external services (currently logs only)
+- [ ] Tests: unit + integration for send/queue and template rendering. (owner: qa)
+  - Pending: Integration tests for communication endpoints
+  - Pending: Unit tests for use cases
+- [ ] Docs: usage guide and template variables. (owner: docs)
+  - Pending: Documentation for template management
+  - Pending: Guide for placeholder usage and recipient formatting

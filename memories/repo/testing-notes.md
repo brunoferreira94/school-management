@@ -1,0 +1,7 @@
+- TestRunnerAgent nesta configuracao aceita melhor comandos de teste padrao (ex.: npm run e2e:ci:services, npm run e2e:ci:portal-registration, dotnet test com filtro).
+- Comandos npm customizados podem ser bloqueados por allowlist do executor; registrar bloqueio no relatorio em vez de assumir reexecucao.
+- Para validar correcoes de teste .NET, executar build antes de dotnet test --no-build para evitar falso negativo por binario desatualizado.
+- Task atual (domain-events-validation-auth-flow): backend solution correta em d:\workspace\Particular\Repositórios\school-management\school-management-api\SchoolManagement.sln.
+- DomainEventsIntegrationTests focado em validacao passou: 8/8.
+- Suite completa backend passou: 724 passed / 5 skipped / 0 failed.
+- Task 4 implementada em SchoolManagement.Tests/Unit/DomainEvents/DomainEventsIntegrationTests.cs com reflection helpers e teste de dispatch manual.

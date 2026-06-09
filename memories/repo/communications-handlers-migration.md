@@ -1,0 +1,3 @@
+- Communications handlers were migrated from direct UseCase dependencies to a new `ICommunicationService`/`CommunicationService` implementation.
+- Dependency injection was updated to register `CommunicationService` and its abstractions.
+- Handler tests were updated and are passing after the migration.

@@ -1,0 +1,38 @@
+# Tasks — Implementar Notificações (Lembretes Automáticos)
+
+- [x] Backend: engine de regras, scheduler, endpoints para templates e regras. (owner: backend)
+  - ✅ Repositories: NotificationRepository, NotificationRuleRepository, NotificationTemplateRepository
+  - ✅ Use Cases: SendNotificationUseCase, CreateNotificationTemplateUseCase, GetNotificationTemplatesUseCase, CreateNotificationRuleUseCase, GetNotificationRulesUseCase
+  - ✅ Services: NotificationService, NotificationEngineService
+  - ✅ Hosted Service: NotificationSchedulerHostedService (scheduler em background)
+  - ✅ Controllers: NotificationsController, NotificationRulesController, NotificationTemplatesController
+  - ✅ Providers: SMTP, Twilio, FCM configuration options
+- [x] Frontend: UI para configurar regras e templates. (owner: frontend)
+  - ✅ Rotas: /notifications, /notifications/preferences, /notifications/templates, /notifications/rules, /notifications/engine
+  - ✅ Componentes:
+    - notification-bell (sino no header com contador e dropdown)
+    - notifications-list (lista completa com filtros)
+    - notification-preferences (opt-in/opt-out por canal)
+    - notification-templates (gerenciar templates - já existia)
+    - notification-rules (gerenciar regras - já existia)
+    - notification-engine (processar notificações - já existia)
+  - ✅ Service: NotificationService com métodos getUserNotifications, getUnreadCount, markAsRead, markAllAsRead
+  - ✅ Models: Notification interface com status e timestamps
+- [x] Infra: integração com provedores de envio e fila. (owner: infra)
+  - ✅ Configuração de providers (SMTP, Twilio, FCM) via appsettings
+  - ✅ NotificationQueue (singleton) para processamento assíncrono
+  - ✅ Registro de dependências completo no Program.cs
+- [x] Tests: simular regras e entrega nos canais. (owner: qa)
+  - ✅ NotificationsIntegrationTests.cs com 6 testes:
+    - CreateNotificationTemplate_ReturnsCreated
+    - GetNotificationTemplates_ReturnsOk
+    - CreateNotificationRule_ReturnsCreated
+    - GetNotificationRules_ReturnsOk
+    - ProcessScheduledNotifications_ReturnsOk
+    - GetNotificationRules_WithTriggerTypeFilter_ReturnsFiltered
+- [x] Docs: procedimentos de opt-out e compliance de comunicação. (owner: docs)
+  - ✅ README.md atualizado com seção completa sobre notificações
+  - ✅ Documentação de compliance LGPD/GDPR
+  - ✅ Procedimentos de opt-out explicados
+  - ✅ Canais de notificação documentados (Email, SMS, Push, InApp)
+  - ✅ Rotas frontend documentadas

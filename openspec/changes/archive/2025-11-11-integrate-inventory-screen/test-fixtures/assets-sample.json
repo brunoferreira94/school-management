@@ -1,0 +1,20 @@
+[
+  {
+    "id": "asset-001",
+    "tag": "TV-001",
+    "name": "Smart TV Sala 101",
+    "category": "Equipamento Audiovisual",
+    "location": "Sala 101",
+    "status": "em_uso",
+    "notes": "Instalada no canto direito da sala"
+  },
+  {
+    "id": "asset-002",
+    "tag": "LAP-023",
+    "name": "Notebook Professor",
+    "category": "Computadores",
+    "location": "Depósito",
+    "status": "disponivel",
+    "notes": "Bateria com problema"
+  }
+]

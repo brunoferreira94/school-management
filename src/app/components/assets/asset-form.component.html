@@ -1,0 +1,12 @@
+<form [formGroup]="form">
+  <label for="asset-name">Nome</label>
+  <input id="asset-name" formControlName="name" />
+
+  <label for="asset-tag">Tag</label>
+  <input id="asset-tag" formControlName="tag" />
+
+  <label for="asset-category">Categoria</label>
+  <input id="asset-category" formControlName="category" />
+
+  <button (click)="save()">Salvar</button>
+</form>
