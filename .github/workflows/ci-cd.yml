@@ -8,9 +8,13 @@ on:
 
 env:
   NODE_VERSION: '20'
-  DOTNET_VERSION: '8.0.x'
+  DOTNET_VERSION: '10.0.x'  # Updated to match project target framework
 
 jobs:
+  # Matriz de Qualidade (Launch)
+  # - Bloqueantes: backend, frontend, e2e (quebram PR/main)
+  # - Informativos: quality-informational (não bloqueia merge/deploy)
+
   # =============================================
   # Backend: Build + Test
   # =============================================
@@ -34,6 +38,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -70,13 +76,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: school-management-ui/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -85,16 +92,14 @@ jobs:
       - name: Lint
         run: npm run lint
         working-directory: school-management-ui
-        continue-on-error: true
 
       - name: Build
         run: npm run build -- --configuration production
         working-directory: school-management-ui
 
       - name: Unit Test (Karma/Jasmine)
-        run: npx ng test --no-watch --no-progress --browsers=ChromeHeadless --code-coverage
+        run: npm test -- --no-progress --browsers=ChromeHeadless --code-coverage
         working-directory: school-management-ui
-        continue-on-error: true
 
       - name: Upload coverage
         if: always()
@@ -102,6 +107,35 @@ jobs:
         with:
           name: frontend-coverage
           path: school-management-ui/coverage/
+
+  # =============================================
+  # Informational checks (non-blocking)
+  # =============================================
+  quality-informational:
+    name: Quality (Informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: school-management-ui
+
+      - name: Dependency audit (informational)
+        run: npm audit --audit-level=high || true
+        working-directory: school-management-ui
+
+      - name: Dependency outdated report (informational)
+        run: npm outdated || true
+        working-directory: school-management-ui
 
   # =============================================
   # E2E Tests (Cypress)
@@ -119,7 +153,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: school-management-ui/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -172,7 +205,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: school-management-ui/package-lock.json
 
       # Build API
       - name: Publish API
