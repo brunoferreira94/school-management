@@ -33,6 +33,7 @@
 | [Frontend Integration](../school-management-api/docs/frontend-integration.md) | Guia de integração frontend | Dev |
 | [Observability](../school-management-api/docs/observability.md) | Métricas e monitoramento | DevOps |
 | [Timetabling](../school-management-api/docs/timetabling.md) | Sistema de horários | Dev |
+| [Teacher Availability API](../school-management-api/docs/api/teacher-availability.md) | Disponibilidade de professores | Dev |
 | [Analytics MVP](../school-management-api/docs/analytics-mvp.md) | Analytics (retenção, inadimplência) | Dev / Product |
 | [CQRS Guide](../school-management-api/docs/cqrs-migration-guide.md) | Guia CQRS | Dev |
 | [Domain Events](../school-management-api/docs/domain-events-pattern.md) | Padrão Domain Events | Dev |
@@ -45,6 +46,7 @@
 | [Pricing Analysis](../school-management-api/docs/pricing-analysis.md) | Análise de precificação | Product |
 | [Roadmap](../school-management-api/docs/ROADMAP.md) | Roadmap do projeto | Product / Dev |
 | [Report Endpoints](../school-management-api/report-endpoints-mapping.md) | Mapeamento de endpoints de relatórios | Dev |
+| [Terms of Use Middleware Exceptions](./middleware/terms-of-use-exceptions.md) | Exceções e respostas HTTP do middleware de termos | Dev / Audit |
 
 ---
 
@@ -78,6 +80,7 @@
 | [Plano de Lançamento](../school-management-api/docs/PLANO_LANCAMENTO_PRODUTO.md) | Plano completo de lançamento | Product / Business |
 | [Guia Rápido de Lançamento](../school-management-api/docs/LANCAMENTO_GUIA_RAPIDO.md) | Sumário executivo de lançamento | Product |
 | [Roteiro de Demo](../school-management-api/examples/README.md) | Roteiro de demonstração (10 min) | Sales / Product |
+| [Onboarding Piloto](./onboarding-piloto.md) | Guia de onboarding para escola piloto (Portal do Responsável) | Product / Admin |
 | [Usability Improvements](../school-management-api/docs/usability-improvements.md) | Melhorias de usabilidade | UX / Product |
 
 ---

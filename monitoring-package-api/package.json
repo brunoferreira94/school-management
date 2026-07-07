@@ -1,0 +1,9 @@
+{
+  "name": "monitoring-package-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node scripts/check-api-health.mjs",
+    "sanity": "node scripts/check-api-health.mjs"
+  }
+}

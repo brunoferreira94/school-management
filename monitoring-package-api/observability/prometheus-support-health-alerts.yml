@@ -1,0 +1,100 @@
+groups:
+  - name: support_health_alerts
+    interval: 15s
+    rules:
+      # ============================================================
+      # CRITICAL: Serviço de suporte está DOWN
+      # Dispara se o endpoint /api/support/health não responde 200
+      # ============================================================
+      - alert: SupportServiceDown
+        expr: up{job="support-health"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          component: support
+          team: platform
+        annotations:
+          summary: "CRITICAL: Support service is DOWN"
+          description: "O endpoint /api/support/health não responde há mais de 30s. Verificar imediatamente o serviço de suporte."
+          runbook_url: "https://wiki.internal/support-service-down"
+
+      # ============================================================
+      # WARNING: Latência alta no health check
+      # Dispara se a latência do health check excede 2s
+      # ============================================================
+      - alert: SupportHealthCheckHighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="support-health"}[5m])) > 2
+        for: 2m
+        labels:
+          severity: warning
+          component: support
+          team: platform
+        annotations:
+          summary: "WARNING: Support health check latency is high"
+          description: "P95 latência do health check de suporte está acima de 2s (valor atual: {{ $value }}s). Investigar possível degradação."
+
+      # ============================================================
+      # WARNING: Latência moderada no health check
+      # Dispara se a latência do health check excede 500ms
+      # ============================================================
+      - alert: SupportHealthCheckModerateLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="support-health"}[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: support
+          team: platform
+        annotations:
+          summary: "WARNING: Support health check latency is moderate"
+          description: "P95 latência do health check de suporte está acima de 500ms (valor atual: {{ $value }}s). Monitorar tendência."
+
+      # ============================================================
+      # CRITICAL: Readiness probe falhando
+      # Serviço não está pronto para receber tráfego
+      # ============================================================
+      - alert: SupportServiceNotReady
+        expr: up{job="support-readiness"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: support
+          team: platform
+        annotations:
+          summary: "CRITICAL: Support service is NOT READY"
+          description: "O readiness probe do serviço de suporte falhou. O serviço pode estar em startup ou com dependências indisponíveis."
+
+      # ============================================================
+      # CRITICAL: Liveness probe falhando
+      # Processo pode estar travado ou em deadlock
+      # ============================================================
+      - alert: SupportServiceNotAlive
+        expr: up{job="support-liveness"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          component: support
+          team: platform
+        annotations:
+          summary: "CRITICAL: Support service liveness check failed"
+          description: "O liveness probe do serviço de suporte falhou. O processo pode estar em deadlock ou travado. Considerar restart."
+
+      # ============================================================
+      # INFO: Uptime do serviço de suporte
+      # Métrica informativa para dashboard
+      # ============================================================
+      - record: support:uptime:ratio_5m
+        expr: avg_over_time(up{job="support-health"}[5m])
+
+      # ============================================================
+      # WARNING: Taxa de erro elevada no serviço de suporte
+      # ============================================================
+      - alert: SupportServiceHighErrorRate
+        expr: rate(http_requests_total{job="support-health",status=~"5.."}[5m]) / rate(http_requests_total{job="support-health"}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          component: support
+          team: platform
+        annotations:
+          summary: "WARNING: Support service has high error rate"
+          description: "Taxa de erro 5xx no serviço de suporte está acima de 5% ({{ $value | humanizePercentage }}). Investigar logs."

@@ -1,0 +1,144 @@
+groups:
+  - name: health_endpoint_alerts
+    interval: 10s
+    rules:
+      # ================================================================
+      # CRITICAL: Health endpoint está DOWN
+      # Dispara se a sonda HTTP retornou falha por mais de 30s
+      # (3 falhas consecutivas em intervalos de 10s)
+      # ================================================================
+      - alert: HealthEndpointDown
+        expr: up{job="school-management-health"} == 0 or absent(up{job="school-management-health"}) == 1
+        for: 30s
+        labels:
+          severity: critical
+          component: health
+        annotations:
+          summary: "CRITICAL: Health endpoint is unreachable"
+          description: "The /api/support/health endpoint has been down for more than 30 seconds (3 consecutive failed probes). Check API availability immediately."
+          runbook_url: "https://wiki.internal/runbooks/health-endpoint-down"
+
+      # ================================================================
+      # CRITICAL: Falhas consecutivas de health check (blackbox)
+      # Dispara quando houve 3+ falhas de sonda HTTP em uma janela de 5 min
+      # Implementa o requisito "3 falhas em 5 minutos"
+      # ================================================================
+      - alert: HealthEndpointConsecutiveFailures
+        expr: increase(probe_success{job="blackbox-http"}[5m]) < (increase(probe_http_status_code{job="blackbox-http", module="http_2xx"}[5m]) - 3)
+        for: 5m
+        labels:
+          severity: critical
+          component: health
+          escalated: "true"
+        annotations:
+          summary: "CRITICAL: Health endpoint consecutive failures (3+ in 5min)"
+          description: "The health endpoint has accumulated multiple consecutive failures in the last 5 minutes. This indicates a sustained outage, not a transient spike."
+          runbook_url: "https://wiki.internal/runbooks/consecutive-health-failures"
+
+      # ================================================================
+      # CRITICAL: API principal está DOWN
+      # ================================================================
+      - alert: ApiEndpointDown
+        expr: up{job="school-management"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "CRITICAL: School Management API is down"
+          description: "The API scrape target has been unreachable for over 1 minute. Immediate investigation required."
+
+      # ================================================================
+      # WARNING: API com latência alta (p95 > 2s por 5 min)
+      # Escala para critical se persistir por 15 min
+      # ================================================================
+      - alert: HealthEndpointSlow
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="school-management"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "WARNING: API response time is high (p95 > 2s)"
+          description: "The 95th percentile response time is above 2 seconds for 5 minutes. Current value: {{ $value }}s. Will escalate to CRITICAL if unresolved in 15 min."
+
+      # ================================================================
+      # CRITICAL: Latência extrema persistindo (> 5s por 15 min = escalonamento)
+      # Equivalente a warning não resolvido, agora como critical
+      # ================================================================
+      - alert: ApiResponseTimeCritical
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="school-management"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "CRITICAL: API response time is critically high (p95 > 5s)"
+          description: "The 95th percentile response time is above 5 seconds. This is an escalation of the warning alert that persists. Current value: {{ $value }}s."
+
+      # ================================================================
+      # WARNING: Memória alta (> 500MB por 10 min)
+      # ================================================================
+      - alert: ApiHighMemory
+        expr: process_resident_memory_bytes{job="school-management"} / 1024 / 1024 > 500
+        for: 10m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "WARNING: API memory usage exceeds 500MB"
+          description: "The API process is using more than 500MB resident memory. Current: {{ $value }}MB. Potential memory leak — investigate."
+
+      # ================================================================
+      # CRITICAL: Memória extrema (> 1GB por 5 min = escalonamento)
+      # ================================================================
+      - alert: ApiMemoryCritical
+        expr: process_resident_memory_bytes{job="school-management"} / 1024 / 1024 > 1000
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "CRITICAL: API memory usage exceeds 1GB"
+          description: "CRITICAL escalation: API memory usage has exceeded 1GB. Risk of OOM kill. Current: {{ $value }}MB. Restart required."
+
+      # ================================================================
+      # CRITICAL: Taxa de erro alta (> 5%)
+      # ================================================================
+      - alert: ApiHighErrorRate
+        expr: rate(http_requests_total{job="school-management", status=~"5.."}[5m]) / rate(http_requests_total{job="school-management"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "CRITICAL: API error rate above 5%"
+          description: "More than 5% of API requests are returning 5xx status codes. Current: {{ $value | humanizePercentage }}. Investigate logs immediately."
+
+      # ================================================================
+      # WARNING: Taxa de erro moderada (> 1%)
+      # Pré-escalonamento para critical se não resolvido
+      # ================================================================
+      - alert: ApiModerateErrorRate
+        expr: rate(http_requests_total{job="school-management", status=~"5.."}[5m]) / rate(http_requests_total{job="school-management"}[5m]) > 0.01
+        for: 3m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "WARNING: API error rate above 1%"
+          description: "Low-grade error rate detected (> 1%). If this persists, it will escalate to CRITICAL in a few minutes. Current: {{ $value | humanizePercentage }}."
+
+      # ================================================================
+      # CRITICAL: Falha de rate limit (HTTP 429)
+      # Indica overload do sistema
+      # ================================================================
+      - alert: ApiRateLimitHit
+        expr: rate(http_requests_total{job="school-management", status="429"}[5m]) > 0
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "CRITICAL: API rate limit is being triggered"
+          description: "HTTP 429 responses detected from the API. Current rate: {{ $value }}/sec. Check for runaway clients or need to adjust rate limiting thresholds."

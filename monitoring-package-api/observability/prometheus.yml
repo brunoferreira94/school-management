@@ -1,0 +1,104 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - "alertmanager:9093"
+      # Timeout for sending alerts to Alertmanager
+      timeout: 10s
+
+# Load alerting rules
+rule_files:
+  - "prometheus-academic-year-alerts.yml"
+  - "prometheus-health-alerts.yml"
+  - "prometheus-support-health-alerts.yml"
+
+scrape_configs:
+  - job_name: "school-management"
+    static_configs:
+      - targets: ["api:5000"]
+    metrics_path: "/metrics"
+    scrape_interval: 10s
+
+  - job_name: "otel-collector"
+    static_configs:
+      - targets: ["otel-collector:8889"]
+
+  # ----------------------------------------------------------
+  # Blackbox exporter — HTTP health probe-based monitoring
+  # Probes /health endpoints for availability tracking
+  # ----------------------------------------------------------
+  - job_name: "blackbox-http"
+    metrics_path: "/probe"
+    params:
+      module: ["http_2xx"]
+    static_configs:
+      - targets:
+          - "http://api:5000/api/support/health"       # Support health endpoint
+          - "http://api:5000/api/operations/health"    # DB-aware health
+          - "http://ui:80/health"                      # Frontend health endpoint
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: "blackbox-exporter:9115"
+
+  # ----------------------------------------------------------
+  # API Prometheus metrics — direct scrape from /metrics
+  # Exposed by prometheus-net (UsePrometheus() middleware)
+  # ----------------------------------------------------------
+  - job_name: "support-health"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["api:5000"]
+    scrape_interval: 10s
+
+  # ----------------------------------------------------------
+  # Blackbox exporter — Readiness probe
+  # ----------------------------------------------------------
+  - job_name: "support-readiness"
+    metrics_path: "/probe"
+    params:
+      module: ["http_2xx"]
+    static_configs:
+      - targets:
+          - "http://api:5000/api/support/ready"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: "blackbox-exporter:9115"
+
+  # ----------------------------------------------------------
+  # Blackbox exporter — Liveness probe
+  # ----------------------------------------------------------
+  - job_name: "support-liveness"
+    metrics_path: "/probe"
+    params:
+      module: ["http_2xx"]
+    static_configs:
+      - targets:
+          - "http://api:5000/api/support/live"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: "blackbox-exporter:9115"
+
+  # ----------------------------------------------------------
+  # Docker container metrics (via cAdvisor if available)
+  # ----------------------------------------------------------
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8080"]
+    scrape_interval: 30s

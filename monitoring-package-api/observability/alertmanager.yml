@@ -1,0 +1,125 @@
+global:
+  resolve_timeout: 5m
+  slack_api_url: 'https://hooks.slack.com/services/xxx/yyy/zzz'
+  smtp_from: 'alertas@schoolmanagement.com.br'
+  smtp_smarthost: 'smtp.schoolmanagement.com.br:587'
+  smtp_auth_username: 'alertas@schoolmanagement.com.br'
+  smtp_auth_password: 'SMTP_PASSWORD'
+
+route:
+  group_by: ['alertname', 'severity', 'component']
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 1h
+  receiver: 'default-webhook'
+
+  routes:
+    # Critical alerts → all channels immediately
+    - match:
+        severity: critical
+      receiver: 'critical-multi-channel'
+      group_wait: 0s
+      repeat_interval: 15m
+      continue: false
+
+    # Warning alerts → webhook + email, escalate to Slack if unresolved
+    - match:
+        severity: warning
+      receiver: 'warning-webhook-email'
+      repeat_interval: 30m
+      routes:
+        # Escalate to critical channel if warning persists > 15 min
+        - match_re:
+            escalated: "true"
+          receiver: 'critical-multi-channel'
+          repeat_interval: 15m
+
+    # Info → webhook only
+    - match:
+        severity: info
+      receiver: 'default-webhook'
+      repeat_interval: 2h
+
+receivers:
+  # Default: webhook only
+  - name: 'default-webhook'
+    webhook_configs:
+      - url: 'https://n8n.schoolmanagement.com.br/webhook/alerts'
+        send_resolved: true
+        max_alerts: 50
+
+  # Warning: webhook + email
+  - name: 'warning-webhook-email'
+    webhook_configs:
+      - url: 'https://n8n.schoolmanagement.com.br/webhook/alerts'
+        send_resolved: true
+    email_configs:
+      - to: 'ops@schoolmanagement.com.br'
+        headers:
+          Subject: '[WARNING] School Management Alert: {{ .GroupLabels.alertname }}'
+        html: |
+          <h2>⚠️ Alerta de Warning</h2>
+          <p><strong>Alerta:</strong> {{ .GroupLabels.alertname }}</p>
+          <p><strong>Componente:</strong> {{ .GroupLabels.component }}</p>
+          <h3>Detalhes:</h3>
+          <ul>
+          {{ range .Alerts }}
+            <li>{{ .Annotations.description }}</li>
+          {{ end }}
+          </ul>
+          <p><a href="{{ .ExternalURL }}">Ver no Alertmanager</a></p>
+
+  # Critical: Slack + email + webhook (all channels)
+  - name: 'critical-multi-channel'
+    slack_configs:
+      - channel: '#_alertas-producao'
+        title: '🔴 CRITICAL: {{ .GroupLabels.alertname }}'
+        text: |
+          {{ range .Alerts }}
+          *Alerta:* {{ .Annotations.summary }}
+          *Componente:* {{ .Labels.component }}
+          *Descrição:* {{ .Annotations.description }}
+          *Desde:* {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+          {{ end }}
+        actions:
+          - type: button
+            text: '📊 Ver Grafana'
+            url: 'http://localhost:3000/d/school-management'
+          - type: button
+            text: '📖 Runbook'
+            url: 'https://wiki.internal/runbooks/{{ .GroupLabels.alertname }}'
+        send_resolved: true
+    email_configs:
+      - to: 'ops@schoolmanagement.com.br'
+        headers:
+          Subject: '[CRITICAL] School Management: {{ .GroupLabels.alertname }}'
+        html: |
+          <h2>🚨 Alerta Crítico</h2>
+          <p><strong>Alerta:</strong> {{ .GroupLabels.alertname }}</p>
+          <p><strong>Componente:</strong> {{ .GroupLabels.component }}</p>
+          <h3>Detalhes:</h3>
+          <ul>
+          {{ range .Alerts }}
+            <li><strong>{{ .Labels.instance }}:</strong> {{ .Annotations.description }}</li>
+          {{ end }}
+          </ul>
+          <p><a href="{{ .ExternalURL }}">Ver no Alertmanager</a></p>
+    webhook_configs:
+      - url: 'https://n8n.schoolmanagement.com.br/webhook/alerts'
+        send_resolved: true
+        max_alerts: 10
+
+# Inibição: suprime warnings se o mesmo componente está crítico
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['component', 'alertname']
+
+  # Se o serviço está DOWN, suprime alertas de latência/erro dele
+  - source_match:
+      alertname: 'HealthEndpointDown'
+    target_match_re:
+      alertname: '(HealthEndpointSlow|ApiHighErrorRate|ApiHighMemory)'
+    equal: ['component']
