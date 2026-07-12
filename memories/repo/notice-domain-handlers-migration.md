@@ -1,3 +1,0 @@
-- Notice domain handlers were migrated from UseCase dependencies to a new `INoticeService`/`NoticeService` implementation.
-- Dependency injection was updated to register `NoticeService` and its abstractions.
-- Existing handler tests were updated/preserved and are passing after the migration.

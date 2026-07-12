@@ -8,6 +8,8 @@
 - [x] Backend: add canonical plans `Free`, `Premium`, `Enterprise` to subscription API and seed data. (owner: backend)
 - [x] Backend: enforce tier limits for students, staff, school units, storage and feature gating. (owner: backend)
 - [x] Backend: ensure Premium includes portal do responsável, notificações e módulo financeiro desde o primeiro dia. (owner: backend)
+- [x] Backend: implement monetization KPIs endpoint with MRR, churn, ARPU, plan distribution, and conversion rate (owner: backend)
+- [x] Backend: create integration tests for KPI endpoint validating metrics, plan distribution, and authorization (owner: qa)
 - [x] Frontend: build pricing page UI using wireframe from `docs/plans/pricing-page.md`. (owner: frontend)
 - [ ] Product: deliver Self-Service Portal for `Premium` and validate the onboarding value proposition. (owner: product)
 - [ ] Infra: execute billing spike with Asaas and document webhook/contract requirements. (owner: infra)

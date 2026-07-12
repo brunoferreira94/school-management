@@ -8,4 +8,9 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
-*.swo
+*.smo
+.pytest_cache/
+obj/
+
+# Graphify knowledge-graph analysis output
+graphify-out/

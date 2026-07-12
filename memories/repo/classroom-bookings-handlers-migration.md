@@ -1,3 +1,0 @@
-- ClassroomBookings handlers were migrated from direct use case dependencies to a new `IClassroomBookingService`/`ClassroomBookingService` abstraction.
-- Dependency injection was updated to register `ClassroomBookingService` and its interfaces.
-- Handler tests were preserved and are passing after the migration.

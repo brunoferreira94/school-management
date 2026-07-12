@@ -24,7 +24,7 @@
 ## 4. Governança B2B
 
 - [ ] 4.1 Definir checklist de ativação de escola exigindo contrato principal e DPA válidos (owner: legal/ops).
-- [ ] 4.2 Registrar referência documental por tenant (identificador de contrato e versão do DPA) para auditoria operacional (owner: backend/ops).
+- [x] 4.2 Registrar referência documental por tenant (identificador de contrato e versão do DPA) para auditoria operacional (owner: backend/ops).
 
 ## 5. Qualidade e validação
 

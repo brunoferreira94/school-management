@@ -1,3 +1,0 @@
-- Asset domain handlers were migrated from legacy UseCase dependencies to a new `IAssetService`/`AssetService` implementation.
-- Dependency injection was updated to register `AssetService` and its abstractions.
-- Focused unit tests were added for both the new service and the asset handlers.
