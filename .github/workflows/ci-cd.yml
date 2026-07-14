@@ -207,6 +207,7 @@ jobs:
         working-directory: school-management-api
         env:
           ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: "http://127.0.0.1:5067"
           ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=schoolmanagement_test;Username=test;Password=test"
 
       - name: Wait for API
