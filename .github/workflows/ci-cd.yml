@@ -229,9 +229,7 @@ jobs:
         with:
           working-directory: school-management-ui
           start: npm run start:e2e
-          wait-on:
-            - 'http://127.0.0.1:4200'
-            - 'http://127.0.0.1:5067/__debug/https-test'
+          wait-on: 'http://127.0.0.1:4200,http://127.0.0.1:5067/__debug/https-test'
           wait-on-timeout: 120
           record: false
         env:
