@@ -225,6 +225,17 @@ jobs:
           cat /tmp/api.log
           exit 1
 
+      - name: Generate JWT for E2E (real auth, no mock)
+        id: jwt
+        run: |
+          TOKEN=$(dotnet run --no-build --no-launch-profile --configuration Release \
+            --project ../school-management-api/tools/GenerateJwt \
+            -- students.read,students.write,analytics.read 2>/dev/null | tail -1)
+          echo "::add-mask::$TOKEN"
+          echo "CYPRESS_AUTH_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+          echo "Token gerado (masked)."
+        working-directory: school-management-api
+
       - name: Cypress run
         uses: cypress-io/github-action@v6
         with:
@@ -235,6 +246,7 @@ jobs:
           record: false
         env:
           CYPRESS_BASE_URL: http://127.0.0.1:4200
+          CYPRESS_AUTH_TOKEN: ${{ env.CYPRESS_AUTH_TOKEN }}
 
       - name: Upload Cypress screenshots
         if: failure()
