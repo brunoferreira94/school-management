@@ -199,7 +199,7 @@ jobs:
 
       - name: Start API (background)
         run: |
-          nohup dotnet run --no-build --configuration Release \
+          nohup dotnet run --no-build --no-launch-profile --configuration Release \
             --project src/SchoolManagement \
             --urls "http://127.0.0.1:5067" \
             > /tmp/api.log 2>&1 &
