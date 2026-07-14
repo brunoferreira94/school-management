@@ -228,8 +228,8 @@ jobs:
       - name: Generate JWT for E2E (real auth, no mock)
         id: jwt
         run: |
-          TOKEN=$(dotnet run --no-build --no-launch-profile --configuration Release \
-            --project ../school-management-api/tools/GenerateJwt \
+          TOKEN=$(dotnet run --no-launch-profile --configuration Release \
+            --project tools/GenerateJwt \
             -- students.read,students.write,analytics.read 2>/dev/null | tail -1)
           echo "::add-mask::$TOKEN"
           echo "CYPRESS_AUTH_TOKEN=$TOKEN" >> "$GITHUB_ENV"
