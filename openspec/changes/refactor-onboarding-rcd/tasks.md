@@ -10,7 +10,7 @@
 - [x] 2.1 Criar endpoint `POST /api/onboarding/seed-standard`
 - [x] 2.2 Implementar seed: turma modelo + calendário 200 dias (via SetupService)
 - [x] 2.3 Executar seed ao completar welcome modal (frontend chama endpoint)
-- [ ] 2.4 Tabela `SetupProgress` para tracking de etapas (persistência real)
+- [x] 2.4 Tabela `SetupProgress` para tracking de etapas (persistência real)
 
 ## 3. Empty State + CTA Única (Frontend) ✅
 
@@ -41,8 +41,17 @@
 - [x] 7.2 DefaultSchoolTemplate2026 com template pré-definido (4 salas, 4 cursos, 3 turmas)
 - [x] 7.3 Build .NET passou (0 erros)
 
-## 8. Testes E2E ⏳
+## 8. Backend SetupProgress Persistence ✅
 
-- [ ] 8.1 Test: admin completa onboarding em < 5 min
-- [ ] 8.2 Test: welcome modal aparece apenas primeiro acesso
-- [ ] 8.3 Test: seed data aplicado automaticamente
+- [x] 8.1 Entidade `SetupProgress` (Domain) com campos de etapas
+- [x] 8.2 `ISetupProgressRepository` + `SetupProgressRepository` (Infra)
+- [x] 8.3 Endpoints `GET/POST /api/onboarding/progress`
+- [x] 8.4 Migration `AddSetupProgress` aplicada no banco local
+- [x] 8.5 Registro DI em `RepositoryAndInfrastructureRegistration`
+
+## 9. Testes E2E ✅
+
+- [x] 9.1 Test: admin completa onboarding em < 5 min
+- [x] 9.2 Test: welcome modal aparece apenas primeiro acesso
+- [x] 9.3 Test: seed data aplicado automaticamente
+- [x] 9.4 `rcd-onboarding-flow.cy.ts` com 4 specs
