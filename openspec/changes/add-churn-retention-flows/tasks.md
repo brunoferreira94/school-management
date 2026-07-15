@@ -5,7 +5,7 @@
 - [x] 1.3 Passo 2: oferecer alternativa (pausar 30 dias / 1 mês grátis) — FRONT
 - [x] 1.4 Passo 3: coletar motivo via pergunta aberta (texto livre + tag opcional) — FRONT
 - [x] 1.5 Substituir `CANCEL_CONFIRM` (confirm nativo) pelo novo fluxo em `subscriptions.component` — FRONT
-- [ ] 1.6 API: endpoints de pausa e cancelamento com persistência do motivo + timestamp
+- [x] 1.6 API: endpoints de pausa e cancelamento com persistência do motivo + timestamp (see PR #74)
 - [x] 1.7 Garantir que o cancelar permanece acessível e honesto em cada passo (sem dark pattern) — FRONT (botão sempre visível)
 
 ## 2. Health score (risco de churn)
@@ -36,4 +36,4 @@
 
 - [ ] 6.1 Instrumentar NRR, taxa de save no cancel screen, % contas em risco reativadas
 - [ ] 6.2 Testes unitários (cancel-flow, health score) + smoke E2E do fluxo de cancelamento
-- [ ] 6.3 `openspec validate add-churn-retention-flows --strict` verde
+- [x] 6.3 `openspec validate add-churn-retention-flows --strict` verde
