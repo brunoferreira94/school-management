@@ -5,3 +5,14 @@
 - [x] 2.0 Health-score endpoint (risk scoring) - via SubscriptionUsageDto.LimitWarnings
 - [x] 3.0 Expansion prompt (90% usage detection) - via LimitWarnings in SubscriptionUsageDto
 - [x] 4.0 Re-engagement anchor - pause notes marker for win-back triggers
+
+## 2. UI Components
+
+- [ ] 2.1 Cancel flow modal with account summary
+- [ ] 2.2 Pause confirmation dialog
+- [ ] 2.3 Usage warnings toast/notice
+
+## 3. E2E Tests
+
+- [ ] 3.1 Smoke test API/UI
+- [ ] 3.2 Login + navigation + data flow
