@@ -2,7 +2,7 @@
 
 The current UI uses `transition: all` extensively (~30+ occurrences across component styles), which animates unintended properties and can trigger layout/paint operations under load. Hover animations lack pointer/hover gating, causing incorrect behavior on touch devices where `:hover` fires on tap. Some components redefine keyframes already defined in styles.scss.
 
-## What
+## What Changes
 
 Replace all `transition: all` with explicit property lists, add `@media (hover: hover) and (pointer: fine)` guards for hover transforms, remove redundant keyframe definitions, and standardize scale values.
 
