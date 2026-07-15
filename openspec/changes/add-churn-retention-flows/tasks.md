@@ -1,12 +1,12 @@
 ## 1. Cancel flow (win-back)
 
-- [ ] 1.1 Criar componente `cancel-flow` (3 passos: perda concreta → alternativa → motivo)
-- [ ] 1.2 Passo 1: exibir perda concreta (contagem real de alunos/turmas/meses de histórico)
-- [ ] 1.3 Passo 2: oferecer alternativa (pausar 30 dias / 1 mês grátis)
-- [ ] 1.4 Passo 3: coletar motivo via pergunta aberta (texto livre + tag opcional)
-- [ ] 1.5 Substituir `CANCEL_CONFIRM` (confirm nativo) pelo novo fluxo em `subscriptions.component`
+- [x] 1.1 Criar componente `cancel-flow` (3 passos: perda concreta → alternativa → motivo) — FRONT
+- [x] 1.2 Passo 1: exibir perda concreta (contagem real de alunos/turmas/meses de histórico) — FRONT (consome `AccountSummary`)
+- [x] 1.3 Passo 2: oferecer alternativa (pausar 30 dias / 1 mês grátis) — FRONT
+- [x] 1.4 Passo 3: coletar motivo via pergunta aberta (texto livre + tag opcional) — FRONT
+- [x] 1.5 Substituir `CANCEL_CONFIRM` (confirm nativo) pelo novo fluxo em `subscriptions.component` — FRONT
 - [ ] 1.6 API: endpoints de pausa e cancelamento com persistência do motivo + timestamp
-- [ ] 1.7 Garantir que o cancelar permanece acessível e honesto em cada passo (sem dark pattern)
+- [x] 1.7 Garantir que o cancelar permanece acessível e honesto em cada passo (sem dark pattern) — FRONT (botão sempre visível)
 
 ## 2. Health score (risco de churn)
 
@@ -29,8 +29,8 @@
 
 ## 5. Portal — jargão e FAQ contextual
 
-- [ ] 5.1 Auditar copy do portal e reescrever termos técnicos/legalês em linguagem simples
-- [ ] 5.2 Adicionar FAQ contextual in-product na seção financeira (e outras de alto atrito)
+- [x] 5.1 Auditar copy do portal e reescrever termos técnicos/legalês em linguagem simples — FRONT (FAQ em PT-BR simples)
+- [x] 5.2 Adicionar FAQ contextual in-product na seção financeira (e outras de alto atrito) — FRONT (`contextual-faq` em portal-financial)
 
 ## 6. Métricas e verificação
 
