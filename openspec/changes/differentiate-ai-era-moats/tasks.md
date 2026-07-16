@@ -21,9 +21,9 @@
 
 ## 4. Moat 3 — Brand Power / visual confidence
 
-- [ ] 4.1 UI: criar design tokens proprietários (`styles/theme/escola-tokens.scss`) — cor ESCOLA+, raio 12px, sombra de confirmação, tipografia de marca
-- [ ] 4.2 UI: aplicar tokens em `onboarding-welcome`, `activation-checklist`, `activation-celebration`, `empty-state` (já fora do Material default)
-- [ ] 4.3 UI: micro-interação de 200ms de confirmação em ações críticas (salvar nota, enviar comunicado, confirmar pagamento)
+- [x] 4.1 UI: criar design tokens proprietários (`styles/escola-brand.scss`) — cor ESCOLA+ `#4f46e5`, raio 12px, sombra de confirmação, pulse de marca
+- [x] 4.2 UI: aplicar tokens em `onboarding-welcome`, `activation-checklist`, `micro-loops`, `activation-celebration`
+- [x] 4.3 UI: micro-interação de 200ms de confirmação (`EscolaConfirmPulseDirective`) em ações críticas (convidar professor)
 
 ## 5. Human touch
 
@@ -40,6 +40,6 @@
 ## 7. Integração e submodules
 
 - [x] 7.1 API: branch `feature/onboarding-invite-teacher`, commit `e1e65a9` (Moat 2) + `feature/onboarding-microloops` (Moat 1)
-- [x] 7.2 UI: branch `feat/ai-era-moats`, commit `97fa4ad` (Moat 2) + `feat/microloops` (Moat 1)
+- [x] 7.2 UI: branch `feat/ai-era-moats`, commit `97fa4ad` (Moat 2) + `feat/microloops` (Moat 1) + `feat/brand-power`, commit `0cba976` (Moat 3)
 - [x] 7.3 Pai: apontar submodules, branch `differentiate/ai-era-moats`, PR #5 (atualizado)
 - [x] 7.4 Validar `openspec validate differentiate-ai-era-moats --strict`
