@@ -8,8 +8,6 @@
 
 ## 2. UI Components
 
-- [ ] 2.1 Cancel flow modal with account summary
-- [ ] 2.2 Pause confirmation dialog
 - [ ] 2.3 Usage warnings toast/notice
 
 ## 3. E2E Tests

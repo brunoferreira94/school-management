@@ -49,9 +49,18 @@
 - [x] 8.4 Migration `AddSetupProgress` aplicada no banco local
 - [x] 8.5 Registro DI em `RepositoryAndInfrastructureRegistration`
 
-## 9. Testes E2E ✅
+## 9. Frontend Sync (Backend <-> LocalStorage) ✅
 
-- [x] 9.1 Test: admin completa onboarding em < 5 min
-- [x] 9.2 Test: welcome modal aparece apenas primeiro acesso
-- [x] 9.3 Test: seed data aplicado automaticamente
-- [x] 9.4 `rcd-onboarding-flow.cy.ts` com 4 specs
+- [x] 9.1 `OnboardingService` usa `signal` reativo para `progress`
+- [x] 9.2 `syncProgress()` busca `GET /api/onboarding/progress` no app init
+- [x] 9.3 `updateProgress()` faz `POST` para persistir etapas
+- [x] 9.4 `app.component.ts` chama `syncProgress()` quando autenticado
+- [x] 9.5 `activation-checklist` usa `progressPercent` do backend
+- [x] 9.6 Teste E2E `syncs onboarding progress from backend on app load`
+
+## 10. Testes E2E ✅
+
+- [x] 10.1 Test: admin completa onboarding em < 5 min
+- [x] 10.2 Test: welcome modal aparece apenas primeiro acesso
+- [x] 10.3 Test: seed data aplicado automaticamente
+- [x] 10.4 `rcd-onboarding-flow.cy.ts` com 5 specs
