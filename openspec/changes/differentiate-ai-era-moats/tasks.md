@@ -8,10 +8,10 @@
 
 ## 2. Moat 1 — Switching cost via UX internalizada (caminho do diretor)
 
-- [ ] 2.1 UI: `activation-checklist` evolui para sequência de micro-loops repetíveis (nota→boletim→comunicado→cobrança) com estado persistido no backend
-- [ ] 2.2 UI: cada loop concluído mostra "próximo passo sugerido" baseado no uso real (não lista estática)
-- [ ] 2.3 API: `SetupProgress` ganha campos de micro-loop (`LastGradeEntryAt`, `LastReportCardViewedAt`, `LastAnnouncementAt`, `LastPaymentAt`) para o backend orientar o próximo passo
-- [ ] 2.4 UI: celebração de micro-loop (`activation-celebration`) reutilizada para cada loop, não só no seed
+- [x] 2.1 UI: `activation-checklist` evolui para sequência de micro-loops repetíveis (nota→boletim→comunicado→cobrança) com estado persistido no backend
+- [x] 2.2 UI: cada loop concluído mostra "próximo passo sugerido" baseado no uso real (não lista estática)
+- [x] 2.3 API: `SetupProgress` ganha campos de micro-loop (`LastGradeEntryAt`, `LastReportCardViewedAt`, `LastAnnouncementAt`, `LastPaymentAt`) para o backend orientar o próximo passo
+- [x] 2.4 UI: celebração de micro-loop (`activation-celebration`) reutilizada para cada loop, não só no seed
 
 ## 3. Atenção militante — "tela de hoje"
 
@@ -39,7 +39,7 @@
 
 ## 7. Integração e submodules
 
-- [x] 7.1 API: branch `feature/onboarding-invite-teacher`, commit `e1e65a9`, push
-- [x] 7.2 UI: branch `feat/ai-era-moats`, commit `97fa4ad`, push
+- [x] 7.1 API: branch `feature/onboarding-invite-teacher`, commit `e1e65a9` (Moat 2) + `feature/onboarding-microloops` (Moat 1)
+- [x] 7.2 UI: branch `feat/ai-era-moats`, commit `97fa4ad` (Moat 2) + `feat/microloops` (Moat 1)
 - [x] 7.3 Pai: apontar submodules, branch `differentiate/ai-era-moats`, PR #5 (atualizado)
 - [x] 7.4 Validar `openspec validate differentiate-ai-era-moats --strict`
