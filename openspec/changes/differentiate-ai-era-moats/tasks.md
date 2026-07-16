@@ -1,10 +1,10 @@
 ## 1. Moat 2 — Expansion architecture (convite real de professores)
 
-- [ ] 1.1 API: criar `POST /api/onboarding/invite-teacher` (ou estender `OnboardingController`) que gera link mágico de convite (token assinado, sem senha) e registra o convite no `SetupProgress`
-- [ ] 1.2 API: criar `POST /api/onboarding/accept-invite` que consome o token, cria/ativa o professor no tenant e marca `teacherActivated` no `SetupProgress`
-- [ ] 1.3 API: estender `SetupProgress` com campo `TeachersInvited` (count) e `TeachersActivated` (count) para o checklist refletir o loop fechado
-- [ ] 1.4 UI: `activation-checklist` — passo "Convidar professores" dispara `invite-teacher` (não só marca local) e mostra estado de "convidado / ativo"
-- [ ] 1.5 UI: tela de aceite de convite (rota `/invite/:token`) com formulário mínimo de nome + confirmação
+- [x] 1.1 API: criar `POST /api/onboarding/invite-teacher` (estender `OnboardingController`) que gera link mágico de convite (token assinado, sem senha) e registra o convite no `SetupProgress`
+- [x] 1.2 API: criar `POST /api/onboarding/accept-invite` que consome o token, cria/ativa o professor no tenant e marca `teacherActivated` no `SetupProgress`
+- [x] 1.3 API: estender `SetupProgress` com campo `TeachersInvited` (count) e `TeachersActivated` (count) para o checklist refletir o loop fechado
+- [x] 1.4 UI: `activation-checklist` — passo "Convidar professores" dispara `invite-teacher` (não só marca local) e mostra estado de "convidado / ativo"
+- [x] 1.5 UI: tela de aceite de convite (rota `/invite/:token`) com formulário mínimo de nome + confirmação
 
 ## 2. Moat 1 — Switching cost via UX internalizada (caminho do diretor)
 
@@ -33,13 +33,13 @@
 
 ## 6. Testes E2E (Cypress)
 
-- [ ] 6.1 `cypress/e2e/rcd-moats-flow.cy.ts`: testar convite de professor (invite → accept → checklist mostra ativo)
+- [x] 6.1 `cypress/e2e/rcd-moats-flow.cy.ts`: testar convite de professor (invite → accept → checklist mostra ativo)
 - [ ] 6.2 `cypress/e2e/rcd-moats-flow.cy.ts`: testar "tela de hoje" com 1 ação primária após onboarding
 - [ ] 6.3 `cypress/e2e/rcd-moats-flow.cy.ts`: testar erro gentil em turma duplicada
 
 ## 7. Integração e submodules
 
-- [ ] 7.1 API: branch `feature/onboarding-invite-teacher`, commit, push
-- [ ] 7.2 UI: branch `feat/ai-era-moats`, commit, push
-- [ ] 7.3 Pai: apontar submodules, branch `differentiate/ai-era-moats`, PR #4
-- [ ] 7.4 Validar `openspec validate differentiate-ai-era-moats --strict`
+- [x] 7.1 API: branch `feature/onboarding-invite-teacher`, commit `e1e65a9`, push
+- [x] 7.2 UI: branch `feat/ai-era-moats`, commit `97fa4ad`, push
+- [x] 7.3 Pai: apontar submodules, branch `differentiate/ai-era-moats`, PR #5 (atualizado)
+- [x] 7.4 Validar `openspec validate differentiate-ai-era-moats --strict`
