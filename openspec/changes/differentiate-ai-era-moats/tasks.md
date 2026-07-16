@@ -15,9 +15,9 @@
 
 ## 3. Atenção militante — "tela de hoje"
 
-- [ ] 3.1 UI: `home.component` ganha modo "tela de hoje" com 1 ação primária (item mais urgente: inadimplência > faltas > evento)
-- [ ] 3.2 UI: widgets antigos mantidos como toggle "ver dashboard completo" (fallback, não competem por atenção no default)
-- [ ] 3.3 UI: `tela de hoje` usa `activation-checklist` como primário no primeiro dia, transiciona para "tela de hoje" após conclusão do onboarding
+- [x] 3.1 UI: `home.component` ganha modo "tela de hoje" com 1 ação primária (item mais urgente: inadimplência > faltas > evento)
+- [x] 3.2 UI: widgets antigos mantidos como toggle "ver dashboard completo" (fallback, não competem por atenção no default)
+- [x] 3.3 UI: `tela de hoje` usa `activation-checklist` como primário no primeiro dia, transiciona para "tela de hoje" após conclusão do onboarding
 
 ## 4. Moat 3 — Brand Power / visual confidence
 
@@ -34,7 +34,7 @@
 ## 6. Testes E2E (Cypress)
 
 - [x] 6.1 `cypress/e2e/rcd-moats-flow.cy.ts`: testar convite de professor (invite → accept → checklist mostra ativo)
-- [ ] 6.2 `cypress/e2e/rcd-moats-flow.cy.ts`: testar "tela de hoje" com 1 ação primária após onboarding
+- [x] 6.2 `cypress/e2e/rcd-moat4-today-focus.cy.ts`: testar "tela de hoje" com 1 ação primária após onboarding
 - [ ] 6.3 `cypress/e2e/rcd-moats-flow.cy.ts`: testar erro gentil em turma duplicada
 
 ## 7. Integração e submodules
