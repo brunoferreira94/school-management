@@ -1,3 +1,4 @@
+
 ## 1. Cancel flow (win-back)
 
 - [x] 1.1 Criar componente `cancel-flow` (3 passos: perda concreta → alternativa → motivo) — FRONT
@@ -37,3 +38,4 @@
 - [ ] 6.1 Instrumentar NRR, taxa de save no cancel screen, % contas em risco reativadas
 - [ ] 6.2 Testes unitários (cancel-flow, health score) + smoke E2E do fluxo de cancelamento
 - [x] 6.3 `openspec validate add-churn-retention-flows --strict` verde
+ origin/main
