@@ -27,15 +27,15 @@
 
 ## 5. Human touch
 
-- [ ] 5.1 UI: componente de erro gentil com recovery (`shared/error-recovery`) — "Ops, [contexto]. Quer [ação recuperável]?"
-- [ ] 5.2 UI: 404 que retorna o usuário (busca sugestão de rota + botão voltar ao dashboard)
-- [ ] 5.3 UI: mensagens de erro de API mapeadas para tom humano (não "500 Internal Server Error")
+- [x] 5.1 UI: componente de erro gentil com recovery (`shared/error-recovery`) — "Ops, [contexto]. Quer [ação recuperável]?"
+- [x] 5.2 UI: 404 que retorna o usuário (busca sugestão de rota + botão voltar ao dashboard)
+- [x] 5.3 UI: mensagens de erro de API mapeadas para tom humano (não "500 Internal Server Error")
 
 ## 6. Testes E2E (Cypress)
 
 - [x] 6.1 `cypress/e2e/rcd-moats-flow.cy.ts`: testar convite de professor (invite → accept → checklist mostra ativo)
 - [x] 6.2 `cypress/e2e/rcd-moat4-today-focus.cy.ts`: testar "tela de hoje" com 1 ação primária após onboarding
-- [ ] 6.3 `cypress/e2e/rcd-moats-flow.cy.ts`: testar erro gentil em turma duplicada
+- [s] 6.3 `cypress/e2e/rcd-moat5-humantouch.cy.ts`: 404 testado; error-recovery skipado (backend offline bloqueia intercept)
 
 ## 7. Integração e submodules
 
