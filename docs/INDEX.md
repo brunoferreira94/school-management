@@ -67,6 +67,8 @@
 |-----------|-----------|---------|
 | [Deploy Guide](../DEPLOY.md) | Guia de deploy (Docker + Cloudflare) | DevOps |
 | [Docker Compose](../docker-compose.prod.yaml) | Configuração Docker de produção | DevOps |
+| [Release Checklist](../docs/RELEASE.md) | Checklist executável de lançamento | Product / DevOps |
+| [Release Readiness](../docs/RELEASE_READINESS.md) | Estado atual e gaps antes do go-live | Product / DevOps |
 | [Nginx Config](../nginx/nginx.conf) | Configuração Nginx | DevOps |
 | [CI/CD](../.github/workflows/ci-cd.yml) | Pipeline GitHub Actions | DevOps |
 
