@@ -32,6 +32,7 @@
 | [API Clients](../school-management-api/docs/api-clients.md) | Ferramentas e clientes de API | Dev |
 | [Frontend Integration](../school-management-api/docs/frontend-integration.md) | Guia de integração frontend | Dev |
 | [Observability](../school-management-api/docs/observability.md) | Métricas e monitoramento | DevOps |
+| [Observability — Produção](../school-management-api/docs/OBSERVABILITY_PRODUCTION.md) | Checklist de validação em produção | DevOps |
 | [Timetabling](../school-management-api/docs/timetabling.md) | Sistema de horários | Dev |
 | [Teacher Availability API](../school-management-api/docs/api/teacher-availability.md) | Disponibilidade de professores | Dev |
 | [Analytics MVP](../school-management-api/docs/analytics-mvp.md) | Analytics (retenção, inadimplência) | Dev / Product |
