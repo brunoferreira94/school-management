@@ -17,8 +17,8 @@ services:
       - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
       - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
       - AUTH0_AUDIENCE=${AUTH0_AUDIENCE}
-      - ASAAS_API_KEY=${ASAAS_API_KEY}
-      - ASAAS_WEBHOOK_TOKEN=${ASAAS_WEBHOOK_TOKEN}
+      - ASAAS_API_KEY = production Asaas API key (use .NET user-secrets)
+      - ASAAS_WEBHOOK_TOKEN = production Asaas webhook token (use .NET user-secrets)
     depends_on:
       postgres:
         condition: service_healthy
