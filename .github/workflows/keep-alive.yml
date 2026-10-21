@@ -1,0 +1,47 @@
+name: Keep-alive (Render + Supabase)
+
+# Evita que o Supabase free tier pause o banco após ~7 dias sem atividade
+# e aquece o serviço Render (que hiberna após ~15 min).
+#
+# O ping de /api/support/health atravessa toda a cadeia:
+#   Vercel (proxy /api) -> Render -> Supabase (health inclui SELECT no banco),
+# então uma única chamada por hora mantém os três serviços ativos.
+#
+# Repos públicos não consomem minutos do GitHub Actions (cobrança R$ 0).
+
+on:
+  schedule:
+    - cron: "17 * * * *" # a cada hora no minuto 17 (evita congestionamento do minuto 0)
+  workflow_dispatch: {} # permite execução manual
+
+permissions:
+  contents: none
+
+concurrency:
+  group: keep-alive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Ping health end-to-end (Vercel → Render → Supabase)
+        shell: bash
+        run: |
+          URL="https://school-management-ui-brunoferreira94s-projects.vercel.app/api/support/health"
+
+          # O Render free hiberna; a primeira tentativa pode acordar o
+          # container (~1 min). Restaura com jitter simples.
+          for attempt in 1 2 3; do
+            echo "::group::Tentativa $attempt"
+            code=$(curl -sS -o health.json -w '%{http_code}' --max-time 165 "$URL" || echo 000)
+            echo "HTTP ${code}"
+            cat health.json 2>/dev/null | head -c 600; echo
+            echo "::endgroup::"
+            [ "$code" = "200" ] && exit 0
+            sleep 20
+          done
+
+          echo "::warning::Health check falhou após 3 tentativas — verifique o dashboard do Render."
+          exit 1
