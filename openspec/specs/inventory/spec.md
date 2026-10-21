@@ -1,7 +1,7 @@
 # inventory Specification
 
 ## Purpose
-TBD - created by archiving change integrate-inventory-screen. Update Purpose after archive.
+Esta capacidade gerencia o inventário de ativos/equipamentos da escola. Provê APIs e telas para CRUD e arquivamento de ativos (categoria, data de aquisição, custo, método de depreciação, status, local designado) e o anexo de documentos por ativo, com limites de tipo/tamanho de arquivo e metadados de upload.
 ## Requirements
 ### Requirement: Asset management API
 

@@ -1,7 +1,7 @@
 # automated-onboarding Specification
 
 ## Purpose
-TBD - created by archiving change implement-automated-onboarding. Update Purpose after archive.
+Esta capacidade automatiza a configuração inicial de novas escolas na plataforma. Provê um wizard guiado que coleta dados da organização, preferências acadêmicas e módulos a habilitar, além de importação em massa via CSV (alunos, responsáveis, equipe, horários, cursos e turmas) com validação, prévia dos registros, bloqueio de lotes inválidos e relatório de erros por linha.
 ## Requirements
 ### Requirement: Guided onboarding wizard
 

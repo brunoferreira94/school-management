@@ -1,7 +1,7 @@
 # self-service-portal Specification
 
 ## Purpose
-TBD - created by archiving change implement-self-service-portal. Update Purpose after archive.
+Esta capacidade provê o portal de autoatendimento para responsáveis e alunos, com autenticação segura (MFA) e acesso baseado em papéis que limita o responsável aos dependentes a ele vinculados. Pelo portal, o usuário consulta e baixa documentos financeiros (boletos/faturas), visualiza o status de pagamento em tempo real e acompanha as informações acadêmicas permitidas.
 ## Requirements
 ### Requirement: Portal authentication and roles
 

@@ -1,7 +1,7 @@
 # application-layer Specification
 
 ## Purpose
-TBD - created by archiving change refactor-application-layer-cqrs. Update Purpose after archive.
+Esta capacidade define o padrão arquitetural da camada Application do backend, baseado em CQRS com o LiteBus. Toda leitura e escrita é despachada via `ICommandMediator` e `IQueryMediator`, retornando `Result<T>` e eliminando o acoplamento direto de controllers a UseCases concretos.
 ## Requirements
 ### Requirement: CQRS Dispatch via LiteBus
 

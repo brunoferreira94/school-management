@@ -1,7 +1,7 @@
 # global-search Specification
 
 ## Purpose
-TBD - created by archiving change add-global-search. Update Purpose after archive.
+Esta capacidade provê uma barra de busca global acessível de qualquer tela (Ctrl+K ou ícone) para descobrir e navegar direto às funcionalidades sem percorrer menus. Indexa rotas com metadados (título, palavras-chave, categoria, ícone), aplica matching fuzzy tolerante a erros de digitação com ranking por score e filtra os resultados pelas permissões do usuário autenticado.
 ## Requirements
 ### Requirement: Quick feature discovery
 

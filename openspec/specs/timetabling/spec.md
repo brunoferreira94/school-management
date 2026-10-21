@@ -1,7 +1,7 @@
 # timetabling Specification
 
 ## Purpose
-TBD - created by archiving change add-teacher-availability. Update Purpose after archive.
+Esta capacidade leva a disponibilidade dos professores em conta no processo de montagem de horários (timetabling). O staff autorizado registra janelas de disponibilidade semanais por professor, dia da semana, hora inicial e final, com rejeição de sobreposições; o gerador automático de grade e os dados do domínio (histórico de horários, turmas, salas, módulos) residem no `AcademicContext`, escopados por tenant e com assembly de migrations próprio.
 ## Requirements
 ### Requirement: Teacher Availability Windows
 

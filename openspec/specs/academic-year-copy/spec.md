@@ -1,7 +1,7 @@
 # academic-year-copy Specification
 
 ## Purpose
-TBD - created by archiving change implement-academic-year-copy. Update Purpose after archive.
+Esta capacidade permite duplicar toda a configuração de um ano letivo para outro de forma assistida. Oferece um wizard com seleção de anos de origem e destino, opções seletivas de cópia (cursos, turmas, horários, planos, avaliações), exigência de confirmação explícita e rastreabilidade da execução da cópia.
 ## Requirements
 ### Requirement: Academic year duplication wizard
 

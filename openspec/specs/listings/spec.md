@@ -1,7 +1,7 @@
 # listings Specification
 
 ## Purpose
-TBD - created by archiving change add-skeleton-loading. Update Purpose after archive.
+Esta capacidade define o padrão de experiência de carregamento das páginas de listagem. Permite exibir componentes de skeleton que preservam a estrutura visual das tabelas enquanto os dados estão sendo carregados, e oferece um componente único de skeleton reutilizável para todas as telas de lista.
 ## Requirements
 ### Requirement: Skeleton loading for list pages
 

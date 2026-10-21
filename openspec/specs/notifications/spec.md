@@ -1,7 +1,7 @@
 # notifications Specification
 
 ## Purpose
-TBD - created by archiving change implement-notifications-reminders. Update Purpose after archive.
+Esta capacidade centraliza as notificações e lembretes da escola. Administradores configuram regras que combinam gatilhos (vencimento de faturas, limiar de presença, lembrete de eventos) com offsets de agendamento e audiências-alvo. O envio é multicanal (e-mail, push, SMS) respeitando as preferências de cada usuário, com retentativas em backoff exponencial para falhas transitórias.
 ## Requirements
 ### Requirement: Notification rule engine
 

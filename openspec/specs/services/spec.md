@@ -1,7 +1,7 @@
 # services Specification
 
 ## Purpose
-TBD - created by archiving change implement-services-screen. Update Purpose after archive.
+Esta capacidade gerencia o catálogo de serviços oferecidos pela escola. Expõe uma API HTTP JSON para CRUD de serviços com paginação, protegida por permissões (consultas exigem `VIEW_SERVICES` e criação/atualização/exclusão exigem `MANAGE_SERVICES`), e mantém o histórico de preços de cada serviço com registros de preço, data inicial e data final consultáveis por endpoint dedicado.
 ## Requirements
 ### Requirement: Services management API
 
