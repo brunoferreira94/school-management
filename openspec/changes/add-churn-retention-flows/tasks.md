@@ -11,10 +11,10 @@
 
 ## 2. Health score (risco de churn)
 
-- [ ] 2.1 API: calcular health score por conta (janelas 14/30 dias, sinais de login + ações-chave)
-- [ ] 2.2 API: endpoint read-only expondo score + sinais contribuintes
-- [ ] 2.3 UI: widget de contas em risco no dashboard do owner
-- [ ] 2.4 Limiares conservadores validados contra dados reais antes de exibir
+- [x] 2.1 API: calcular health score por conta (janelas 14/30 dias, sinais de login + ações-chave) ✅ 2026-10-21 commit 2fddd15 — `ChurnHealthScore` pura (pesos login≤45/ações≤40/volume30d≤15) + 6 testes unitários
+- [x] 2.2 API: endpoint read-only expondo score + sinais contribuintes ✅ 2fddd15 — GET /api/owner/retention/health e /api/owner/tenants/{id}/retention-health (Permission:owner.read); fonte = AuditLogs.TenantId (migration AddTenantIdToAuditLogs)
+- [x] 2.3 UI: widget de contas em risco no dashboard do owner ✅ 2026-10-21 commit 88df6a5 — app-retention-risk-widget na aba Prontidão; ship-dark controlado por `ChurnHealth:WidgetEnabled` (staging/dev=true, prod=false)
+- [ ] 2.4 Limiares conservadores validados contra dados reais antes de exibir (iniciado: limiares versionados + flag ship-dark; falta coletar dados reais no staging e flipar a flag em prod)
 
 ## 3. Expansion prompt (usage-based)
 
@@ -36,6 +36,6 @@
 ## 6. Métricas e verificação
 
 - [ ] 6.1 Instrumentar NRR, taxa de save no cancel screen, % contas em risco reativadas
-- [ ] 6.2 Testes unitários (cancel-flow, health score) + smoke E2E do fluxo de cancelamento
+- [ ] 6.2 Testes unitários (cancel-flow, health score) + smoke E2E do fluxo de cancelamento (parcial: health score 6/6 ✅; falta cancel-flow + smoke E2E)
 - [x] 6.3 `openspec validate add-churn-retention-flows --strict` verde
  origin/main

@@ -22,7 +22,7 @@
 
 ## Qualidade
 
-- [ ] Criar suíte E2E Cypress cobrindo fluxo positivo e fluxos negativos. (owner: qa)
+- [x] Criar suíte E2E Cypress cobrindo fluxo positivo e fluxos negativos. (owner: qa) ✅ 2026-10-21 commit a36ac40 — cypress/e2e/portal-registration.cy.ts (positivo: register→verificação→reenvio; negativos: dup 400, rate limit 429 na 6ª tentativa, sub inválido; analytics p/ consentimento). Obs: cypress/e2e/portal-registration.spec.ts legada pode estar red hôm que rodar CI — reconciliar/remover
 - [ ] Adicionar testes unitários para link no login e tela de email-verification. (owner: qa)
 - [ ] Adicionar testes automatizados de rate limiting no backend. (owner: qa)
 - [ ] Validar não regressão de permissões/escopo de responsável no login do portal. (owner: qa)

@@ -29,3 +29,9 @@ Próximos passos
 Documentação pós-implementação
 
 - Após integração e configuração, documentar no `README.md` os provedores habilitados, fluxos de webhook, passos para reinstalar chaves e o painel de conciliação.
+
+---
+
+## Decisão de gateway (2026-10-21)
+
+**Dual gateway: Asaas + Stripe** — autorizado por Bruno Ferreira (founder). O `SubscriptionGatewayAbstraction` deve isolar providers; Asaas como primary BRL (pix/boleto/carnê), Stripe para USD/internacional. Desbloqueia a execução das tasks 1–5 deste change.

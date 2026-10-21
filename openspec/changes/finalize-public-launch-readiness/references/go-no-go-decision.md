@@ -20,3 +20,9 @@
 | Data | Fase | Decisão | Assinatura |
 |---|---|---|---|
 | | | | |
+
+---
+
+## Decisão registrada (2026-10-21)
+
+**GO** — autorizado por Bruno Ferreira (founder). Lançamento público segue vigente: UI na Vercel, API no Render, DB no Supabase; keep-alive ativo. Pendências operacionais monitoradas: staging no Render requer cartão no workspace (billing), revisão jurídica dos drafts (DPA/contrato) em aberto, e rotina de sign-off de mudanças de schema/migração.
