@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Activation checklist as director path
 
@@ -17,8 +17,6 @@ The system SHALL present an activation checklist after onboarding that evolves f
 - **WHEN** the view is recorded
 - **THEN** the system shows a 200ms confirmation micro-interaction
 - **AND** the checklist advances to the next loop (announcement) as primary
-
-## ADDED Requirements
 
 ### Requirement: Teacher invitation with magic link
 

@@ -1,6 +1,6 @@
 ## MODIFIED Requirements
 
-### Requirement: Guided onboarding wizard (REDUZIDO)
+### Requirement: Guided onboarding wizard
 
 The system SHALL provide a simplified onboarding flow with only 3 critical steps: (1) Welcome modal with video + seed data option, (2) One-click seed application or CSV upload for first class group, (3) First real result visible before any further configuration.
 
@@ -15,6 +15,12 @@ The system SHALL provide a simplified onboarding flow with only 3 critical steps
 - **GIVEN** the admin selects the standard template
 - **WHEN** they confirm the seed
 - **THEN** the system provisions sample class groups, calendar, and invites user to import real data
+
+#### Scenario: Complete onboarding steps
+
+- **GIVEN** a new administrator logs in for the first time
+- **WHEN** they complete each onboarding step and submit the final confirmation
+- **THEN** the tenant is provisioned with the chosen modules enabled and the wizard marks the onboarding as completed
 
 ## ADDED Requirements
 
