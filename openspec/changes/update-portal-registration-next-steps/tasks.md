@@ -4,7 +4,7 @@
 
 - [x] Inventariar dependências de spec: self-service-portal, notifications, communications, automated-onboarding, academic-year. (owner: product)
 - [x] Estruturar pacote OpenSpec completo para o roadmap de registro. (owner: product)
-- [x] Validar o change via openspec validate --strict. (owner: product) ✅ 2026-10-21 — spec consistente (scripts/validate_openspec.sh: package válido; nenhuma violação)
+- [x] Validar o change via openspec validate --strict. (owner: product) ✅ 2026-10-21 — `npx @fission-ai/openspec validate update-portal-registration-next-steps --strict` → "Change is valid" (corrigidos 2 cenários omitidos no delta MODIFIED de self-service-portal; `validate_openspec.sh` local também corrigido — bug de contagem do `grep -c`)
 
 ## Backend
 
