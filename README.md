@@ -2,8 +2,8 @@
 
 > Plataforma completa de gestão escolar — multi-tenant, moderna e intuitiva.
 
-[![Backend](https://img.shields.io/badge/.NET-8-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
-[![Frontend](https://img.shields.io/badge/Angular-17-DD0031?logo=angular)](https://angular.io/)
+[![Backend](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![Frontend](https://img.shields.io/badge/Angular-22-DD0031?logo=angular)](https://angular.io/)
 [![Database](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql)](https://www.postgresql.org/)
 [![Auth](https://img.shields.io/badge/Auth0-EB5424?logo=auth0)](https://auth0.com/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -47,24 +47,27 @@ O **School Management SaaS** é uma plataforma multi-tenant de gestão escolar q
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Cloudflare Tunnel                        │
-│                           (HTTPS)                               │
+│                       Vercel (CDN + proxy)                      │
+│        https://school-management-ui-*.vercel.app                │
+│        rewrites: /api/* → Render (same-origin, sem CORS         │
+│        necessário no fluxo principal)                           │
 └──────────────────────────────┬──────────────────────────────────┘
                                │
 ┌──────────────────────────────▼──────────────────────────────────┐
-│                         Nginx (Reverse Proxy)                   │
-│                    ┌─────────┴─────────┐                        │
-│                    │                   │                        │
-│              ┌─────▼─────┐      ┌─────▼─────┐                  │
-│              │  Frontend  │      │   API     │                  │
-│              │  (Angular) │      │  (.NET 8) │                  │
-│              │  Port 80   │      │  Port 5066│                  │
-│              └────────────┘      └─────┬─────┘                  │
-│                                        │                        │
-│                                  ┌─────▼─────┐                  │
-│                                  │ PostgreSQL │                  │
-│                                  │  Port 5432 │                  │
-│                                  └───────────┘                  │
+│              Render (Git-Connected, Docker, free tier)          │
+│      https://school-management-api-sik5.onrender.com            │
+│   .NET 10 (Port 5000)  ·  hibernação por inatividade (~15 min)  │
+│   CI-friendly: /api/support/health · /metrics (Prometheus)      │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │
+┌──────────────────────────────▼──────────────────────────────────┐
+│                  Supabase (PostgreSQL 16, ca-central-1)         │
+│    SchoolManagementDb · pooler aws-0-ca-central-1               │
+│    free tier: pausa após ~7 dias de inatividade                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ .github/workflows/keep-alive.yml (hora) pontua a cadeia  │   │
+│  │ toda → mantém os 3 serviços vivos                        │   │
+│  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -87,9 +90,9 @@ O **School Management SaaS** é uma plataforma multi-tenant de gestão escolar q
 ### Backend
 | Tecnologia | Versão | Propósito |
 |------------|--------|-----------|
-| .NET | 8.0 | Runtime |
-| ASP.NET Core | 8.0 | Web API |
-| Entity Framework Core | 8.0 | ORM |
+| .NET | 10.0 | Runtime |
+| ASP.NET Core | 10.0 | Web API |
+| Entity Framework Core | 10.0 | ORM |
 | LiteBus | Latest | CQRS Mediator |
 | PostgreSQL | 16 | Banco de dados |
 | Auth0 | - | Autenticação |
@@ -100,7 +103,7 @@ O **School Management SaaS** é uma plataforma multi-tenant de gestão escolar q
 ### Frontend
 | Tecnologia | Versão | Propósito |
 |------------|--------|-----------|
-| Angular | 17+ | Framework |
+| Angular | 22 | Framework |
 | TypeScript | 5+ | Linguagem |
 | Tailwind CSS | 3+ | Estilos |
 | Angular CDK | 17+ | Drag & Drop, a11y |
@@ -112,9 +115,10 @@ O **School Management SaaS** é uma plataforma multi-tenant de gestão escolar q
 ### Infraestrutura
 | Tecnologia | Propósito |
 |------------|-----------|
-| Docker + Docker Compose | Containerização |
-| Nginx | Reverse proxy + SSL |
-| Cloudflare Tunnel | Exposição segura |
+| Docker + Docker Compose | Containerização (self-hosted alternativo) |
+| Vercel | Hosting/Aha deploy produção (front) |
+| Render | Hosting produção (API) |
+| Nginx | Reverse proxy + SSL (self-hosted alternativo) |
 | Grafana | Dashboards |
 | Prometheus | Métricas |
 
@@ -128,7 +132,7 @@ school-management/
 ├── 📄 PRD.md                       # Product Requirements Document
 ├── 📄 DEPLOY.md                    # Guia de deploy
 │
-├── 📁 school-management-api/       # Backend (.NET 8)
+├── 📁 school-management-api/       # Backend (.NET 10) — submodule
 │   ├── 📁 src/
 │   │   ├── 📁 SchoolManagement.Domain/         # Entidades, agregados
 │   │   ├── 📁 SchoolManagement.Application/    # Casos de uso, DTOs
@@ -138,7 +142,7 @@ school-management/
 │   ├── 📁 docs/                                # Documentação da API
 │   └── 📄 README.md
 │
-├── 📁 school-management-ui/        # Frontend (Angular 17)
+├── 📁 school-management-ui/        # Frontend (Angular 22) — submodule
 │   ├── 📁 src/
 │   │   ├── 📁 app/
 │   │   │   ├── 📁 core/                        # Auth, guards, interceptors
@@ -351,31 +355,37 @@ https://localhost:7046/swagger
 
 ## 🚢 Deploy
 
-### Docker Compose (Recomendado)
+### Produção (cloud — atual)
+
+A topoologia de produção está hospedada em three platforms:
+
+| Camada | Serviço | URL | Observações |
+|--------|---------|-----|-------------|
+| Frontend | **Vercel** (Angular build) | `https://school-management-ui-*.vercel.app` | rewrites `/api/*` → API via proxy same-origin |
+| API | **Render** (Docker, Git-connected) | `https://school-management-api-sik5.onrender.com` | free tier hiberna após ~15 min |
+| Banco | **Supabase** (PostgreSQL 16) | projeto `cuiurrqwdugajuyaaaef` (ca-central-1) | free tier pausa após ~7 dias sem uso |
+
+```bash
+# Deploy do front: push para main no repo school-management-ui
+git push origin main                     # dentro de school-management-ui/
+
+# Deploy da API: push para main no repo school-management-api (Render rebuilda)
+# ou trigger manual via API/dashboard
+```
+
+- **Health:** `/api/support/health` (após o proxy da Vercel: `https://school-management-ui-*.vercel.app/api/support/health`)
+- **Métricas:** `/metrics` (Prometheus)
+- **Keep-alive:** `.github/workflows/keep-alive.yml` pinga a cadeia inteira a cada hora (evita pausar o Supabase e cold start do Render)
+- ⚠️ **CORS:** a API espera `Cors__AllowedOrigins__0/1` no Render — qualquer novo CONTEXTO de deploy (preview/front novo) precisa ser adicionada lá
+
+> 📖 [Guia completo de deploy](./DEPLOY.md)
+
+### Docker Compose (self-hosted — alternativo)
 
 ```bash
 # Produção
 docker compose -f docker-compose.prod.yaml up -d --build
 ```
-
-### Cloudflare Tunnel
-
-```bash
-cloudflared tunnel run school-management
-```
-
-### Variáveis de Ambiente
-
-| Variável | Descrição | Obrigatório |
-|----------|-----------|-------------|
-| `DB_USER` | Usuário PostgreSQL | Sim |
-| `DB_PASSWORD` | Senha PostgreSQL | Sim |
-| `AUTH0_DOMAIN` | Domínio Auth0 | Sim |
-| `AUTH0_CLIENT_ID` | Client ID Auth0 | Sim |
-| `AUTH0_CLIENT_SECRET` | Client Secret Auth0 | Sim |
-| `AUTH0_AUDIENCE` | Audience da API | Sim |
-
-> 📖 [Guia completo de deploy](./DEPLOY.md)
 
 ---
 

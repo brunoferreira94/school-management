@@ -1,93 +1,106 @@
-# School Management SaaS - Deploy Guide
+# School Management SaaS — Guia de Deploy
 
-## Pré-requisitos
+> **Produção (out/2026):** Vercel (front) → Render (API, Docker) → Supabase (PostgreSQL).
+> Docker Compose + Cloudflare continuam documentados como alternativa self-hosted no fim deste guia.
 
-- Docker 24+
-- Docker Compose 2+
-- Auth0 account (com API configurada)
+---
 
-## Deploy Rápido (docker-compose)
+## 🗺️ Topologia de produção
 
-### 1. Configurar variáveis de ambiente
+| Camada | Plataforma | Recurso |
+|--------|------------|---------|
+| Frontend | Vercel | projeto `school-management-ui` (git `brunoferreira94/school-management-ui`, branch `main`) |
+| API | Render | serviço `school-management-api` → `https://school-management-api-sik5.onrender.com` |
+| Banco | Supabase | projeto `SchoolManagementDb` (`cuiurrqwdugajuyaaaef`, `ca-central-1`) |
+| Auth | Auth0 | domain `rare-softwares` (`us.auth0.com`) |
+| Pagamentos | Asaas | sandbox/prod conforme env |
+
+O front roteia `/api/*` direto para a API pelo rewrite do `vercel.json` (proxy same-origin), então o browser **não** executa CORS no fluxo principal. CORS fica configurado na API via `Cors__AllowedOrigins__0/1` para chamadas diretas (ex.: previews, apps nativos, integrações).
+
+## 🔩 Como funcionam os deploys
+
+### Front (Vercel)
 
 ```bash
-cp .env.example .env
-# Editar .env com suas credenciais
+cd school-management-ui
+git push origin main          # branch `main` → redeploy produção (vercel)
+# development gera preview, não produção
 ```
 
-### 2. Build e Deploy
+- Configuração: `vercel.json` (rewrites) fica na raiz e é copiado pro output do build (commit `35b65dc`).
+- ⚠️ Se o subdomínio Render mudar, atualizar `vercel.json:5` e dar push.
+
+### API (Render)
+
+- Serviço Git-connected: `push` no branch default do repo `school-management-api` dispara build/deploy.
+- Trigger manual/API (necessário pós mudança de env vars via API, quando não auto-disparar):
+  ```bash
+  RENDER_API_KEY=... # https://dashboard.render.com/account#api-keys
+  curl -X POST -H "Authorization: Bearer $RENDER_API_KEY" \
+       -H 'Content-Type: application/json' \
+       https://api.render.com/v1/services/srv-d82eofrbc2fs73b4jh1g/deploys \
+       -d '{"clearCache":"do_not_clear"}'
+  ```
+- Últimas env vars via `PUT /v1/services/.../env-vars` (a lista completa precisa ser enviada — a **operação substitui tudo**).
+- **Variáveis** (atuação cloud): `ASPNETCORE_ENVIRONMENT=Production`, `ConnectionStrings__DefaultConnection` (Supabase pooler), `Jwt__*`, `Auth0__*`(+Management), `Asaas__*`, `Cors__AllowedOrigins__0/1`.
+
+### Banco (Supabase)
+
+- Free tier **pausa** o banco pós ~7 dias sem queries — a API **causa crash-loop (`SIGSEGV/exit 139`) na inicialização** quando o banco está inacessível. Não assustar: restaurar o projeto no dashboard (`Restore`) ou via API:
+  ```bash
+  SUPABASE_ACCESS_TOKEN=...
+  curl -X POST -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+       https://api.supabase.com/v1/projects/cuiurrqwdugajuyaaaef/restore
+  ```
+
+## 🏥 Health & Monitoramento
+
+| Endpoint | Uso |
+|----------|-----|
+| `/api/support/health` | saúde completa — 200/503 + checks (DB/memória/disco/thread) |
+| `/api/support/ready`, `/api/support/live` | k8s/readiness/liveness |
+| `/metrics` | Prometheus |
+
+- **Keep-alive:** `.github/workflows/keep-alive.yml` — cron por hora no `main` do repo raiz (custo zero: repo público). Ele acorda o Render e mantém o Supabase ativo; falha depois de 3 pings → a notificação do GitHub chega por e-mail.
+- Prometheus local: `monitoring-package-api/observability/` (docker) — o `prometheus.yml` também scrapeia a API cloud.
+
+## 🚦 Incidentes comuns
+
+| Sintoma | Causa | Resolução |
+|---------|-------|-----------|
+| `x-render-routing: no-server` no `*.onrender.com` | URL de serviço removida/renomeada | conferir slug do serviço no dashboard; atualizar `vercel.json` se necessário |
+| Render `server_failed` (`nonZeroExit: 139`) repetidos | banco Supabase pausado | Restaurar projeto no Supabase + redeploy |
+| Front 404 sem ACAO/SSO | deployment "congelado" sem file tree | resetar deploy novo (commit vazio ou redeploy na UI) |
+| `BLOCKED (COMMIT_AUTHOR_REQUIRED)` | commit author não vinculado à conta Vercel | commit com o e-mail da conta (`brunolpcdz@hotmail.com`) |
+
+## 💾 Backup
 
 ```bash
-# Build das imagens
+# Supabase (via CLI ou dashboard) — banco produção
+supabase db dump --project-id cuiurrqwdugajuyaaaef -f backup.sql
+# pg_dump direto também funciona com a connection string do pooler
+```
+
+---
+
+## 🐳 Alternativo: self-hosted com Docker Compose
+
+> `docker-compose.prod.yaml` (guiado no CI) é o compose atual. O antigo `docker-compose.prod.yml` foi **removido** em 2026-10 (divergia de envs/typos: `STRIPE_WEBHOOk_SECRET`, DB e portas).
+
+```bash
+cp .env.example .env # preencher com dotnet user-secrets (docs are GITHUB_ACTIONS_SECRETS)
 docker compose -f docker-compose.prod.yaml build
-
-# Iniciar serviços
 docker compose -f docker-compose.prod.yaml up -d
-
-# Ver logs
-docker compose -f docker-compose.prod.yaml logs -f
-```
-
-### 3. Inicializar banco de dados
-
-```bash
 docker compose -f docker-compose.prod.yaml exec api dotnet ef database update
 ```
 
-## Deploy com Cloudflare Tunnel
-
-### 1. Configurar Cloudflare Tunnel
+Cloudflare Tunnel (opcional, para expor sem porta pública):
 
 ```bash
-# Instalar cloudflared
-curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared
-chmod +x /usr/local/bin/cloudflared
-
-# Autenticar
 cloudflared tunnel login
-
-# Criar tunnel
 cloudflared tunnel create school-management
-
-# Configurar
-cloudflared tunnel route dns school-management app.suaescola.com
-```
-
-### 2. Iniciar com tunnel
-
-```bash
-# Iniciar aplicação
-docker compose -f docker-compose.prod.yaml up -d
-
-# Iniciar tunnel (em outro terminal)
+cloudflared tunnel route dns school-management app.suadominio.com
 cloudflared tunnel run school-management
 ```
 
-## Variáveis de Ambiente
-
-| Variável | Descrição | Obrigatório |
-|----------|-----------|-------------|
-| `DB_USER` | Usuário do PostgreSQL | Sim |
-| `DB_PASSWORD` | Senha do PostgreSQL | Sim |
-| `AUTH0_DOMAIN` | Domínio Auth0 | Sim |
-| `AUTH0_CLIENT_ID` | Client ID do Auth0 | Sim |
-| `AUTH0_CLIENT_SECRET` | Client Secret do Auth0 | Sim |
-| `AUTH0_AUDIENCE` | Audience da API Auth0 | Sim |
-
-## Monitoramento
-
-- **API Health:** http://localhost:5000/health
-- **Grafana:** http://localhost:3000 (admin/admin)
-- **Prometheus:** http://localhost:9090
-
-## Backup do Banco
-
-```bash
-docker compose -f docker-compose.prod.yaml exec postgres pg_dump -U postgres SchoolManagementDb > backup_$(date +%Y%m%d).sql
-```
-
-## Restaurar Backup
-
-```bash
-cat backup.sql | docker compose -f docker-compose.prod.yaml exec -T postgres psql -U postgres SchoolManagementDb
-```
+Monitoramento local (docker): Grafana http://localhost:3000 · Prometheus http://localhost:9090

@@ -12,4 +12,4 @@ Objetivos
 
 Links
 
-- OpenSpec Change: `openspec/changes/integrate-inventory-screen`
+- OpenSpec Change: `openspec/changes/archive/2025-11-11-integrate-inventory-screen`

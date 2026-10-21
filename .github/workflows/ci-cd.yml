@@ -315,9 +315,24 @@ jobs:
           docker build -t schoolmanagement-api:latest -f school-management-api/Dockerfile school-management-api/
           docker build -t schoolmanagement-ui:latest -f school-management-ui/Dockerfile school-management-ui/
 
+      # Deploy API no Render — opt-in: crie o Deploy Hook no dashboard do Render
+      # (Settings → Deploy Hook) e salve em Secrets como RENDER_DEPLOY_HOOK;
+      # crie também a variável de repo RENDER_DEPLOY_HOOK_ENABLED=true.
+      - name: Trigger Render deploy (API)
+        if: vars.RENDER_DEPLOY_HOOK_ENABLED == 'true'
+        run: |
+          response=$(curl -sf -X POST "$RENDER_DEPLOY_HOOK_URL")
+          echo "Render deploy hook acionado: $response"
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK }}
+
+      # O frontend opera via deploy automático da Vercel (git-connected ao
+      # repo school-management-ui). O um botão no push da main dispara build.
+
       - name: Deployment summary
         run: |
           echo "✅ Build completed successfully"
           echo "📦 API: ./publish/api"
           echo "🌐 UI: school-management-ui/dist/"
           echo "🐳 Docker images: schoolmanagement-api:latest, schoolmanagement-ui:latest"
+          echo "☁️ Produção: Vercel (front, auto) · Render (API) · Supabase (DB)"

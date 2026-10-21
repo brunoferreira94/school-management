@@ -24,6 +24,17 @@ scrape_configs:
     metrics_path: "/metrics"
     scrape_interval: 10s
 
+  # API em produção (Render, free tier hiberna — aquecida pelo keep-alive CI)
+  # O Render /metrics é público (confirmado); usa /api/support/health path
+  - job_name: "school-management-prod"
+    metrics_path: "/metrics"
+    scrape_interval: 60s
+    static_configs:
+      - targets: ["school-management-api-sik5.onrender.com"]
+        labels:
+          environment: "production"
+          platform: "render"
+
   - job_name: "otel-collector"
     static_configs:
       - targets: ["otel-collector:8889"]
