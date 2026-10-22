@@ -12,6 +12,12 @@ The system SHALL provide a dedicated portal for guardians and students with secu
 - **WHEN** they attempt to authenticate before e-mail verification
 - **THEN** the system denies full portal access, guides the user to verification, and records an audit event
 
+#### Scenario: Guardian access scope
+
+- **GIVEN** a guardian associated with two students
+- **WHEN** they sign in to the portal
+- **THEN** they can view data for those students only and cannot access other students' information
+
 ### Requirement: Profile management and audit
 
 The system SHALL let users update personal contact information subject to validation rules and SHALL record an audit trail of changes requiring administrator approval when required by policy. Registration, verification resend, rate-limit blocks, and first-login events SHALL also be auditable.
@@ -21,6 +27,12 @@ The system SHALL let users update personal contact information subject to valida
 - **GIVEN** repeated registration attempts from the same IP exceed policy threshold
 - **WHEN** the limit is reached
 - **THEN** the system returns HTTP 429, logs the blocking event with minimal sensitive data, and exposes the signal to observability dashboards
+
+#### Scenario: Update phone number
+
+- **GIVEN** a guardian edits their phone number
+- **WHEN** they submit the change
+- **THEN** the system validates the format, stores the new value pending approval if configured, and logs the change with timestamp
 
 ## ADDED Requirements
 

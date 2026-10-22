@@ -10,3 +10,9 @@ O sistema SHALL fornecer dashboards analíticos operacionais para equipes admini
 
 - **WHEN** um Owner abre o dashboard analítico operacional
 - **THEN** o sistema exibe SKI atual, tendência e taxa de adoção por feature, sinalizando itens <0,3 e <threshold de adoção
+
+#### Scenario: Apply dashboard filters
+
+- **GIVEN** a user with `VIEW_ANALYTICS` permission viewing the retention dashboard
+- **WHEN** they filter by a specific campus and academic year
+- **THEN** the dashboard refreshes to show metrics scoped to the selected campus and year within three seconds

@@ -10,3 +10,9 @@ O sistema SHALL guiar o admin através de um wizard de no máximo 3 passos crít
 
 - **WHEN** o admin conclui o setup e cai no painel
 - **THEN** o sistema apresenta hierarquia visual onde a primeira ação recomendada é a feature de maior retenção (ex.: criar primeira turma), e features de nicho aparecem em segundo plano
+
+#### Scenario: Complete onboarding steps
+
+- **GIVEN** a new administrator logs in for the first time
+- **WHEN** they complete each onboarding step and submit the final confirmation
+- **THEN** the tenant is provisioned with the chosen modules enabled and the wizard marks the onboarding as completed
