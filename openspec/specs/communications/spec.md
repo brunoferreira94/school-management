@@ -1,7 +1,7 @@
 # communications Specification
 
 ## Purpose
-TBD - created by archiving change implement-communications-screen. Update Purpose after archive.
+Esta capacidade cobre a gestão de comunicação da escola com responsáveis e alunos. Permite criar, editar, clonar e arquivar templates de mensagem (e-mail, SMS, push) com placeholders e conteúdo por canal, além de envios segmentados por série, turma, tag ou filtro customizado, com agendamento para data/hora futura com awareness de timezone.
 ## Requirements
 ### Requirement: Communication template management
 

@@ -1,7 +1,7 @@
 # advanced-analytics Specification
 
 ## Purpose
-TBD - created by archiving change implement-advanced-analytics. Update Purpose after archive.
+Esta capacidade entrega dashboards analíticos para gestão da operação da escola, com métricas de retenção, inadimplência, ocupação de turmas, desempenho de alunos e churn de responsáveis. Inclui drill-down por campus, curso e período, pipeline ETL para popular um warehouse analítico, atualização diária das métricas e visibilidade do status da última carga.
 ## Requirements
 ### Requirement: Operational analytics dashboards
 

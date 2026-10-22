@@ -1,7 +1,7 @@
 # session-autologout Specification
 
 ## Purpose
-TBD - created by archiving change add-inactivity-session-confirm. Update Purpose after archive.
+Esta capacidade resolve o problema de sessões ativas abandonadas em máquinas compartilhadas. Quando o usuário fica inativo por um tempo configurável (15, 30 ou 60 minutos, persistido em `localStorage` e com padrão de 30), a interface solicita confirmação de presença; sem resposta, a sessão é encerrada automaticamente (autologout) para proteção dos dados.
 ## Requirements
 ### Requirement: supported timeout values
 

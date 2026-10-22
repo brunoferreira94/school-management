@@ -1,7 +1,8 @@
 # PRD — School Management SaaS
 
 > Produto: Plataforma SaaS de Gestão Escolar
-> Stack: .NET 8 (Backend) + Angular 17 (Frontend) + PostgreSQL + Auth0
+> Stack (out/2026): .NET 10 (Backend) + Angular 22 (Frontend) + PostgreSQL 16 (Supabase) + Auth0 + Asaas
+> Produção: Vercel (front) → Render (API) → Supabase (BD) — ver `DEPLOY.md`
 > Branch: `development`
 
 ---
@@ -22,15 +23,11 @@ Plataforma SaaS multi-tenant para gestão escolar completa. O administrador da e
 - 41 migrations do banco
 - Observabilidade (Prometheus + Grafana)
 
-### 2.2 Frontend (UI) — ~30% funcional
-- **20 componentes HTML** com layout (design system aplicado)
-- **51 services Angular** — mas **apenas 4 chamam a API de verdade**
-- 24 features com API mas **sem UI**
-- Portal do aluno/responsável **inexistente**
-- Pricing/Checkout **inexistente**
+### 2.2 Frontend (UI) — retrato pré-go-live (2026-07)
+> As tabelas de services abaixo são um retrato do sprint pré-go-live e podem estar desatualizadas. A produção está online (Vercel + Render + Supabase) e a paridade UI↔API evoluiu significativamente. O backlog **atual** vive em `openspec/changes/`.
 
-### 2.3 Gap Principal
-Os services do Angular estão escritos mas a maioria não faz chamadas HTTP reais. Os componentes HTML existem mas não se conectam ao backend.
+### 2.3 Gap Principal (histórico)
+> Registro histórico: havia services Angular escritos antes das chamadas HTTP existirem; o gap foi fechado progressivamente durante o go-live. Reavalie com `grep -r apiBaseUrl school-management-ui/src/app` quando necessário.
 
 ---
 

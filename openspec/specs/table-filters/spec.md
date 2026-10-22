@@ -1,7 +1,7 @@
 # table-filters Specification
 
 ## Purpose
-TBD - created by archiving change add-table-search-filters. Update Purpose after archive.
+Esta capacidade provê a busca e filtragem reutilizável das tabelas de listagem do frontend. Um utilitário comum suporta busca textual, campos de filtro configuráveis, debounce de 500ms e persistência do estado dos filtros em `localStorage` por chave de tabela, aplicar-se às listas de alunos (busca por nome, CPF e campos visíveis) e demais listas sem recarregar a página.
 ## Requirements
 ### Requirement: Reusable table search and filter state
 

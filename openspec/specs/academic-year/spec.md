@@ -1,7 +1,7 @@
 # academic-year Specification
 
 ## Purpose
-TBD - created by archiving change add-academic-year-aggregate. Update Purpose after archive.
+Esta capacidade define o ano letivo como agregado raiz e unidade de escopo temporal da escola. Provê CRUD de anos letivos por tenant (nome, slug, datas, status Draft/Active/Archived), impede anos ativos com intervalos de datas sobrepostos e garante que entidades que operam dentro de um ano letivo (cursos, turmas, planos de aula, horários, avaliações, eventos) fiquem vinculadas a um ano letivo válido do próprio tenant.
 ## Requirements
 ### Requirement: Academic year management
 

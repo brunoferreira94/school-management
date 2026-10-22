@@ -1,7 +1,7 @@
 # classgroup-copy Specification
 
 ## Purpose
-TBD - created by archiving change implement-copy-classgroups-screen. Update Purpose after archive.
+Esta capacidade permite duplicar uma turma (classgroup) existente em uma nova instância pela interface. O usuário com permissão adequada seleciona a turma de origem, escolhe o que copiar (horários, professores, capacidade, atribuições), define destino por ano letivo/período e um sufixo/prefixo opcional para o código, garantindo unicidade e preservando as configurações copiadas.
 ## Requirements
 ### Requirement: Classgroup duplication UI
 

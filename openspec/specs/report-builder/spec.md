@@ -1,7 +1,7 @@
 # report-builder Specification
 
 ## Purpose
-TBD - created by archiving change add-custom-report-builder. Update Purpose after archive.
+Esta capacidade permite que administradores da escola criem relatórios personalizados a partir de templates. Cobre o gerenciamento completo de templates de relatório (CRUD, duplicação, ativação/desativação) com isolamento multi-tenant, além da composição de layout e geração dos relatórios definidos por cada template.
 ## Requirements
 ### Requirement: Report template management
 

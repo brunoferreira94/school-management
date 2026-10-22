@@ -5,6 +5,21 @@ Todas as alterações notáveis deste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [Unreleased]
+
+### Corrigido
+- Deploy de produção restaurado: recriado deploy da UI após deployment Vercel congelado (file tree ausente) e desativação do Deployment Protection
+- Env vars no Render atualizadas (incl. `Cors__AllowedOrigins__0/1`) — browser disciplina CORS para os 2 domínios de produção
+- `development` sincronizada com `main` nos 2 submódulos (18/7 commits FF) e repo pai em merge
+
+### Adicionado
+- Workflow `keep-alive.yml`: ping por hora em `main` (free, repo público) que mantém Render quente e impede pause do Supabase
+- Topologia de produção documentada (Vercel + Render + Supabase) no README/DEPLOY
+- Branch backup `backup/development-pre-sync` (API) preservando linhagem local divergente
+
+### Removido
+- `docker-compose.prod.yml` legacy (duplicado de `docker-compose.prod.yaml` com envs divergentes + typo `STRIPE_WEBHOOk_SECRET`)
+
 ## [1.0.0] - 2026-07-31
 
 ### Adicionado

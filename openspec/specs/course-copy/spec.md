@@ -1,7 +1,7 @@
 # course-copy Specification
 
 ## Purpose
-TBD - created by archiving change implement-copy-courses-screen. Update Purpose after archive.
+Esta capacidade permite criar novos cursos a partir de um curso existente usado como modelo. O administrador seleciona o curso de origem e escolhe o que duplicar (currículo, avaliações, carga horária, precificação), preservando vínculos de módulos, disciplinas e pré-requisitos com novos identificadores gerados.
 ## Requirements
 ### Requirement: Course duplication selection
 
