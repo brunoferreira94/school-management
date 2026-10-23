@@ -1,14 +1,14 @@
 ## 1. Backend
-- [ ] 1.1 Novo tipo de bloco `ai-narrative` no modelo de templates do report-builder
-- [ ] 1.2 `AiDraftService` gera narrativa a partir dos dados dos outros blocos do relatório (mesma base), citando os números
-- [ ] 1.3 Estado "review required" no bloco: exportação bloqueada enquanto narrativa não aprovada; trilha de auditoria de quem aprovou
-- [ ] 1.4 Template padrão "Resumo executivo mensal" (matrículas, inadimplência, frequência, evasão) com bloco de narrativa
+- [x] 1.1 Novo tipo de bloco `ai-narrative` no modelo de templates (renderer + catálogo de blocos disponíveis + DI)
+- [x] 1.2 `ReportNarrativeService` compõe a narrativa a partir dos dados JÁ buscados para os blocos do próprio relatório (`context.Data`: reportCard/attendance/financialSummary), citando os números — original imutável (`NarrativeOriginalContent`, padrão ai-drafts)
+- [x] 1.3 Estado de revisão na geração: relatório entra em `PendingNarrativeReview` sem PDF; download bloqueado (400) até aprovação; aprovação (com edição opcional) re-renderiza com badge "Aprovada", gera o PDF e registra auditoria (`NarrativeReviewedBy/AtUtc/Note`); rejeição preserva o trilho (migration `AddReportNarrativeReview`)
+- [ ] 1.4 Template padrão "Resumo executivo mensal" (matrículas, inadimplência, frequência, evasão) — **parcial: o modelo de relatório é por aluno (StudentReportCard/AttendanceReport/balance do aluno), então o bloco já dá resumo executivo por aluno; template de escola (nível institucional, matrículas/evasão agregadas) aguarda modelo de relatório por escola**
 
 ## 2. Frontend
-- [ ] 2.2 Bloco de narrativa no editor WYSIWYG: badge "pendente de revisão", editar antes de aprovar
-- [ ] 2.3 No preview, narrativa mostra os números citados destacados (hover → fonte do dado)
+- [x] 2.2 Bloco de narrativa: badge de estado no preview renderizado (pendente/aprovada com quem aprovou); na lista de relatórios gerados, painel de revisão com edição antes de aprovar + botão rejeitar + cadeado explicando exportação bloqueada (tab "✍ Narrativas pendentes")
+- [x] 2.3 No preview, números citados destacados como chips monoespaçados com hover "Fonte: dado do próprio relatório" (`data-basis`)
 
 ## 3. Testes
-- [ ] 3.1 API: exportação com bloco de narrativa não aprovado é bloqueada
-- [ ] 3.2 Unitário: narrativa gerada cita somente dados presentes nos blocos do próprio relatório
-- [ ] 3.3 E2E: diretor gera resumo mensal, revisa narrativa, aprova e exporta PDF
+- [x] 3.1 API: aprovação rejeita estados não-pendentes (já aprovada / não pendente); download bloqueado por estado na geração (PDF nunca produzido) — 3 testes do fluxo de revisão
+- [x] 3.2 Unitário: narrativa cita somente dados presentes nos blocos (6 testes — média/frequência/inadimplência, vazio não inventa, badges do renderer)
+- [ ] 3.3 E2E: diretor gera relatório, revisa narrativa, aprova e exporta PDF — **pende de ambiente E2E estável (staging em Render 402)**
