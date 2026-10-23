@@ -1,17 +1,23 @@
+# Tasks — Diário único → relatórios automáticos
+
 ## 1. Backend
-- [ ] 1.1 Modelar `WeeklyDiaryEntry` (aula dada, conteúdos, faltas registradas) por professor/turma/semana — ou reaproveitar LessonPlan/Assignments existentes como fonte
-- [ ] 1.2 `GET /api/diary/weekly/{teacherId}/{week}` e `POST /api/diary/weekly` (upsert)
-- [ ] 1.3 `POST /api/diary/weekly/{id}/coordination-report`: gera relatório de coordenação a partir dos dados do diário (sem novo lançamento)
-- [ ] 1.4 `POST /api/diary/report-card-comment-draft`: rascunho IA por aluno citando notas e frequência do diário (estado "review required", padrão ai-drafts)
-- [ ] 1.5 `POST /api/diary/lesson-plan-draft`: sugestão de plano com BNCC mapeada por disciplina/ano (editável, nunca salvo como final sem revisão)
+- [x] 1.1 `WeeklyDiaryEntry` por professor/turma/semana (upsert; migration `AddWeeklyDiaryAndDiaryDrafts`) — faltas **não** são redigitadas: vêm do Attendance existente (fonte única)
+- [x] 1.2 `GET /api/diary/weekly` (turma + semana, com faltas agregadas da semana) e `POST /api/diary/weekly` (upsert via claim staff_id)
+- [x] 1.3 `POST /api/diary/weekly/coordination-report`: relatório de coordenação gerado **somente** dos dados do diário (conteúdos, observações, faltas, professor) — sem novo lançamento
+- [x] 1.4 `POST /api/diary/report-card-comment-draft`: rascunho por aluno citando notas e faltas reais, status `PendingReview` (bloqueado até aprovação) — **v1: composição determinística com dados reais; integração com LLM externa quando `ai-drafts` for implementado**
+- [x] 1.5 `POST /api/diary/lesson-plan-draft`: plano com habilidades BNCC citadas no conteúdo, editável, revisão obrigatória — **v1: códigos BNCC informados na geração; catálogo completo já existe na tela /bncc**
 
-## 2. Frontend
-- [ ] 2.1 Tela do diário semanal do professor (lançamento único: aula + faltas + conteúdos)
-- [ ] 2.2 Botão "Gerar relatório para coordenação" com preview e exportação PDF
-- [ ] 2.3 Rascunho de comentário de boletim: revisão obrigatória antes de salvar (badge "pending review")
-- [ ] 2.4 Plano de aula com sugestão BNCC: código da habilidade pré-preenchido, edição livre
+## 2. Fluxo de revisão (padrão ai-drafts)
+- [x] `POST /api/diary/drafts/{id}/approve` (com edição opcional; OriginalContent preservado p/ auditoria) e `/reject` (com motivo) — dupla aprovação bloqueada
+- [x] `GET /api/diary/drafts?status=`: fila de revisão
 
-## 3. Testes
-- [ ] 3.1 API: relatório de coordenação contém exatamente os dados do diário (sem entrada duplicada)
-- [ ] 3.2 API: rascunho de comentário fica bloqueado para envio sem aprovação; trilha de auditoria registra quem aprovou
-- [ ] 3.3 E2E: professor lança diário → gera relatório → coordenação visualiza
+## 3. Frontend
+- [x] 3.1 `/diario`: diário semanal (lançamento único: conteúdos + observações; faltas read-only vindas da frequência), navegação por semana
+- [x] 3.2 Botão "Gerar relatório para coordenação" com preview + imprimir/PDF (print CSS)
+- [x] 3.3 Rascunhos com badge "pendente de revisão", edição inline, aprovar/rejeitar
+- [x] 3.4 Sidebar: item "Diário" (após Frequência)
+
+## 4. Testes
+- [x] 4.1 API: relatório contém exatamente os dados do diário (7 testes: upsert sem duplicar, relatório sem diário lança erro, rascunho cita notas/faltas, auditoria de aprovação + dupla aprovação bloqueada, plano com BNCC, isolamento por tenant)
+- [x] 4.2 Unitário frontend: carrega semana com faltas, salva, gera relatório, cria/aprova rascunhos (6 testes)
+- [ ] 4.3 E2E: professor lança diário → gera relatório → coordenação visualiza
