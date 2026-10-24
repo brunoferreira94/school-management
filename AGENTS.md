@@ -75,13 +75,12 @@ else
 ## 📁 Arquivos Criados
 | Arquivo | Descrição |
 |---------|-----------|
-| `/home/bruno/workspace/school-management/school-management-api/src/Infrastructure/Auth0/IAuth0Service.cs` | Interface comum |
-| `/home/bruno/workspace/school-management/school-management-api/src/Infrastructure/Auth0/MockAuth0Service.cs` | Implementação do mock |
-| `/home/bruno/workspace/school-management/school-management-api/src/Infrastructure/Auth0/ProductionAuth0Service.cs` | Implementação produção |
-| `/home/bruno/workspace/school-management/school-management-api/src/Infrastructure/Auth0/README.md` | Documentação do mock |
+| `/home/bruno/workspace/school-management/school-management-api/src/SchoolManagement.Infrastructure/Auth0/IAuth0Service.cs` | Interface comum + `Auth0AuthModeResolver` (decadência por `AUTH_MODE`) |
+| `/home/bruno/workspace/school-management/school-management-api/src/SchoolManagement.Infrastructure/Auth0/MockAuth0Service.cs` | Implementação do mock (tokens `mock|management-token-*`) |
+| `/home/bruno/workspace/school-management/school-management-api/src/SchoolManagement.Infrastructure/Auth0/ProductionAuth0Service.cs` | Implementação produção (client_credentials + /userinfo) |
 
-## 🚀 Próximos Passos
-1. **Registrar no DI container** (`Program.cs`): Adicionar registro de `IAuth0Service` com alternância via `AUTH_MODE`
-2. **Atualizar `appsettings.Development.json`**: Substituir valores Auth0 por mocks
-3. **Testar autenticação local** com mock ativado
-4. **Documentar uso no README principal** do projeto
+## 🚀 Status da implementação
+1. ~~**Registrar no DI container**~~ ✅ `RepositoryAndInfrastructureRegistration` — `AUTH_MODE=mock` força o mock mesmo com credenciais; sem `AUTH_MODE` haverá decadência automática pelo mock em desenvolvimento sem credenciais e Auth0 real em produção.
+2. **Atualizar `appsettings.Development.json`**: desnecessário — o mock não depende de credenciais; não colocar valores falsos no config para evitar ativar o serviço real.
+3. **Testar autenticação local** com mock ativado ✅ 9 testes (Auth0MockTests/ProductionAuth0ServiceTests).
+4. **Documentar uso no README principal**: `AUTH_MODE` documentado no próprio AGENTS.md e nos testes.

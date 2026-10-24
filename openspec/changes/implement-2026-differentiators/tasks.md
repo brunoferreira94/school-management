@@ -55,5 +55,5 @@ rodando a suíte `cypress/e2e/school-funnel.cy.ts` (8/8 verde após as correçõ
 ## 6. SelfServiceOnboarding (cadastro self-service da escola)
 - [ ] Endpoint `POST /api/onboarding/register-school` (nome, escola, e-mail, CPF/CNPJ, senha) → cria tenant + usuário pending + assinatura Free/trial
 - [ ] UI: rota `/cadastro` (escola) com validação, aceite dos termos e confirmação de e-mail (mock em dev)
-- [ ] Integração com o funil: `pricing` → `cadastro` → `checkout` (via `checkout-intents`) → onboarding guiado
+- [x] Integração com o funil: `pricing` → `cadastro` → `checkout` (via `checkout-intents`) → onboarding guiado (2026-10-24: `/cadastro/:planId` não perdia mais o plano — após o cadastro navega direto para `/checkout/:planId`, que cria a checkout-intent e redireciona para o gateway quando `checkoutUrl` presente, ou segue para a tela interna de sucesso; e2e live do checkout aguarda chaves de gateway)
 - [ ] E2E: `school-self-service-signup.cy.ts` (cadastro → trial ativo → primeira navegação)
