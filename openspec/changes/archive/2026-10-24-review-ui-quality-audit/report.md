@@ -43,9 +43,9 @@
 ## Ações recomendadas (backlog priorizado — trabalho futuro, não desta change)
 1. **[P1] `/impeccable animate`** — media query global `prefers-reduced-motion` + revisar overshoots.
 2. **[P1] `/impeccable document`** — DESIGN.md com tokens; depois migrar hex → token por feature (começando pelas 8 piores).
-3. **[P2] `/impeccable harden`** — `:focus-visible` global, aria-label nos icon buttons das features sem cobertura.
-4. **[P2] `/impeccable optimize`** — `loading="lazy"` + width/height nas 6 imagens.
-5. **[P2] Ajuste de token** — escurecer `--color-text-soft` ~1 tom (ex.: #64707c) para passar 4.5:1.
+3. ~~**[P2] `/impeccable harden`** — `:focus-visible` global, aria-label nos icon buttons das features sem cobertura.~~ **PARCIAL 2026-10-24**: `:focus-visible` global adicionado (ui `a681ff7`); aria-labels seguem abertos.
+4. ~~**[P2] `/impeccable optimize`** — `loading="lazy"` + width/height nas 6 imagens.~~ **RESOLVIDO 2026-10-24** (ui `a681ff7`): lazy nas 3 imagens externas/decorativas; logos de header ficam **eager por decisão** (são LCP/above-the-fold).
+5. ~~**[P2] Ajuste de token** — escurecer `--color-text-soft` ~1 tom (ex.: #64707c) para passar 4.5:1.~~ **RESOLVIDO 2026-10-24** (ui `a681ff7`): token agora `#646d79` — 4.97:1 sobre bg-app, 5.24:1 sobre surface, 4.51:1 sobre subtle.
 6. **[P3]** side-tab/bounce: registrar como decisão de design ou revisar em `/impeccable polish` futuro.
 
 > Re-executar `/impeccable audit` após os fixes para medir a evolução do score.
