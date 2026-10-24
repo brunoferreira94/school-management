@@ -47,13 +47,14 @@ flow can be exercised end-to-end without Asaas or Stripe keys.
 - **THEN** the `MockPaymentCheckoutService` returns a `checkoutUrl` with provider `MockPayment`
 - **AND** the local return route simulates a `COMPLETED` payment
 
-## MODIFIED Requirements
+## ADDED Requirements
 
-### Requirement: Pricing page CTAs lead to real checkout
+### Requirement: Pricing CTAs route through gateway checkout
 
-- **FROM**: CTAs navigated to `/checkout/:planId` which simulated payment with a timer
-- **TO**: CTAs still navigate to `/checkout/:planId`, but the checkout SHALL call
-  `POST /api/subscriptions/checkout-intents` and SHALL redirect to the provider's `checkoutUrl`
+The pricing page CTAs SHALL navigate to `/checkout/:planId`, where the checkout page SHALL call
+`POST /api/subscriptions/checkout-intents` and redirect to the provider's `checkoutUrl` when
+present. The checkout form SHALL collect name, e-mail and CPF for all payment methods, and card
+fields only when the payment method is credit card.
 
 #### Scenario: Pricing → gateway checkout
 
@@ -61,3 +62,9 @@ flow can be exercised end-to-end without Asaas or Stripe keys.
 - **WHEN** the visitor clicks a plan CTA
 - **THEN** the visitor lands on the checkout page for that plan
 - **AND** submitting the form creates a checkout intent and redirects to the provider
+
+#### Scenario: PIX checkout hides card fields
+
+- **GIVEN** the checkout page with payment method PIX (or boleto) selected
+- **WHEN** the visitor fills name, e-mail and CPF and confirms
+- **THEN** the checkout intent is created without any card data being requested

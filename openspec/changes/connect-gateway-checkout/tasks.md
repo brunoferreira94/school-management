@@ -1,29 +1,29 @@
 # Tasks — Conectar checkout ao gateway (checkout-intents)
 
 ## 1. API (mock local)
-- [ ] 1.1 Em `Environment/development` (e2e), registrar uma rota controller `GET /api/dev/checkout/return/{id}` que devolve o status do *intent* mockado (simula o retorno do provedor após pagamento)
-- [ ] 1.2 Garantir que `GatewayCheckoutRouter` degrade para `MockPaymentCheckoutService` quando `Asaas:ApiKey` e `Stripe:SecretKey` estão vazios (já implementado — validar com teste de roteamento)
-- [ ] 1.3 `CheckoutIntentResponse` já expõe `CheckoutUrl`; confirmar shape `Amount`/`Currency` no mock
+- [x] 1.1 `GET /api/dev/checkout/return/{id}` devolve o status mockado (só em Development) — existente, verificado
+- [x] 1.2 `GatewayCheckoutRouter` degrada para `MockPaymentCheckoutService` com chaves vazias (PIX/BOLETO/CARNE→Asaas|mock; CREDIT/DEBIT→Stripe|mock; default→Asaas|mock) — existente
+- [x] 1.3 `CheckoutIntentResponse` expõe `CheckoutUrl` + `Amount`/`Currency` (BRL) no mock — verificado via E2E local (200 com `checkoutUrl` demo-payments.local)
 
-## 2. UI — subscription.service (raiz)
-- [ ] 2.1 Exportar `createCheckoutIntent(payload)` (existe em `src/app/services/subscription.service.ts`) no serviço de checkout
-- [ ] 2.2 Adicionar helpers: `getTenantSubscription()`, `acceptTerms()` (se não exportados)
+## 2. UI — subscription.service
+- [x] 2.1 `createCheckoutIntent(payload)` exportado e usado pela checkout-page
+- [x] 2.2 `getTenantSubscription()` existe (`features/subscriptions/data/subscription.service.ts`); aceite de termos é fluxo próprio do ToU (`/privacy/terms-of-use/accept`), não do checkout
 
 ## 3. UI — checkout-page
-- [ ] 3.1 Substituir o `setTimeout` + `createSubscription` pelo `createCheckoutIntent`
-- [ ] 3.2 Enviar `Plan`, `BillingCycle`, `BillingType` (PIX/BOLETO/CREDIT), `Name`, `Email`, `Document`, `TotalPrice`
-- [ ] 3.3 Redirecionar para `checkoutUrl` (abrir em nova aba no dev; no mobile usar redirect)
-- [ ] 3.4 Na rota de retorno, consultar `GET /subscriptions/tenant` e navegar para `success` (ou `cancel`)
-- [ ] 3.5 Remover o formulário de cartão mock se for pagamento via *redirect* (PIX/boleto) — manter para CREDIT apenas se o gateway exigir
+- [x] 3.1 `setTimeout`/`createSubscription` já substituídos pelo `createCheckoutIntent`
+- [x] 3.2 Payload envia `Plan`, `BillingCycle`, `BillingType` (PIX/BOLETO/CREDIT via seletor), `Name`, `Email`, `Document`, `TotalPrice` — **fix de bug real (2026-10-24)**: o submit antigo lia `cardForm.value.name/email` inexistentes → payload sem nome/e-mail → 400 do backend; form agora tem name/email/cpf próprios
+- [x] 3.3 Redirect para `checkoutUrl` real via `window.open(url, '_self')`; checkoutUrl do mock (demo-payments.local) segue **retorno interno** em vez de sair do app para um domínio inexistente
+- [x] 3.4 Retorno do mock consulta `GET /subscriptions/tenant` antes de navegar para success (nota honesta: sem gateway real não há webhook — assinatura permanece Trial; Active pende de webhook em staging/produção)
+- [x] 3.5 Campos de cartão apenas para CREDIT (validators condicionais em `setBillingType`); PIX/BOLETO pedem só nome/e-mail/CPF
 
 ## 4. Mock local (sem credenciais reais)
-- [ ] 4.1 `MockPaymentCheckoutService` devolve URL `https://demo-payments.local/checkout/{id}` e persiste o *intent* em memória
-- [ ] 4.2 Em dev, a página de retorno do mock marca o *intent* como `COMPLETED` e aplica a assinatura no backend (simula webhook)
+- [x] 4.1 `MockPaymentCheckoutService` devolve `https://demo-payments.local/checkout/{id}` (parcial: response stateless — persistência in-memory desnecessária no fluxo dev atual, o status vem do dev-route 1.1)
+- [ ] 4.2 Dev return aplicar a assinatura como `Active` — pende de simulação de webhook (o dev-route só ecoa `COMPLETED`); fluxo real Active depende de credenciais Asaas/Stripe no staging
 
 ## 5. Testes
-- [ ] 5.1 E2E: checkout autenticado redireciona para o checkout do provider e a assinatura é criada como `Active` ao voltar (sem `setTimeout`)
-- [ ] 5.2 E2E: checkout anônimo continua na página (não cria assinatura)
-- [ ] 5.3 Unitário: `GatewayCheckoutRouter` escolhe mock quando chaves vazias
+- [ ] 5.1 E2E: checkout autenticado redireciona para o gateway e assinatura `Active` ao voltar — fluxo até o redirect coberto por testes unitários (4 novos em `checkout-page.component.spec.ts`: payload PIX, redirect real, retorno interno do mock, validators condicionais de cartão) e E2E curl local; o `Active` final pende de webhook real
+- [ ] 5.2 E2E: checkout anônimo continua na página (não cria assinatura) — onda de E2E local (Cypress)
+- [x] 5.3 `GatewayCheckoutRouterTests` cobre roteamento (BRL→Asaas, Card→Stripe, chaves vazias→Mock)
 
 ## Ordem de implementação
 Gateway → UI checkout → dev return → E2E
