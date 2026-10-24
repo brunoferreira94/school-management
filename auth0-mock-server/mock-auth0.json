@@ -1,0 +1,13 @@
+{
+  "/oauth/token": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhdXRoMHxNSU1FbmV0SXNzdWVzIiwiaXNzIjoiaHR0cHM6Ly9leGFtcGxlLmNvbS5jb20iLCJleHAiOjE3MTI4NTk5OTk5fQ.xxxxx",
+    "token_type": "Bearer",
+    "expires_in": 86400
+  },
+  "/userinfo": {
+    "sub": "auth0|12345678",
+    "email": "dev@schoolmanagement.app",
+    "name": "Usuário Desenvolvimento",
+    "picture": "https://via.placeholder.com/150"
+  }
+}

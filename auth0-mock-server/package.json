@@ -1,0 +1,21 @@
+{
+  "name": "auth0-mock-server",
+  "version": "1.0.0",
+  "description": "Mock server for Auth0 endpoints during development",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": ["auth0", "mock", "development"],
+  "author": "Bruno Ferreira",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "json-server": "^0.17.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
