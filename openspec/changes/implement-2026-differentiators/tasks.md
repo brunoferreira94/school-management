@@ -28,11 +28,12 @@ rodando a suíte `cypress/e2e/school-funnel.cy.ts` (8/8 verde após as correçõ
 - [ ] Validar o funil completo em **staging** (Render) — hoje validado em local com API+seed demo (funnel live 8/8 com DB real); Render 402 (fatura pendente) bloqueia
 
 ## 1. BillingCadence (régua de cobrança)
-- [ ] Entidade/infra: `BillingCadenceRule` (D-3/hoje/D+2/D+5, ativo), `BillingCadenceOccurrence` (dedup por fatura+regra+data) e repositórios
-- [ ] Serviço de engine (`BillingCadenceEngine`) com replay seguro e log de execuções; integração foco de faturamento do Asaas
-- [ ] Endpoints: `GET/PUT /api/billing-cadence/rules` (por escola), `POST /api/billing-cadence/run` (manual/dry-run), `GET /api/billing-cadence/metrics`
-- [ ] Notificações com link de pagamento resolvido pelo `ISubscriptionGateway` de acordo com o billing type da fatura
-- [ ] Testes unitários + E2E `billing-cadence-flow.cy.ts` (lembrete gerado, dedup, métricas)
+- [x] Entidade/infra: `BillingCadenceRule` (D-3/hoje/D+2/D+5, ativo), `BillingCadenceOccurrence` (dedup por fatura+regra+data, com `SentChannels`) e `BillingCadenceRun` (log de execuções) + repos; migration `20261025184254_AddBillingCadence`
+- [x] Serviço de engine (`BillingCadenceEngine`) com replay seguro (ocorrência persistida ANTES do envio; dedup por fatura+regra+data) e log de execuções (`BillingCadenceRun` com skip/fatal-notas); seeds padrão idempotentes por escola
+- [x] Endpoints: `GET/PUT /api/billing-cadence/rules` (por escola, GET semeia defaults), `POST /api/billing-cadence/run` (manual/dry-run), `GET /api/billing-cadence/metrics` (por regra + canal; SLA de 3 dias via ocorrência→fatura paga), `GET /api/billing-cadence/runs`; `[Authorize(Policy = "Permission:finance.manage")]`
+- [x] Notificações com link de pagamento: `IInvoicePaymentLinkProvider` + `MockInvoicePaymentLinkProvider` (demo-payments.local, espelha `MockPaymentCheckoutService`) — **honesto**: o provider real por billing type (PIX/boleto no Asaas / hosted checkout no Stripe) aguarda chaves de cobrança per-student; canal efetivo respeita consentimento do responsável (`IGuardianChannelConsentService`, WhatsApp exige opt-in → fallback e-mail)
+- [x] Testes unitários: 7 xUnit (`BillingCadenceEngineTests`: lembrete gerado+link no body, dedup replay, dry-run, regra desativada, offset positivo +2, seeds padrão, sem duplicar seeds); suíte completa 718/0 (5 skips pré-existentes)
+- [x] E2E `billing-cadence-flow.cy.ts` — **ao vivo** (API local + Postgres/seed, como `school-funnel`; sem UI para cadence): 6/6 (1 regras semeadas, 2 desativa/reativa auditável, 3 lembrete gerado→ocorrência, 4 dedup replay+run log, 5 dry-run não persiste, 6 métricas por regra+canal; setup determinístico/idempotente via `cy.exec`+psql no container, cleanup no after)
 
 ## 2. WhatsApp deep links (communications)
 - [ ] Handler de handoff: template por evento (inadimplência, publicação de notas, aviso) com consentimento e mascaramento de dados

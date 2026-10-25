@@ -8,7 +8,7 @@
 - [x] 1.5 Endpoint de opt-in: `PUT /api/guardians/{id}/whatsapp-opt-in`
 
 ## 2. Integrações
-- [ ] 2.1 billing-cadence dispara lembretes via WhatsApp — **depende da implementação de `billing-cadence` (implement-2026-differentiators); o canal já está pronto para consumir**
+- [x] 2.1 billing-cadence dispara lembretes via WhatsApp — **implementado (BillingCadence, 2026-10-25)**: o engine da régua (inadimplência/vence-em-3) resolve o destinatário pelo `IGuardianChannelConsentService` — WhatsApp quando há opt-in, fallback e-mail com motivo em notas/`SentChannels` (métricas por regra e canal em `GET /api/billing-cadence/metrics`); entrega real observa os credenciais Meta (provider fake em dev), pipeline WhatsApp pronto conforme 1.1-1.5; E2E `billing-cadence-flow.cy.ts` ao vivo 6/6 (canal efetivo por ocorrência)
 - [x] 2.2 Falta recorrente notifica via WhatsApp com registro de status (evento pedagógico → regra com canal WhatsApp)
 
 ## 3. Frontend

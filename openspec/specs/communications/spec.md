@@ -2,7 +2,9 @@
 
 ## Purpose
 Esta capacidade cobre a gestão de comunicação da escola com responsáveis e alunos. Permite criar, editar, clonar e arquivar templates de mensagem (e-mail, SMS, push) com placeholders e conteúdo por canal, além de envios segmentados por série, turma, tag ou filtro customizado, com agendamento para data/hora futura com awareness de timezone.
+
 ## Requirements
+
 ### Requirement: Communication template management
 
 The system SHALL allow users with `MANAGE_COMMUNICATIONS` permission to create, edit, clone, and archive message templates with support for placeholders and channel-specific content (email, SMS, push).
@@ -75,3 +77,32 @@ O sistema SHALL monitorar e exibir o status de saúde dos provedores de envio.
 
 - Usuário acessa painel de saúde e visualiza status (online/offline/erro) dos provedores de email, SMS e push.
 
+### Requirement: WhatsApp as an official communication channel
+
+The system SHALL support WhatsApp as a first-class communication channel through the same template, segmentation, and delivery-tracking infrastructure used for e-mail and SMS, with every message traceable inside the system.
+
+#### Scenario: Segmented WhatsApp send with tracking
+
+- **GIVEN** a coordinator sends a notice to a class group selecting WhatsApp as channel
+- **WHEN** the send is processed
+- **THEN** each recipient's delivery and read status is recorded in the existing communication history
+
+### Requirement: Channel consent with fallback
+
+The system SHALL only send WhatsApp messages to guardians who opted in to the channel, and SHALL fall back to e-mail (recording the reason) when consent is absent.
+
+#### Scenario: No consent falls back to e-mail
+
+- **GIVEN** a guardian has no WhatsApp opt-in recorded
+- **WHEN** a billing reminder is dispatched via WhatsApp
+- **THEN** the reminder is sent by e-mail instead and the fallback reason is recorded in the delivery log
+
+### Requirement: WhatsApp templates with actionable variables
+
+WhatsApp templates SHALL support student and invoice variables, including a one-tap PIX second-copy link, so billing reminders are actionable inside the message.
+
+#### Scenario: Billing reminder with PIX link
+
+- **GIVEN** an overdue invoice for a student
+- **WHEN** the billing cadence triggers the WhatsApp reminder
+- **THEN** the message includes the amount, due date, and a working second-copy link
