@@ -2,7 +2,9 @@
 
 ## Purpose
 Esta capacidade provê uma barra de busca global acessível de qualquer tela (Ctrl+K ou ícone) para descobrir e navegar direto às funcionalidades sem percorrer menus. Indexa rotas com metadados (título, palavras-chave, categoria, ícone), aplica matching fuzzy tolerante a erros de digitação com ranking por score e filtra os resultados pelas permissões do usuário autenticado.
+
 ## Requirements
+
 ### Requirement: Quick feature discovery
 
 The system SHALL provide a global search bar accessible from any screen that indexes all application routes with metadata (title, keywords, category, icon) and allows fuzzy text matching to help users discover and navigate to features without browsing menus.
@@ -73,3 +75,18 @@ The system SHALL maintain a history of recent searches in browser localStorage, 
 - **WHEN** they trigger the "clear history" action (via UI control or service method)
 - **THEN** recent searches are removed from localStorage, and future searches no longer receive the recency boost
 
+### Requirement: Search results with contextual actions
+
+For entity results (student, invoice, class group), the global search SHALL return contextual actions executable directly from the search result (e.g. generate a second copy of an invoice, open the student's financial page, send a class announcement), filtered by the searching user's permissions.
+
+#### Scenario: Second copy generated from search
+
+- **GIVEN** a staff user with billing permissions
+- **WHEN** they search a student by name
+- **THEN** the result offers a "2ª via" action that generates the invoice copy without navigating away
+
+#### Scenario: Actions respect permissions
+
+- **GIVEN** a teacher without billing permissions
+- **WHEN** they search the same student
+- **THEN** no billing action is offered in the result
