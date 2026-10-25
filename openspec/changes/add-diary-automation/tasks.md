@@ -20,4 +20,4 @@
 ## 4. Testes
 - [x] 4.1 API: relatório contém exatamente os dados do diário (7 testes: upsert sem duplicar, relatório sem diário lança erro, rascunho cita notas/faltas, auditoria de aprovação + dupla aprovação bloqueada, plano com BNCC, isolamento por tenant)
 - [x] 4.2 Unitário frontend: carrega semana com faltas, salva, gera relatório, cria/aprova rascunhos (6 testes)
-- [ ] 4.3 E2E: professor lança diário → gera relatório → coordenação visualiza
+- [x] 4.3 E2E `diary-automation.cy.ts` (2026-10-25): professor lança conteúdos/observações da semana → salva → gera relatório para coordenação → relatório visível com professor, conteúdos, faltas da semana e botão Imprimir/PDF

@@ -16,4 +16,4 @@
 - [x] 3.1 API: prontidão calcula % com dados incompletos e reflete edições imediatamente (6 testes: %, missing por campo, bloqueio, layout, isolamento tenant/ano)
 - [x] 3.2 API: exportação bloqueada com campos faltando; completa gera arquivo com os registros 00/20/30/50
 - [x] 3.3 Unitário frontend: barras de prontidão, banner bloqueio/pronto, download liberado, bloqueio parseado do 400 (5 testes)
-- [ ] 3.4 E2E: secretária corrige campos apontados e exporta com sucesso
+- [x] 3.4 E2E `censo-export.cy.ts` (2026-10-25): exportação bloqueada apontando aluno/campos (INEP, nome da mãe) → após correção a prontidão volta completa e o segundo export gera o arquivo com toast de sucesso

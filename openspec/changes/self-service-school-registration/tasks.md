@@ -18,7 +18,7 @@
 
 ## 4. Testes
 - [x] 4.1 API: `RegisterSchoolControllerTests` (6 testes: criação transacionada, 409 sem transação, 400 segmento, persistência do segmento, rollback em falha, campos vazios) + **E2E real contra Postgres local**: falha no meio (FK) → 0 tenants/0 órfãos (rollback atômico ✅); sucesso → 201 com tenant+unidade+conta+trial+ano letivo+progresso persistidos
-- [ ] 4.2 E2E `school-self-service-signup.cy.ts`: signup → tenant trial ativo → login → dashboard — pendente (onda de E2E local via Cypress; o fluxo equivalente já foi validado via curl E2E local)
+- [x] 4.2 E2E `school-self-service-signup.cy.ts` (2026-10-25, cypress 15 contra dev server e2e config, mock-based): 3 testes — signup → 201 → login?registered=1 → autenticado; cadastro vindo da pricing preserva o plano pelo login até /checkout/:plan; 409 exibe erro sem sair da tela. Nota honesta: mocks via cy.intercept; o caminho com backend real está coberto pelos testes de API + E2E curl local
 
 ## Ordem de implementação
 Seed Free → endpoint API → UI cadastro → CTAs apontando para /cadastro → E2E

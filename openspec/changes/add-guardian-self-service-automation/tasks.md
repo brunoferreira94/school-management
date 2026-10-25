@@ -18,4 +18,4 @@
 ## 4. Testes
 - [x] 4.1 API: 2ª via resolvida automaticamente com a fatura correta do aluno (valor/vencimento/status no PDF e na resposta) — 12 testes de resolver + fila + métricas
 - [x] 4.2 API: solicit. não resolúvel (sem turma, sem quitação, aluno não vinculado, tipo livre) vira ticket e a fila da secretaria vê só os open, com isolamento por tenant
-- [ ] 4.3 E2E: responsável pede declaração e recebe PDF sem interação da secretaria — **pende de ambiente E2E estável (staging em Render 402)**
+- [x] 4.3 E2E `guardian-self-service.cy.ts` (2026-10-25, mock-based): responsável pede declaração de matrícula → resolvido na hora (Auto) com PDF baixável; pedido não resolvível → ticket com posição na fila e sem PDF. **Fix real incluído**: `portalGuard` e `portal-dashboard` não respeitavam `devAuth` (só Auth0 SDK) — o portal nunca carregava em dev/e2e

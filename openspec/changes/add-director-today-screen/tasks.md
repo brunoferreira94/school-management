@@ -15,4 +15,4 @@
 ## 3. Testes
 - [x] 3.1 API: fila contém ações priorizadas (billing + churn), resolve registra audit, idempotente por SourceKey, isolamento por tenant (5 testes)
 - [x] 3.2 Unitário frontend: today-screen renderiza fila, resolve ação, filtra por tipo e mostra estado "dia resolvido" (5 testes)
-- [ ] 3.3 E2E: diretor abre /hoje, resolve uma ação de cobrança, contagem atualiza
+- [x] 3.3 E2E `today-screen.cy.ts` (2026-10-25): diretor abre /hoje, resolve a ação de cobrança → card some da fila e badge atualiza de 0 para "1 resolvida(s) hoje"; filtro Financeiro mostra só billing

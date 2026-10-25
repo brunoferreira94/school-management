@@ -14,4 +14,4 @@
 - [x] 3.1 API: professor sobreposto detectado; sala sobreposta detectada (case-insensitive); grade sem recurso compartilhado retorna lista vazia; conflito de outro ano letivo é ignorado (7 testes)
 - [x] 3.2 API: sugestões devolvem apenas slots realmente livres (professor + sala + turma); mover para slot sugerido resolve o conflito; mover para slot conflitante é bloqueado
 - [x] 3.3 Unitário frontend: badge, conflitos traduzidos, sugestões carregadas, aplicar em 1 clique com reload + emissão do evento (5 testes)
-- [ ] 3.4 E2E: coordenador aplica sugestão e o conflito desaparece da lista
+- [x] 3.4 E2E `timetabling-conflicts.cy.ts` (2026-10-25): gera escala → verifica conflito de professor → ver sugestões → aplica sugestão (PUT com day/start confirmados) → conflito some e badge muda para "Sem conflitos"

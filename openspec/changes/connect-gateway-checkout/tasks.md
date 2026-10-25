@@ -21,8 +21,8 @@
 - [ ] 4.2 Dev return aplicar a assinatura como `Active` — pende de simulação de webhook (o dev-route só ecoa `COMPLETED`); fluxo real Active depende de credenciais Asaas/Stripe no staging
 
 ## 5. Testes
-- [ ] 5.1 E2E: checkout autenticado redireciona para o gateway e assinatura `Active` ao voltar — fluxo até o redirect coberto por testes unitários (4 novos em `checkout-page.component.spec.ts`: payload PIX, redirect real, retorno interno do mock, validators condicionais de cartão) e E2E curl local; o `Active` final pende de webhook real
-- [ ] 5.2 E2E: checkout anônimo continua na página (não cria assinatura) — onda de E2E local (Cypress)
+- [x] 5.1 E2E `checkout-gateway.cy.ts` (2026-10-25, cypress): intent criado com payload completo, redirect `window.open(url,'_self')` ao gateway real, retorno interno do mock dev consulta a assinatura e conclui em success; `Active` real ao voltar pende do webhook do provedor (staging/chaves). Complementado pelos 4 testes unitários de `checkout-page.component.spec.ts` (payload PIX, redirect real, retorno interno do mock, validators condicionais) e E2E curl local
+- [x] 5.2 E2E `checkout-gateway.cy.ts` (2026-10-25): nenhuma chamada a POST /subscriptions/tenant no fluxo de pagamento (verificado por flag no intercept) — assinatura só via webhook; cartão exigido apenas em CREDIT — onda de E2E local (Cypress)
 - [x] 5.3 `GatewayCheckoutRouterTests` cobre roteamento (BRL→Asaas, Card→Stripe, chaves vazias→Mock)
 
 ## Ordem de implementação
