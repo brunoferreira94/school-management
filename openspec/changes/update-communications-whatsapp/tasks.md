@@ -19,4 +19,4 @@
 ## 4. Testes
 - [x] 4.1 Unitário: sender WhatsApp respeita a interface dos canais e devolve ProviderMessageId (2 testes)
 - [x] 4.2 API: envio sem opt-in cai para e-mail com motivo registrado; com opt-in envia WhatsApp para o telefone; destinatário desconhecido mantém o canal (3 testes)
-- [ ] 4.3 E2E: coordenação envia comunicado WhatsApp segmentado por turma com rastreio
+- [x] 4.3 E2E `whatsapp-segmented.cy.ts` (2026-10-25, cypress): manager ganha canal **WhatsApp** (4º card) e segmentação por turma (chips → `segmentFilter.classGroupIds`); envio confirma payload `channel=WhatsApp` + turma selecionada, sucesso visível e o rastreio (log WhatsApp `Delivered`) aparece no histórico. Fake provider assume o envio até credenciais reais. **Fix real incluído**: CD async do manager (mensagens de sucesso/logs não renderizavam)
