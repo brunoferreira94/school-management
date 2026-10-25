@@ -20,12 +20,12 @@ rodando a suíte `cypress/e2e/school-funnel.cy.ts` (8/8 verde após as correçõ
 - [x] UI/infra: `ng serve` sem `--configuration` sobe com `environment.prod.ts` (sem `devAuth`) → qualquer rota guardada expulsa o usuário para o Auth0 hosted — suíte E2E passa a rodar com `--configuration e2e`
 
 ### Pendentes (bloqueiam o funil self-service)
-- [ ] **Checkout não usa o gateway**: a UI chama `POST /api/subscriptions/tenant` direto, sem `checkout-intents` → nenhum link de pagamento (Asaas/Stripe/Mock) é gerado e nenhum webhook reconcilia. Ligar a UI ao `GatewayCheckoutRouter` (PIX/BOLETO/CARNE → Asaas; cartão → Stripe) e tratar o retorno do gateway no checkout
-- [ ] **Não há cadastro self-service de escola**: o visitante anônimo não consegue criar conta de escola (só existe o portal do responsável) — implementar `self-service-onboarding` (spec criada neste change)
-- [ ] **Sem plano trial automático**: conta nova não recebe assinatura Free/trial (hoje o seed cria plano, mas não assinatura)
-- [ ] **Anglo: landing pública**: a raiz `/` redireciona para `/login` em build sem `devAuth`; no funil anônimo a "landing" é a tela de login — Landing/marketing page real ainda não existe
-- [ ] **Onboarding checklist**: o modal de boas-vindas depende de `GET /api/onboarding/progress` (agora 200) mas o progresso ainda não é gravado no servidor em todos os passos
-- [ ] Validar o funil completo em **staging** (Render) — hoje validado só em ambiente local com seed demo
+- [x] **Checkout usa o gateway** (2026-10-25, fechado via `connect-gateway-checkout` + ajustes de hoje): a UI chama `POST /api/subscriptions/checkout-intents` (GatewayCheckoutRouter: PIX/BOLETO/CARNE → Asaas/Mock; cartão → Stripe/Mock) com o **slug** do plano; retorno do mock segue o fluxo interno (`demo-payments.local`) e o real redireciona ao hosted checkout. Pendente honesto: reconciliação por webhook real (chaves de staging)
+- [x] **Cadastro self-service de escola** (fechado via changes `self-service-self-service-onboarding`/`self-service-registration` arquivadas): landing → `/cadastro/:plan` cria o tenant; specs `school-self-service-signup.cy.ts` + funnel live `school-funnel.cy.ts` (8/8)
+- [x] **Trial automático**: provisionamento Free/trial na criação do tenant (`ITrialSubscriptionProvisioner`), assinatura já persistida no seed
+- [x] **Landing pública** (archived `public-landing-page`, 2026-10-25): raiz `/` roteia a landing sem guard; early-redirect invertido (anônimo fica na landing, autenticado vai a `/home`); E2E `public-landing.cy.ts` 2/2
+- [x] **Onboarding checklist**: progresso gravado no servidor via `POST /api/onboarding/progress` nos passos (turma criada, professores convidados, boletim visto) — verificado hoje no código (`onboarding.service.ts` chama `updateProgress` nos 3 marcos)
+- [ ] Validar o funil completo em **staging** (Render) — hoje validado em local com API+seed demo (funnel live 8/8 com DB real); Render 402 (fatura pendente) bloqueia
 
 ## 1. BillingCadence (régua de cobrança)
 - [ ] Entidade/infra: `BillingCadenceRule` (D-3/hoje/D+2/D+5, ativo), `BillingCadenceOccurrence` (dedup por fatura+regra+data) e repositórios
