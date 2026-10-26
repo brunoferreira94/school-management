@@ -9,13 +9,13 @@
 
 ## 2. Motor de cálculo
 
-- [ ] 2.1 `IGradingCalculationEngine` no Domain + `GradingCalculationEngine` no Application: avaliador de AST com whitelist de operadores (`sum`, `avg`, `weightedAvg`, `min`, `max`, `round`, aritméticos) e operandos (avaliação, média por categoria, média/resultado de período, pontos extras, constante), limites de profundidade/aridade, políticas de nota ausente e divisão por zero
-- [ ] 2.2 Resolução de fórmula ativa: default do tenant por tipo de período + override por turma + fallback do cálculo legado para tenants sem fórmula
-- [ ] 2.3 Cálculo de status (Aprovado/Recuperação/Reprovado), arredondamento e escala como parte da avaliação da fórmula — remover 6.0/5.0 e `* 0.1` hardcoded
-- [ ] 2.4 Cálculo por turma em lote (uma query de grades por turma, sem N+1) e por aluno×período (incremental)
-- [ ] 2.5 Catálogo de templates de fórmulas como ASTs pré-definidas no Application (os 9 templates da spec) com descrição legível
-- [ ] 2.6 Golden tests de paridade: fórmulas default ativas produzem exatamente os mesmos números do cálculo inline atual (`AssessmentService` + `ReportPreviewService`) para os datasets de teste existentes
-- [ ] 2.7 Unit tests do engine no padrão `BillingCadenceEngineTests` (média simples/ponderada, categoria ausente, recuperação substitui, exame final `(M+PF)/2`, pontos por etapa, descartar menor, arredondamento, escala ≠ 0–10, divisão por zero, nota ausente, profundidade máxima, AST inválida rejeitada)
+- [x] 2.1 `IGradingCalculationEngine` no Domain + `GradingCalculationEngine` no Application: avaliador de AST com whitelist de operadores (`sum`, `avg`, `weightedAvg`, `min`, `max`, `round`, aritméticos) e operandos (avaliação, média por categoria, média/resultado de período, pontos extras, constante), limites de profundidade/aridade, políticas de nota ausente e divisão por zero
+- [x] 2.2 Resolução de fórmula ativa: default do tenant por tipo de período + override por turma + fallback do cálculo legado para tenants sem fórmula (`GradingCalculationService.ResolveActiveFormulaAsync` — ano específico > genérica `AcademicYearId` null)
+- [x] 2.3 Cálculo de status (Aprovado/Recuperação/Reprovado), arredondamento (HalfUp/HalfEven/Floor/Ceil) e escala como parte da avaliação da fórmula (a remoção dos 6.0/5.0 e `* 0.1` hardcoded do `AssessmentService` é a task 3.5)
+- [x] 2.4 Cálculo por turma em lote (`ComputeClassPeriodAsync` — 1 query de avaliações + 1 de notas + 1 de alunos, sem N+1) e por aluno×período (`ComputeStudentPeriodAsync`, incremental) com materialização via `StudentPeriodGradeRepository.UpsertAsync`
+- [x] 2.5 Catálogo de templates de fórmulas como ASTs pré-definidas no Application (`GradingFormulaTemplates` — os 9 templates da spec) com descrição legível e `ToFormula()` para instanciar
+- [x] 2.6 Golden tests de paridade: fórmula default (ponderada por peso, `TreatAsZero`, `HalfEven`/2, escala 0–10, 6.0/5.0) produz exatamente os mesmos números do cálculo inline atual do `AssessmentService` (dataset com 3 alunos, nota ausente e escala 0–100) + verificação com valores calculados à mão
+- [x] 2.7 Unit tests do engine no padrão `BillingCadenceEngineTests` (31 testes: 9 templates, escala ≠ 0–10, arredondamentos, 3 políticas de nota ausente, divisão por zero, referência de período ausente, coleção vazia, JSON inválido, validação de AST — operador/aridade/pesos/ref/profundidade, rastro de passos do preview, round-trip de serialização)
 
 ## 3. API (CQRS: commands/queries + handlers)
 
@@ -52,3 +52,12 @@
 
 - [ ] 7.1 README/docs da API: como funcionam fórmulas, AST, templates e preview
 - [ ] 7.2 Guia na UI (ajuda da secretaria): como criar uma fórmula a partir de um template e ajustar
+
+## 8. Documentação para agentes de IA (modular)
+
+- [ ] 8.1 `AGENTS.md` na raiz do repo: mapa do monorepo (api/ui/openspec), comandos essenciais (build, testes, migrations, seeds, e2e), convenções de commit e layout de pastas — incorporando o conteúdo atual (Auth0 mock vira doc modular em `docs/`)
+- [ ] 8.2 `school-management-api/AGENTS.md`: arquitetura em camadas (Domain/Application/Infrastructure/SchoolManagement), **bounded contexts EF (SchoolContext vs AcademicContext — entidades compartilhadas, regra de migrations separadas por assembly e o precedente ClassGroup)**, padrão CQRS LiteBus (commands/queries/handlers/behaviors), repositórios (BaseRepository + registro no DI), multi-tenancy (ITenantContext/ITenantProvider, query filters), permissões (Policy "Permission:", PilotEnvironmentSeeder, roles), migrations (gerar/aplicar, design-time factories, School vs Academic), seeds idempotentes e testes (padrões xUnit, TestWebApplicationFactory, Postgres container)
+- [ ] 8.3 `school-management-ui/AGENTS.md`: stack (Angular standalone + signals, Material, ngx-translate), estrutura (features/app/core/config), data services + models espelhando DTOs do backend, guards e PERMISSIONS (roleGuard), rotas, ambiente e2e (`--configuration e2e`), Cypress live (API + Postgres + seed)
+- [ ] 8.4 `docs/` modular no api (docs/architecture/*.md): um arquivo curto por tema — bounded-contexts, cqrs, multitenancy, permissions, migrations, grading-formulas — com caminhos de arquivo reais (`arquivo.cs:linha`), para um agente carregar apenas o que precisa
+- [ ] 8.5 Índice de features (docs/features.md): cada pasta de feature da Application/UI em 2–3 linhas (o que faz, endpoints principais, entidades) para navegação rápida
+- [ ] 8.6 Checklists de manutenção para agentes (docs/how-to.md): onde registrar DI, quando gerar migration School vs Academic, como adicionar permissão/perfil, como adicionar entidade/testes — passo a passo verificável
