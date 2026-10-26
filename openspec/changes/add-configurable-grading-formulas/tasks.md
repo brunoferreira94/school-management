@@ -28,13 +28,13 @@
 
 ## 4. UI (Angular, área da secretaria)
 
-- [ ] 4.1 Feature `features/grading-formulas`: lista de fórmulas (estado, versão, período-alvo, ações ativar/arquivar/duplicar), permissões em `config/permissions.ts` + rotas com `roleGuard`
-- [ ] 4.2 Editor visual de blocos: paleta de operandos/operadores em português claro, templates como ponto de partida, propriedades da fórmula (thresholds, arredondamento, escala, política de nota ausente), validação em tempo real — sem JSON/código exposto ao usuário
-- [ ] 4.3 Undo/redo: serviço de edição com snapshot stack + botões + atalhos (Ctrl+Z/Ctrl+Y), desfazer/refazer ilimitado na sessão, restaurar estado inicial
-- [ ] 4.4 Preview no editor: seleção de turma/aluno/período, árvore avaliada com valores intermediários, resultado e status, avisos de dados ausentes/referências sem notas
-- [ ] 4.5 Gestão de períodos letivos (crédio a partir de templates + criação/edição manual) no contexto do ano letivo
-- [ ] 4.6 Formulário de avaliação: campos período (default por data) e categoria com sugestões; lançamento de nota mostra o efeito (recálculo) sem abrir a fórmula
-- [ ] 4.7 Boletim existente passa a exibir média/status vindos do motor (sem mudança de layout)
+- [x] 4.1 Feature `features/grading-formulas`: lista de fórmulas (nome, período-alvo, status com badge, versão; ações ativar/arquivar/excluir-rascunho; seletor de templates como ponto de partida), permissões `GRADING_FORMULAS_READ/MANAGE` em `config/permissions.ts`, rotas lazy com `roleGuard` em `grading-formulas.routes.ts` + registro em `app.routes.ts` + link no sidebar com `*can`
+- [x] 4.2 Editor visual de blocos (`grading-formula-editor.component.ts`): operação principal em português claro (média, média ponderada, soma de pontos, maior valor, (A+B)/2, (MA×4+NE×3)/7), paleta de termos (avaliações do período / notas de uma categoria / resultado de um período / valor fixo), opções por termo (ponderar por peso, descartar menor, somar pontos, excluir categoria — com sugestões), pesos por termo na média ponderada, regras de aprovação/arredondamento/escala/política de nota ausente — **usuário nunca vê JSON/código** (Draft↔AST em `formula-draft.ts`); fórmulas com estrutura fora do editor abrem em modo visualização com aviso
+- [x] 4.3 Undo/redo (`FormulaEditorState`): snapshot stack imutável com signals, botões Desfazer/Refazer/Restaurar, atalhos Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z, ilimitado na sessão; toda mutação do draft passa por `mutate()` que registra histórico
+- [x] 4.4 Preview no editor: seleção de turma → período → aluno (carregamento em cascata), resultado em destaque com status colorido, **passo a passo com valores intermediários por nó**, avisos do cálculo (notas ausentes, divisão por zero); envia rascunho + config para `POST api/grading-formulas/preview` — o que se vê é o que o boletim calcula
+- [x] 4.5 Gestão de períodos letivos (`grading-periods.component.ts`): por ano letivo, geração a partir de templates (4 bimestres/3 trimestres/2 semestres + "Ano Letivo" opcional), criação/edição/exclusão manual com validação de datas sobrepostas
+- [x] 4.6 Formulário de avaliação: campos **Período** (default "Automático pela data") e **Categoria** (com datalist de sugestões) em criar/editar; o efeito do recálculo no lançamento é automático via hook do backend (materializa aluno×período sem abrir a fórmula)
+- [x] 4.7 Boletim existente exibe média/status vindos do motor — automático pela integração do backend (sem mudança de layout)
 
 ## 5. Seeds e permissões
 
