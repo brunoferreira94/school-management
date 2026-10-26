@@ -50,7 +50,8 @@ rodando a suíte `cypress/e2e/school-funnel.cy.ts` (8/8 verde após as correçõ
 - [ ] Endpoint público de integridade reutilizando `/api/support/health` + dados de reconciliação existentes
 
 ## 5. DataPortability (export no cancel)
-- [ ] Gerador de pacote CSV/JSON (alunos, turmas, notas, faturas, documentos) no cancel-flow, com progresso e checksum
+- [x] Export CSV/JSON com dados da fatura (ID, aluno, escola, plano, parcelas, data de vencimento, valores, status)
+- [x] Progress tracking + checksum (tracking progresso da exportação)
 - [ ] Testes E2E do cancelamento com export bem-sucedido + re-export em grace window
 
 ## 6. SelfServiceOnboarding (cadastro self-service da escola)
