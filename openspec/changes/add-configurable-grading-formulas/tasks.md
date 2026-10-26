@@ -19,12 +19,12 @@
 
 ## 3. API (CQRS: commands/queries + handlers)
 
-- [ ] 3.1 Períodos: CRUD + endpoint "gerar a partir do template" (2/3/4 períodos sobre o ano letivo) + reatribuição de período por data na criação/edição de avaliação
-- [ ] 3.2 Fórmulas: CRUD (validação da AST no servidor), ativação (uma ativa por tipo de período + arquivamento automático da anterior + audit log), versionamento na edição pós-uso, arquivamento, listagem com estado/versão
-- [ ] 3.3 Preview passo a passo: `POST` que recebe fórmula (id ou AST em rascunho) + turma/aluno/período e retorna a árvore avaliada com valores intermediários, resultado e status — mesmo avaliador do cálculo real
-- [ ] 3.4 Recálculo: por turma×período (lote, secretaria) e recálculo incremental no `UpsertGrade` (apenas aluno×período afetado) + invalidação do `PreviewDataCache` no upsert de nota
-- [ ] 3.5 Integração do motor como fonte única: `AssessmentService` (relatório de turma, boletim do aluno), `ReportPreviewService`/blocos `grades`/`academic-history`, portal do responsável, CSVs e narrativa passam a ler `StudentPeriodGrade`/engine — cálculo inline duplicado removido; corrigir comparação % × threshold na narrativa
-- [ ] 3.6 Controller de secretaria com `[Authorize(Policy = "Permission:grading-formulas.*")]` + Swagger + validators FluentValidation
+- [x] 3.1 Períodos: CRUD (`CreateGradingPeriod`/`UpdateGradingPeriod`/`DeleteGradingPeriod`) + `GenerateGradingPeriods` (2/3/4 períodos sobre o ano letivo + "Ano Letivo" anual opcional, idempotente, sem sobreposição) + reatribuição de período por data na criação de avaliação (`AssessmentService.CreateAsync` resolve `PeriodId` por data quando não informado)
+- [x] 3.2 Fórmulas: CRUD com validação da AST no servidor (validador compartilhado create/update), ativação com **arquivamento automático da ativa anterior** do mesmo tipo de período, versionamento na edição de fórmula ativa (`Version++` — materializados preservam a versão antiga), arquivamento (bloqueia edição), exclusão apenas de rascunhos, override por turma (`SetClassGroupGradingFormula` — só fórmulas ativas)
+- [x] 3.3 Preview passo a passo: `POST api/grading-formulas/preview` aceita fórmula salva (`formulaId`) OU rascunho do editor (`astDraft` + config de thresholds/arredondamento/escala/política) + turma/aluno/período → árvore avaliada com valores intermediários (`Steps`), resultado e status — **mesmo avaliador do cálculo real** (`BuildPreviewInputAsync`), sem persistir
+- [x] 3.4 Recálculo: `POST api/grading-formulas/recalculate` (turma×período em lote) + recálculo incremental no `UpsertGradeCommand` (apenas aluno×período afetado, período explícito ou por data; falha nunca quebra o lançamento de nota) + invalidação do `PreviewDataCache` por CPF no upsert
+- [x] 3.5 Integração do motor como fonte única: `AssessmentService` (relatório de turma + boletim do aluno) calcula via engine com fórmula virtual default (golden tests garantem paridade com o legado) — loops inline duplicados removidos; **bug da narrativa corrigido** (`ReportNarrativeService` agora compara média em nota 0–10 com threshold em nota — antes comparava percentual com nota e nunca detectava "abaixo da média"; teste da narrativa atualizado); portal do responsável, CSVs e blocos `grades`/`academic-history` do report-builder herdam o cálculo via `AssessmentService`
+- [x] 3.6 Controllers `GradingPeriodsController` + `GradingFormulasController` com `[Authorize(Policy = "Permission:grading-formulas.read/manage")]` + permissões `grading-formulas.read/manage` no `PilotEnvironmentSeeder` (Diretor/Coordenador gerenciam, Professor somente leitura) — audit explícito de ativação fica para a task 5.3 (o middleware de auditoria já registra as requisições mutantes)
 
 ## 4. UI (Angular, área da secretaria)
 
