@@ -36,9 +36,9 @@ rodando a suíte `cypress/e2e/school-funnel.cy.ts` (8/8 verde após as correçõ
 - [x] E2E `billing-cadence-flow.cy.ts` — **ao vivo** (API local + Postgres/seed, como `school-funnel`; sem UI para cadence): 6/6 (1 regras semeadas, 2 desativa/reativa auditável, 3 lembrete gerado→ocorrência, 4 dedup replay+run log, 5 dry-run não persiste, 6 métricas por regra+canal; setup determinístico/idempotente via `cy.exec`+psql no container, cleanup no after)
 
 ## 2. WhatsApp deep links (communications)
-- [ ] Handler de handoff: template por evento (inadimplência, publicação de notas, aviso) com consentimento e mascaramento de dados
-- [ ] UI: botão "WhatsApp" no item de notificação/fatura → wa.me deep link com texto do template
-- [ ] Testes E2E de handoff (deep link inicia da escola, não envio automático)
+- [x] Handler de handoff: template por evento (inadimplência, publicação de notas, aviso) com consentimento e mascaramento de dados — 2026-10-27: `WhatsAppHandoffService` + POST /api/communications/whatsapp-handoff; mascaramento = sem CPF, primeiro nome do aluno; consentimento via IGuardianChannelConsentService
+- [x] UI: botão "WhatsApp" no item de fatura (finance, `*can` finance.manage) → wa.me deep link com texto do template; fallback mostra motivo em toast
+- [x] Testes E2E de handoff (deep link inicia da escola, não envio automático) — `whatsapp-handoff-export-trust.cy.ts` 2.3a/2.3b; **descobriu bug real**: FindGuardianAsync não buscava por CPF → consentimento de opt-in nunca aplicado (régua e handoff seguiam WhatsApp e o wa.me recebia CPF como telefone) — corrigido em GuardianChannelConsentService
 
 ## 3. AiDrafts (rascunhos com revisão)
 - [ ] Contrato do provedor de rascunhos (interface) + provedor mock p/ dev; circuito de consentimento de dados por escola
@@ -46,13 +46,13 @@ rodando a suíte `cypress/e2e/school-funnel.cy.ts` (8/8 verde após as correçõ
 - [ ] Estado "review required" + audit trail de quem editou/aprovou; testes de bloqueio de envio sem revisão
 
 ## 4. ProductTrust (transparência de confiabilidade)
-- [ ] Página "confiabilidade & mudanças": changelog de releases, MTTR-30d, status das integrações (gateways/notifications/storage)
-- [ ] Endpoint público de integridade reutilizando `/api/support/health` + dados de reconciliação existentes
+- [x] Página "confiabilidade & mudanças": rota pública /confiabilidade (TrustStatusComponent) — changelog de releases, MTTR-30d (AuditLog 5xx→próximo <400), status das integrações (gateway de pagamento, e-mail, armazenamento) + checks de infraestrutura do health existente
+- [x] Endpoint público de integridade: GET /api/support/trust-status (AllowAnonymous) reutilizando `/api/support/health` (IHealthService) + status das integrações por configuração + MTTR-30d do AuditLog + changelog (TrustStatusService/TrustStatusController)
 
 ## 5. DataPortability (export no cancel)
 - [x] Export CSV/JSON com dados da fatura (ID, aluno, escola, plano, parcelas, data de vencimento, valores, status)
 - [x] Progress tracking + checksum (tracking progresso da exportação)
-- [ ] Testes E2E do cancelamento com export bem-sucedido + re-export em grace window
+- [x] Testes E2E do cancelamento com export bem-sucedido + re-export em grace window (`whatsapp-handoff-export-trust.cy.ts` 5.3: export com checksum + re-export idêntico; cancela → re-export na janela de 7 dias → recusa "janela de carência" quando expirada; endpoints POST /tenants/{id}/export + GET /tenants/{id}/export/{exportId})
 
 ## 6. SelfServiceOnboarding (cadastro self-service da escola)
 - [ ] Endpoint `POST /api/onboarding/register-school` (nome, escola, e-mail, CPF/CNPJ, senha) → cria tenant + usuário pending + assinatura Free/trial
