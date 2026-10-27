@@ -38,9 +38,9 @@
 
 ## 5. Seeds e permissões
 
-- [ ] 5.1 Permissões `grading-formulas.read`/`grading-formulas.manage` no `PilotEnvironmentSeeder` (array + mapeamentos de papéis: Diretor/Coordenador gerenciam, Professor lê)
-- [ ] 5.2 Seed idempotente: períodos padrão (4 bimestres) por ano letivo existente + fórmulas default ativas equivalentes ao cálculo atual + templates disponíveis a todos os tenants
-- [ ] 5.3 Audit log de criação/edição/ativação de fórmula (quem, quando, versão)
+- [x] 5.1 Permissões `grading-formulas.read`/`grading-formulas.manage` no `PilotEnvironmentSeeder` (array + mapeamentos de papéis: Diretor/Coordenador gerenciam via prefixo `grading-formulas.*`, Professor lê)
+- [x] 5.2 Seed idempotente (executado junto com `--seed-demo`): períodos padrão **4 bimestres + "Ano Letivo"** (âncora de fórmulas anuais) para cada ano letivo existente sem períodos + **fórmula default ATIVA por tenant** (ponderada por peso, `TreatAsZero`, `HalfEven`/2, escala 0–10, 6.0/5.0 — exatamente o cálculo histórico, paridade golden-tested); templates são estáticos na API, disponíveis a todos os tenants por design; queries com `IgnoreQueryFilters()` (seed é cross-tenant)
+- [x] 5.3 Audit log de ativação/edição de fórmula ativa (quem = `User`/claims, quando = timestamp, versão = `RequestId` no formato `formula:{id}:v{versão}`) via `IAuditLogRepository`; `ActivatedBy` gravado na fórmula; criação/edição comum cobertas pelo middleware de auditoria HTTP existente
 
 ## 6. Testes de integração e E2E
 
