@@ -1,86 +1,86 @@
----
-title: "Mock do Auth0 para Ambiente de Desenvolvimento"
-description: "Estratégia para contornar a limitação do Auth0 (apenas um ambiente) usando mock local"
-schema: openspec
-version: 1.0
-status: draft
-author: Bruno Ferreira
-tags:
-  - auth0
-  - mock
-  - desenvolvimento
-  - authentication
----
+# AGENTS.md — Mapa do Monorepo (school-management)
 
-## 🌟 Motivação
-O Auth0 só permite Criar **um ambiente principal**, que será definido como **produção**. Como precisamos testar em desenvolvimento sem impactar a produção, precisamos de uma solução de mock que simule as respostas do Auth0 localmente.
+Guia de orientação para **agentes de IA** (e humanos) trabalhando neste repositório. Objetivo: você encontrar o caminho certo na primeira tentativa. Documentos específicos são modulares — carregue apenas o que precisa.
 
-## 📝 Proposta
-Criar uma solução de mock local substituindo as chamadas à API do Auth0 real durante o desenvolvimento.
+## O que é este projeto
 
-## 📋 Especificações do Mock
-### 1. Configuração no .NET
-- Alternância automática:  
-  - Em desenvolvimento: Usar mock  
-  - Em produção: Usar endpoints reais do Auth0
+Sistema de gestão escolar multi-tenant (SaaS): alunos, responsáveis, turmas, horários, avaliações/notas, planos de pagamento escolar, comunicação, boletins, assinaturas. Monorepo com **API .NET**, **UI Angular** e **specs OpenSpec** (spec-driven development).
 
-- **Atualização no `appsettings.Development.json`**:  
-  ```json
-  "Auth0": {
-    "Domain": "mock-auth0.local",
-    "Audience": "http://localhost:5066/api",
-    "ManagementClientId": "mock-client-id",
-    "ManagementClientSecret": "mock-secret"
-  }
-  ```
-
-### 2. Implementação do Mock Service
-**Interface (`IAuth0Service.cs`):** 
-```csharp
-public interface IAuth0Service
-{
-    Task<string> GetAccessTokenAsync(string clientId, string clientSecret, string audience, string domain);
-    Task<Dictionary<string, object>> GetUserInfoAsync(string accessToken);
-    bool IsMockEnabled { get; }
-}
+```
+school-management/
+├── school-management-api/     # API ASP.NET Core (.NET 10) — submodule git
+├── school-management-ui/      # UI Angular 22 (standalone + signals) — submodule git
+├── openspec/                  # Specs: changes (propostas) + specs (verdade atual)
+├── docs/                      # Docs transversais do monorepo
+│   └── auth0-mock.md          # Mock do Auth0 p/ desenvolvimento (histórico, movido da raiz)
+└── AGENTS.md                  # ← você está aqui
 ```
 
-**Mock Service (`MockAuth0Service.cs`):** Retorna token mockado e dados de usuário fictícios.
+> ⚠️ `school-management-api` e `school-management-ui` são **submodules**. Commits são feitos dentro de cada submodule e depois o ponteiro é bumpado no repositório raiz (padrão já usado por todo o histórico).
 
-### 3. Estratégia de Alternância
-```csharp
-// Program.cs
-var authMode = Environment.GetEnvironmentVariable("AUTH_MODE");
+## Documentos por projeto (carregue só o que precisa)
 
-if (authMode == "***")
-{
-    builder.Services.AddSingleton<IAuth0Service, MockAuth0Service>();
-}
-else
-{
-    builder.Services.AddHttpClient<IAuth0Service, ProductionAuth0Service>();
-}
+| Preciso… | Leia |
+|---|---|
+| Trabalhar na API (.NET) | `school-management-api/AGENTS.md` |
+| Trabalhar na UI (Angular) | `school-management-ui/AGENTS.md` |
+| Criar/alterar uma proposta de mudança | `openspec/AGENTS.md` (workflow OpenSpec) |
+| Entender o mock do Auth0 | `docs/auth0-mock.md` |
+
+## Comandos essenciais
+
+### API (`school-management-api/`)
+
+```bash
+export PATH="$HOME/.dotnet:$PATH"
+dotnet build src/SchoolManagement                      # build (API + camadas)
+dotnet test tests/SchoolManagement.Tests               # suíte completa (xUnit + Testcontainers)
+dotnet test tests/SchoolManagement.Tests --filter "FullyQualifiedName~Grading"   # subconjunto
+dotnet ef migrations add <Nome> --context SchoolContext \
+     --project src/SchoolManagement.Infrastructure --output-dir Data/Migrations   # a partir de src/SchoolManagement
+dotnet run --project src/SchoolManagement --no-launch-profile -- --seed-demo     # aplica seeds (idempotentes) e sai
+dotnet run --project src/SchoolManagement --no-launch-profile                    # sobe a API (Development)
 ```
 
-## ✅ Verificação  
-- [ ] O mock retorna tokens válidos para chamadas frequentes do Auth0  
-- [ ] Frontend conecta-se ao mock sem falhas  
-- [ ] Backend não exibe erros relacionados ao Auth0 em desenvolvimento  
+### UI (`school-management-ui/`)
 
-## 📚 Referências
-- [Auth0 SDK for .NET](https://github.com/auth0/auth0-aspnetcore)  
-- [.NET Dependency Injection](https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection)  
-- [JSON Server](https://github.com/typicode/json-server)
+```bash
+source ~/.nvm/nvm.sh && nvm use 24     # Node ≥ 22 exigido pelo CLI (24 LTS instalado)
+npm ci
+npx ng build --configuration development     # build
+npx cypress run --spec cypress/e2e/<spec>.cy.ts --config baseUrl='http://127.0.0.1:5067'  # E2E ao vivo (API real)
+```
 
-## 📁 Arquivos Criados
-| Arquivo | Descrição |
-|---------|-----------|
-| `/home/bruno/workspace/school-management/school-management-api/src/SchoolManagement.Infrastructure/Auth0/IAuth0Service.cs` | Interface comum + `Auth0AuthModeResolver` (decadência por `AUTH_MODE`) |
-| `/home/bruno/workspace/school-management/school-management-api/src/SchoolManagement.Infrastructure/Auth0/MockAuth0Service.cs` | Implementação do mock (tokens `mock|management-token-*`) |
-| `/home/bruno/workspace/school-management/school-management-api/src/SchoolManagement.Infrastructure/Auth0/ProductionAuth0Service.cs` | Implementação produção (client_credentials + /userinfo) |
+> E2E "ao vivo" = API local (porta 5067, Development) + Postgres do `docker compose` + seed demo, sem UI servida — specs API-only (`cy.request`). E2E de UI real usa `ng serve --configuration e2e` (devAuth).
 
-## 🚀 Status da implementação
-1. ~~**Registrar no DI container**~~ ✅ `RepositoryAndInfrastructureRegistration` — `AUTH_MODE=mock` força o mock mesmo com credenciais; sem `AUTH_MODE` haverá decadência automática pelo mock em desenvolvimento sem credenciais e Auth0 real em produção.
-2. **Atualizar `appsettings.Development.json`**: desnecessário — o mock não depende de credenciais; não colocar valores falsos no config para evitar ativar o serviço real.
-3. **Testar autenticação local** com mock ativado ✅ 9 testes (Auth0MockTests/ProductionAuth0ServiceTests).
-4. **Documentar uso no README principal**: `AUTH_MODE` documentado no próprio AGENTS.md e nos testes.
+### Ambiente local
+
+```bash
+docker compose up -d postgres   # dentro de school-management-api (container school-management-api-postgres-1, porta 5433)
+docker exec -i school-management-api-postgres-1 psql -U postgres -d SchoolManagementDb   # psql direto
+```
+
+## Convenções de commit
+
+- Mensagens detalhadas em uma linha, no estilo do histórico: `feat(escopo): o que mudou — detalhes; suíte N/N`.
+- Escopos comuns: `grading-formulas`, `billing-cadence`, `report-builder`, `export`, `ui`, `seed`, `test`.
+- Sempre: build verde + `dotnet test` (ou `ng build`) antes de commitar. A suíte atual é **755 testes, 0 falhas** (5 skips conhecidos).
+- Commits em dois níveis: dentro do submodule → bump do ponteiro na raiz com mensagem resumida apontando o commit do submodule.
+
+## Fluxo de trabalho (OpenSpec — spec-driven)
+
+1. **Proposta**: crie `openspec/changes/<verb-kebab-case>/` com `proposal.md`, `tasks.md`, `design.md` (se preciso) e deltas em `specs/<capability>/spec.md`. Valide com `openspec validate <id> --strict` (CLI: `npx -y @fission-ai/openspec`).
+2. **Aprovação**: confirme com o dono do produto antes de implementar.
+3. **Implementação**: siga as tasks de `tasks.md` **na ordem**; marque `- [x]` conforme conclui. Cada requirement do delta precisa de pelo menos um `#### Scenario:`.
+4. **Archive**: após deploy, `openspec archive <change>` (specs → `openspec/specs/`).
+
+Inventário atual: `openspec list` (changes ativos) · `ls openspec/changes/archive/` (concluídos).
+
+## Armadilhas conhecidas (economize debug)
+
+- **Duas tabelas "turma"**: `"ClassGroup"` (singular — modelo espelho do SchoolContext, relíquia) e `"ClassGroups"` (plural — **a real**, dono do AcademicContext). O app lê/escreve na **plural**. Entidades compartilhadas entre contexts têm colunas só onde o dono mapeia — colunas novas de `ClassGroup` vão por **migration do AcademicContext**.
+- **Idem `StudentClass`/`StudentClasses`**. O seed demo **não cria vínculos aluno-turma** (só notas) — E2E que precisa de matrícula as cria via psql idempotente.
+- **Seed**: `--seed-demo` só aplica em banco vazio para o demo de frontend (slug fixo); o Pilot é idempotente e reponível. Períodos letivos e fórmula default vêm do Pilot (recomendado re-rodar `--seed-demo` após migrations novas).
+- **xUnit v3 paraleliza métodos da mesma classe**: testes de integração com dados compartilhados correm riscos — use dados únicos por instância e semeadura fora da conexão singleton (`GetSeedConnectionString()`).
+- `IStudentClassRepository`/`IClassGroupRepository` resolvem para `AcademicContext ?? SchoolContext`.
+- Migration nova de entidade School + `dotnet ef` **a partir de `src/SchoolManagement`** com `--project .../SchoolManagement.Infrastructure` (senão falta o pacote Design).
