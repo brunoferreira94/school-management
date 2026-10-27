@@ -41,9 +41,9 @@ rodando a suíte `cypress/e2e/school-funnel.cy.ts` (8/8 verde após as correçõ
 - [x] Testes E2E de handoff (deep link inicia da escola, não envio automático) — `whatsapp-handoff-export-trust.cy.ts` 2.3a/2.3b; **descobriu bug real**: FindGuardianAsync não buscava por CPF → consentimento de opt-in nunca aplicado (régua e handoff seguiam WhatsApp e o wa.me recebia CPF como telefone) — corrigido em GuardianChannelConsentService
 
 ## 3. AiDrafts (rascunhos com revisão)
-- [ ] Contrato do provedor de rascunhos (interface) + provedor mock p/ dev; circuito de consentimento de dados por escola
-- [ ] 3 artefatos: mensagem p/ responsável em risco, comentário de boletim (report-builder), resumo semanal do diretor na tela de hoje
-- [ ] Estado "review required" + audit trail de quem editou/aprovou; testes de bloqueio de envio sem revisão
+- [x] Contrato do provedor de rascunhos (IAiDraftProvider + RiskScoreForDraft/ReportCardForDraft/WeeklySummaryForDraft) + MockAiDraftProvider determinístico p/ dev; consentimento de dados por escola (TenantAiConsent + endpoint GET/PUT /api/ai-drafts/consent)
+- [x] 3 artefatos (POST /api/ai-drafts/generate): mensagem p/ responsável em risco (ancorada no RiskScore, score+fatores na mensagem e no data basis), comentário de boletim (média consolidada + status + nº de avaliações), resumo semanal do diretor (alunos em risco >= 60 + faturas em aberto)
+- [x] Estado "review required" (PendingReview → Approved/Rejected) + audit trail (ReviewedBy/ByName/AtUtc/Note, OriginalContent imutável, EditedContent na aprovação) + BLOQUEIO de envio sem revisão (SendAiDraftCommand falha se != Approved) — 11 testes unitários (AiDraftServiceTests: consentimento recusa, 3 artefatos, revisão c/ edição, revisão duplicada recusada, envio bloqueado pending/rejected, envio aprovado enfileira c/ canal consentido, consentimento revogado entre aprovação e envio)
 
 ## 4. ProductTrust (transparência de confiabilidade)
 - [x] Página "confiabilidade & mudanças": rota pública /confiabilidade (TrustStatusComponent) — changelog de releases, MTTR-30d (AuditLog 5xx→próximo <400), status das integrações (gateway de pagamento, e-mail, armazenamento) + checks de infraestrutura do health existente
