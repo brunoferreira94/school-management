@@ -8,11 +8,11 @@
 - [x] 1.5 Score acima do limiar (`ChurnActionThreshold`) publica ação na fila da Tela de Hoje com dados citados
 
 ## 2. Frontend
-- [ ] 2.1 Painel "Risco" no advanced-analytics existente: lista priorizada com score e fatores
-- [ ] 2.2 Detalhe do aluno: fatores em linguagem simples — **parcialmente coberto pela Tela de Hoje (fatores citados no card); painel dedicado pendente**
-- [ ] 2.3 Ação direto do painel: "criar rascunho de contato" (ai-drafts) ou "adicionar à fila de hoje" — **depende da implementação de ai-drafts; resolver pela Tela de Hoje já disponível**
+- [x] Painel "Risco" no advanced-analytics existente: rota /analytics/risco (RiskPanelComponent) — lista priorizada (score desc) com score em destaque, tipo (evasão/inadimplência), recálculo e filtro por tipo; link no sidebar
+- [x] Detalhe do aluno: fatores em linguagem simples — chips de fatores no card do aluno (split por ";", ex.: "frequência abaixo de 75%", "atraso financeiro de 2 parcelas"); recálculo automático se >20h (backend RiskScoringService)
+- [x] Ação direto do painel: "criar rascunho de contato" via POST /api/ai-drafts/generate (GuardianRiskMessage, targetId=riskScore.id — Id agora exposto no RiskScoreDto) → preview inline do rascunho com data basis + aviso de revisão obrigatória; rascunho nasce PendingReview e o envio é bloqueado até aprovação (ai-drafts)
 
 ## 3. Testes
 - [x] 3.1 Unitário: score de evasão sobe com faltas; fatores listados refletem os pesos; aluno sem problemas não tem score; ausência de outro tenant é ignorada; staleness não recalcula (5 testes)
 - [x] 3.2 Integração: score acima do limiar gera ação na Tela de Hoje com base citada (fila contém ação churn a partir dos scores)
-- [ ] 3.3 E2E: diretora abre o painel de risco, escolhe um aluno e gera rascunho de contato
+- [x] E2E (risk-panel-draft.cy.ts ao vivo): painel lista scores com fatores → gera rascunho de contato (PendingReview, sem CPF no texto, data basis com score) → envio bloqueado sem aprovação (400 "aprovação humana") → diretora aprova (review) → finalContent disponível
