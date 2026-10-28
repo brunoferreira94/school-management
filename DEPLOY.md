@@ -42,6 +42,12 @@ git push origin main          # branch `main` → redeploy produção (vercel)
        -d '{"clearCache":"do_not_clear"}'
   ```
 - Últimas env vars via `PUT /v1/services/.../env-vars` (a lista completa precisa ser enviada — a **operação substitui tudo**).
+- ⚠️ **Auto-deploy DESLIGADO** (2026-10-28, via API: `PATCH /v1/services/{id}` `{"autoDeploy":"no"}`) em `school-management-api` (main) e `school-management-api-dev` (development). Motivo: 27 builds Docker automáticos em 8 dias (10/21–28) furaram os minutes inclusos do plano Hobby e geraram fatura de overage → 402. **Push no git não constrói mais nada** — deploy é sempre manual (comando acima).
+- **Limites de gasto (pós-incidente):**
+  - Spend limit do build pipeline é **dashboard-only**: Workspace Settings → **Build Pipeline** → **Set spend limit** → `0`. Com limite 0, os builds param ao esgotar os minutes do mês (sem compra automática). Endereço: https://dashboard.render.com/billing
+  - Bandwidth incluso: **5 GB/mês** — estouro cobra $0.15/GB se houver cartão no cadastro; **não há spend limit para bandwidth** (só alertas por e-mail). Tráfego API→Supabase conta como outbound.
+  - Itens de fatura não aparecem em API/MCP — **Billing → Invoices** no dashboard é o lugar-of-verdade do que foi cobrado.
+- **Deploys manuais comem minutes**: cada build Docker da API ≈ 10–20 min sem cache (`no-cache`) — prefira poucos deploys grandes a vários pequenos. Reativar auto-deploy só se a fábrica de builds for paga consciente (Plano pago / spend limit maior).
 - **Variáveis** (atuação cloud): `ASPNETCORE_ENVIRONMENT=Production`, `ConnectionStrings__DefaultConnection` (Supabase pooler), `Jwt__*`, `Auth0__*`(+Management), `Asaas__*`, `Cors__AllowedOrigins__0/1`.
 
 ### Banco (Supabase)
