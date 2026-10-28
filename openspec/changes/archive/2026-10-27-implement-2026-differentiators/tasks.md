@@ -25,7 +25,7 @@ rodando a suíte `cypress/e2e/school-funnel.cy.ts` (8/8 verde após as correçõ
 - [x] **Trial automático**: provisionamento Free/trial na criação do tenant (`ITrialSubscriptionProvisioner`), assinatura já persistida no seed
 - [x] **Landing pública** (archived `public-landing-page`, 2026-10-25): raiz `/` roteia a landing sem guard; early-redirect invertido (anônimo fica na landing, autenticado vai a `/home`); E2E `public-landing.cy.ts` 2/2
 - [x] **Onboarding checklist**: progresso gravado no servidor via `POST /api/onboarding/progress` nos passos (turma criada, professores convidados, boletim visto) — verificado hoje no código (`onboarding.service.ts` chama `updateProgress` nos 3 marcos)
-- [ ] Validar o funil completo em **staging** (Render) — hoje validado em local com API+seed demo (funnel live 8/8 com DB real); Render 402 (fatura pendente) bloqueia
+- [x] Validar o funil completo em **staging** (Render) — **2026-10-28: `school-funnel.cy.ts` 8/8 AO VIVO contra staging** (API Render + Supabase Dev `us-east-2` + seed demo aplicado idempotentemente). Correções de ambiente feitas no caminho (via API do Render): `Legal__TermsOfUseVersion=2026.1` ausente nas env vars (500 no `TermsOfUseEnforcementMiddleware`) e `Asaas__ApiKey` com placeholder literal → router ia a Asaas real com token inválido (400 "Não foi possível identificar cliente no Asaas"); diagnostico do "402" anterior corrigido no DEPLOY.md (nunca houve fatura — spend limit já em 0)
 
 ## 1. BillingCadence (régua de cobrança)
 - [x] Entidade/infra: `BillingCadenceRule` (D-3/hoje/D+2/D+5, ativo), `BillingCadenceOccurrence` (dedup por fatura+regra+data, com `SentChannels`) e `BillingCadenceRun` (log de execuções) + repos; migration `20261025184254_AddBillingCadence`
