@@ -33,6 +33,10 @@ por `{cpf}` apenas nunca aderiu ao padrão.
   plano junto/atrás; pós-CREATE a tela usa a listagem.
 - **404 (não 403)** nos ataques: não vazar existência de recurso de outro tenant.
 
+> **Nota de implementação (final tal como codificado)**: a variante ficou
+> `GetStudentByCpfForTenantAsync(cpf)` + `ListStudentsForTenantAsync()` no `StudentService`, resolvendo
+> o tenant via `ITenantContext` (já injetado no service — sem dependência nova de `ITenantProvider`).
+
 ## Risks / Trade-offs
 
 - **Risco**: alguma chamada interna LEGÍTIMA ao `GetByCpfAsync` global que dependa de aluno sem
