@@ -1,18 +1,13 @@
 ## ADDED Requirements
 
-### Requirement: Exclusão integral de dados do titular
+### Requirement: Exclusão anonimiza identificadores diretos do titular
 
 O sistema SHALL, ao receber solicitação de exclusão do próprio titular
-(`DELETE /api/privacy/data-subject/me`), remover ou anonimizar de forma irreversível
+(`DELETE /api/privacy/data-subject/me`), anonimizar de forma irreversível
 todo identificador direto do solicitante (username, CPF, nome, contato, endereço,
-e-mail, telefone) nas entidades account, student, guardian e staff; SHALL apagar o
-histórico pessoal vinculado (histórico de busca, solicitações pendentes de perfil,
-refresh tokens); e SHALL NÃO manter nenhum campo a partir do qual o titular possa ser
-reidentificado. Dados que devem ser retidos por obrigação legal ou regulatória
-(art. 16 da LGPD) SHALL permanecer sem identificadores diretos e com entrada
-correspondente em um registro de retenção que documenta a base legal.
+e-mail, telefone) nas entidades account, student, guardian e staff.
 
-#### Scenario: Identificadores diretos são removidos na exclusão
+#### Scenario: Identificadores diretos são removidos
 
 - **GIVEN** um titular autenticado com conta, vínculo de aluno e perfil de responsável
 - **WHEN** ele executa `DELETE /api/privacy/data-subject/me`

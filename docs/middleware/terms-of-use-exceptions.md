@@ -159,8 +159,11 @@ if (response.status === 428) {
 | `/api/auth/*` | Endpoints de autenticação — não podem exigir aceite prévio |
 | `/api/privacy/terms-of-use/*` | Endpoint de aceite dos próprios termos |
 | `/api/privacy/cookie-consent/*` | Consentimento de cookies — fluxo separado |
+| `/api/privacy/data-subject/*` | Direitos do titular (art. 18: acesso/correção/exclusão) — não podem ser bloqueados por aceite pendente (`fix-lgpd-compliance-gaps`; exigem autenticação JWT) |
 | `/api/subscriptions/webhooks` | Webhooks externos — não têm contexto de usuário |
 | `/api/support/*` | Endpoints de suporte podem precisar de acesso pré-aceite |
+| `/api/setup/wizard/*` | Onboarding inicial (register-school) — antecede qualquer aceite |
+| `/api/portal/*` | Portal do responsável — decisão de produto: aceite tratado na superfície do portal |
 | Requisições `OPTIONS` | CORS preflight não precisa de autenticação |
 
 ---
