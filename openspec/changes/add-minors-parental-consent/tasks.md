@@ -16,10 +16,10 @@
 
 ## 3. Gating
 
-- [ ] 3.1 Matrícula em turma (`BulkEnrollStudentsAsync` + enroll singular) bloqueada p/
+- [x] 3.1 Matrícula em turma (`BulkEnrollStudentsAsync` + enroll singular) bloqueada p/
       aluno menor sem consentimento vigente (erro explícito, registrável).
-- [ ] 3.2 Lançamento de notas/avaliações bloqueado (mesmo gate).
-- [ ] 3.3 Comunicações ao aluno bloqueadas (mesmo gate).
+- [x] 3.2 Lançamento de notas/avaliações bloqueado (mesmo gate).
+- [x] 3.3 Comunicações ao aluno bloqueadas (mesmo gate).
 - [ ] 3.4 Painel de status de consentimento (staff): alunos menores × estado.
 
 ## 4. Docs e QA
