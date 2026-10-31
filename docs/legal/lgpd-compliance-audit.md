@@ -160,3 +160,12 @@ elimina o risco; manter guarda quando real (proposal futuro).
 
 ---
 *Próxima revisão: após implementação do consentimento parental e da remediação P0.*
+
+## Atualização — 31/10/2026 (add-minors-parental-consent)
+
+Lacuna P0 (§3) **implementada**:
+- `GuardianConsent` (domain + migration `AddGuardianConsent`) — art. 14 §1º;
+- `POST /api/privacy/guardian-consent` (aceite portal / staff presencial) + revoke;
+- Gating de matrícula/notas/comunicações p/ menores sem consentimento vigente (3.1–3.3);
+- UI banner de aceite (2.3) + termo draft versionado (2.1);
+- Auditoria do aceite/canal/versão; dossiê referenciado em `privacy-policy.md` §9.

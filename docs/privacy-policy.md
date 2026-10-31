@@ -57,3 +57,7 @@ Os dados são processados por nossos subfornecedores/infraestrutura (AWS, Supaba
 ## 8. Menores
 
 O acesso à plataforma como titular passa por login de responsável legal. Consentimento específico para tratamento de dados de menores é dado pelo responsável legal com prova de como foi obtido.
+
+## 9. Consentimento parental (menores — LGPD art. 14)
+
+Registro versionado em `docs/legal/guardian-consent-terms-draft.md` (draft p/ jurídico). Quando o aluno é menor de 18 anos, o responsável legal recebe aviso no primeiro acesso; enquanto não houver aceite vigente, matrícula em turma, lançamento de notas e comunicações ao aluno permanecem bloqueados (gating — add-minors-parental-consent 3.1–3.3). Revogação no portal tem efeito imediato.
