@@ -1,7 +1,11 @@
 # lgpd-compliance Specification
 
 ## Purpose
-TBD - created by archiving change add-minors-parental-consent. Update Purpose after archive.
+
+Garantir conformidade LGPD ao sistema de gestão escolar: consentimento parental
+para menores (art. 14), registro versionado e auditável, e bloqueio (gating) das
+funcionalidades dependentes de dados do menor enquanto o consentimento não estiver
+vigente — permitindo que a escola regularize o status sem perder a operação.
 
 ## Requirements
 
