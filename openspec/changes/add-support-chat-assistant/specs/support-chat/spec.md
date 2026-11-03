@@ -53,6 +53,28 @@ all) e as permissões do usuário — conteúdo de staff nunca é exposto a resp
 - **WHEN** um responsável faz pergunta que recupera esse artigo
 - **THEN** o artigo é filtrado fora da recuperação e não influencia a resposta
 
+### Requirement: Apontamento funcional — o que, onde e como
+
+A resposta do chat SHALL incluir apontamento funcional para as operações citadas:
+`actions[]` sugerindo o que fazer de forma contextual — reutilizando o catálogo de
+ações da busca global (`EntitySearchService`: label + Route, filtrado pelas
+permissões do usuário) — e `contentRoute` do artigo apontando a tela de destino;
+ação que o não usuário não tem permissão SHALL NÃO ser sugerida.
+
+#### Scenario: Resposta aponta tela de destino e ação
+
+- **GIVEN** um diretor pergunta "como lançar as notas de uma prova?"
+- **WHEN** o assistente responde com base no artigo de lançamento de notas
+- **THEN** a resposta inclui `contentRoute` apontando a tela de notas e `actions[]`
+  com a ação contextual (label + Route) do catálogo da busca global
+
+#### Scenario: Ação sem permissão não é sugerida
+
+- **GIVEN** um professor sem permissão financeira pergunta sobre cobrança
+- **WHEN** o assistente compõe a resposta
+- **THEN** nenhuma ação financeira aparece em `actions[]` (apenas o material de
+  ajuda e o apontamento de quem pode executar)
+
 ### Requirement: Controle de custo e abuso
 
 O uso do chat SHALL ser limitado por cota diária de mensagens por usuário/tenant

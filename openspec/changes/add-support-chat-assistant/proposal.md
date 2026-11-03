@@ -21,6 +21,11 @@ em base curada + recusa com threshold + citação de fonte é o que separa um as
 - **Retrieval v1 sem infra nova**: busca Postgres FTS/tsvector sobre `HelpArticle`
   (chunked por seção), filtrada por audiência/papel do usuário — sem pgvector no v1
   (boring pattern; embeddings ficam p/ v2 se FTS não sustentar).
+- **Apontamento funcional (o "onde/como fazer")**: resposta do chat inclui
+  `actions[]` reutilizando o catálogo contextual da busca global
+  (`EntitySearchService` — label + Route filtrado por permissões) e cada artigo
+  carrega `contentRoute` (caminho da tela de destino) — o chat não só explica,
+  leva o usuário direto para onde a ação acontece.
 - **Guardrails de escopo** (o "sem papear"): system prompt com escopo fechado +
   checagem de retrievals — pergunta fora do sistema/portal → recusa simpática e
   redireciona ao assunto; sem retrieval relevante (score < threshold) → "não sei,
