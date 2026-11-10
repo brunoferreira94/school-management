@@ -1,7 +1,7 @@
 # director-today-screen Specification
 
 ## Purpose
-TBD - created by archiving change add-director-today-screen. Update Purpose after archive.
+Tela "hoje" do diretor: fila de ações priorizada por criticidade com ação sugerida de um clique por item.
 
 ## Requirements
 

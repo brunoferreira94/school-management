@@ -1,7 +1,7 @@
 # subscription-model Specification
 
 ## Purpose
-TBD - created by archiving change auto-provision-trial-subscription. Update Purpose after archive.
+Ciclo de vida da assinatura do tenant: trial provisionado junto com a escola, evolução de plano e estados de cobrança.
 
 ## Requirements
 

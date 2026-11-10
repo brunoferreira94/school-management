@@ -1,7 +1,7 @@
 # reports Specification
 
 ## Purpose
-TBD - created by archiving change add-owner-client-management-dashboard. Update Purpose after archive.
+Relatórios interativos da operação escolar: filtros, drill-down por dimensão e views salvas para reuso.
 
 ## Requirements
 

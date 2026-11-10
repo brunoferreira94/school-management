@@ -1,7 +1,7 @@
 # checkout-gateway Specification
 
 ## Purpose
-TBD - created by archiving change connect-gateway-checkout. Update Purpose after archive.
+Checkout redirecionado pelo gateway de pagamento (hosted page), refletindo no retorno o status real do pagamento na assinatura; o desenvolvimento local roda sem credenciais reais de gateway.
 
 ## Requirements
 

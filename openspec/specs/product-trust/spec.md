@@ -1,7 +1,7 @@
 # product-trust Specification
 
 ## Purpose
-TBD - created by archiving change implement-2026-differentiators. Update Purpose after archive.
+Página pública de confiabilidade do produto: segurança, privacidade/LGPD e práticas operacionais apresentadas a visitantes e prospects.
 
 ## Requirements
 

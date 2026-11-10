@@ -1,7 +1,7 @@
 # support-chat Specification
 
 ## Purpose
-TBD - created by archiving change add-support-chat-assistant. Update Purpose after archive.
+Chat de suporte "Zeca" do portal: escopo fechado no sistema, respostas grounded na base curada de artigos de ajuda com citações e rotas, acesso filtrado por audiência/papel, controle de custo e abuso, e fallback FAQ puro + encaminhamento humano.
 
 ## Requirements
 

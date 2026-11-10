@@ -1,7 +1,7 @@
 # tenant-management Specification
 
 ## Purpose
-TBD - created by archiving change add-owner-client-management-dashboard. Update Purpose after archive.
+Gestão de tenants (SaaS): criação/onboarding de escolas, detalhe do tenant e ações administrativas na superfície do dono.
 
 ## Requirements
 

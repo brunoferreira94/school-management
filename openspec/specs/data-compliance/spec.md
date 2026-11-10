@@ -1,7 +1,7 @@
 # data-compliance Specification
 
 ## Purpose
-TBD - created by archiving change fix-lgpd-compliance-gaps. Update Purpose after archive.
+Direitos dos titulares na LGPD: exclusão que anonimiza identificadores diretos, export completo e portátil, consentimento unificado e revogável, política de retenção configurável e canal com prazo de resposta a solicitações.
 
 ## Requirements
 

@@ -1,7 +1,7 @@
 # public-presence Specification
 
 ## Purpose
-TBD - created by archiving change public-landing-page. Update Purpose after archive.
+Presença pública anônima: landing page na raiz com CTA de preços condicional à existência de sessão.
 
 ## Requirements
 

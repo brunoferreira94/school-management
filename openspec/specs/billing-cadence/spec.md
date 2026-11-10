@@ -1,7 +1,7 @@
 # billing-cadence Specification
 
 ## Purpose
-TBD - created by archiving change implement-2026-differentiators. Update Purpose after archive.
+Motor de cadência para eventos de cobrança (lembretes, atrasos, retenção): anexa link de pagamento conforme o tipo de cobrança e mede a eficácia das cadências executadas.
 
 ## Requirements
 

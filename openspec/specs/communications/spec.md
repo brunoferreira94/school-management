@@ -51,7 +51,8 @@ O sistema SHALL permitir o gerenciamento de templates de comunicação com place
 
 #### Scenario: Criar template com placeholders
 
-- Usuário acessa o gerenciador de templates, cria um novo template com campos dinâmicos e salva.
+- **WHEN** um usuário do gerenciador cria um template com campos dinâmicos (placeholders) e salva
+- **THEN** o template fica disponível na listagem e pronto para uso nos envios
 
 ### Requirement: Agendamento de envios segmentados
 
@@ -59,7 +60,8 @@ O sistema SHALL possibilitar o agendamento de envios segmentados por grupos/audi
 
 #### Scenario: Agendar envio segmentado
 
-- Usuário seleciona um segmento (ex: turma), agenda o envio para data futura e confirma.
+- **WHEN** um usuário seleciona um segmento (ex.: turma), agenda o envio para data futura e confirma
+- **THEN** o envio fica agendado e disparado automaticamente na data configurada para o segmento escolhido
 
 ### Requirement: Registro e exibição de logs de entrega
 
@@ -67,7 +69,8 @@ O sistema SHALL registrar e exibir logs de entrega por canal (email, SMS, push, 
 
 #### Scenario: Visualizar logs de entrega
 
-- Após envio, usuário acessa logs e visualiza status de entrega por canal para cada destinatário.
+- **WHEN** um envio é concluído e o usuário acessa os logs de entrega
+- **THEN** o status de entrega é exibido por canal (email, SMS, push, in-app) para cada destinatário
 
 ### Requirement: Monitoramento de saúde dos provedores
 
@@ -75,7 +78,8 @@ O sistema SHALL monitorar e exibir o status de saúde dos provedores de envio.
 
 #### Scenario: Monitorar saúde dos provedores
 
-- Usuário acessa painel de saúde e visualiza status (online/offline/erro) dos provedores de email, SMS e push.
+- **WHEN** um usuário acessa o painel de saúde dos provedores
+- **THEN** o status (online/offline/erro) é exibido para cada provedor de email, SMS e push
 
 ### Requirement: WhatsApp as an official communication channel
 

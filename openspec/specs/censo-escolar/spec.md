@@ -1,7 +1,7 @@
 # censo-escolar Specification
 
 ## Purpose
-TBD - created by archiving change add-censo-escolar-export. Update Purpose after archive.
+Exportação one-click dos dados escolares no formato do Censo Escolar (INEP), com checklist de prontidão que aponta o que falta completar antes de exportar.
 
 ## Requirements
 

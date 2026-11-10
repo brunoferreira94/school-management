@@ -1,7 +1,7 @@
 # ai-drafts Specification
 
 ## Purpose
-TBD - created by archiving change implement-2026-differentiators. Update Purpose after archive.
+Rascunhos de texto gerados por IA (ex.: comentários de boletim) que SEMPRE passam por revisão e aprovação humana explícita (PendingReview → Approved) antes de serem usados ou enviados.
 
 ## Requirements
 

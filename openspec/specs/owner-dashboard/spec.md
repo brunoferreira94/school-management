@@ -1,7 +1,7 @@
 # owner-dashboard Specification
 
 ## Purpose
-TBD - created by archiving change add-owner-client-management-dashboard. Update Purpose after archive.
+Painel do dono (SaaS): visão agregada de tenants e assinaturas com cards de KPI e alertas acionáveis.
 
 ## Requirements
 

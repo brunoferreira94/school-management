@@ -1,7 +1,7 @@
 # security Specification
 
 ## Purpose
-TBD - created by archiving change add-owner-client-management-dashboard. Update Purpose after archive.
+Segurança de plataforma: controle de acesso do owner, trilha de auditoria, isolamento cross-tenant da superfície de alunos e minimização de dados pessoais em logs.
 
 ## Requirements
 

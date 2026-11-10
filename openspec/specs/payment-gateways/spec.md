@@ -1,7 +1,7 @@
 # payment-gateways Specification
 
 ## Purpose
-TBD - created by archiving change integrate-payment-gateways. Update Purpose after archive.
+Cobranças via gateway: hosted checkout, tokenização e meios de pagamento armazenados, processamento de webhooks idempotente e dashboard de reconciliação financeira.
 
 ## Requirements
 

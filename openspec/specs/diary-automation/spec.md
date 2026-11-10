@@ -1,7 +1,7 @@
 # diary-automation Specification
 
 ## Purpose
-TBD - created by archiving change add-diary-automation. Update Purpose after archive.
+Diário de classe semanal como fonte única de verdade para rascunhos de IA: comentários de boletim com base citada e planos de aula pré-mapeados à BNCC.
 
 ## Requirements
 

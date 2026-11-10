@@ -1,7 +1,7 @@
 # data-portability Specification
 
 ## Purpose
-TBD - created by archiving change implement-2026-differentiators. Update Purpose after archive.
+Portabilidade dos dados da escola: exportação completa e organizada dos dados da conta no momento do cancelamento.
 
 ## Requirements
 
