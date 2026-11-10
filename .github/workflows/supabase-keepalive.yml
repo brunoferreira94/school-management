@@ -1,0 +1,30 @@
+# Keepalive do Supabase de staging (free tier pausa o projeto após ~7 dias sem
+# conexão; acontecimento real em 10/11/2026 derrubou o deploy do Render com
+# ENOTFOUND "tenant/user not found" no pooler). Pingar /api/support/health a
+# cada 3 dias mantém o banco ativo e o Render quente.
+name: supabase-keepalive
+
+on:
+  schedule:
+    - cron: "0 6 */3 * *" # 06:00 UTC a cada 3 dias
+  workflow_dispatch: {} # permite disparo manual
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health (staging)
+        run: |
+          url="https://school-management-api-dev.onrender.com/api/support/health"
+          # Free tier do Render tem cold start de ~1 min: até 3 tentativas.
+          for i in 1 2 3; do
+            code=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 180 "$url")
+            echo "tentativa $i: HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "body: $(cat /tmp/health.json)"
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "::warning::health não respondeu 200 — Supabase pausado ou Render fora do ar; restaurar via dashboard/Management API"
+          exit 1
