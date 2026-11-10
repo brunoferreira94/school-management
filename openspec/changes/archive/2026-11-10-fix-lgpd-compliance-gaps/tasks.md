@@ -26,14 +26,14 @@
 
 ## 3. Frontend — consentimento e privacidade
 
-- [ ] 3.1 Unificar consentimento: `PortalAnalyticsService` passa a ler a decisão do
+- [x] 3.1 Unificar consentimento: `PortalAnalyticsService` passa a ler a decisão do
       `CookieConsentService` e removê-lo `portal_analytics_consent` divergente
       (owner: frontend).
-- [ ] 3.2 Garantir que aceitar/rejeitar no banner habilita/bloqueia o disparo de
+- [x] 3.2 Garantir que aceitar/rejeitar no banner habilita/bloqueia o disparo de
       analytics a partir da mesma decisão (owner: frontend).
-- [ ] 3.3 Superfície de revogação de consentimento nas preferências (reabrir banner /
+- [x] 3.3 Superfície de revogação de consentimento nas preferências (reabrir banner /
       preferências) com efeito imediato (owner: frontend).
-- [ ] 3.4 Atualizar `privacidade.component.*` com as seções do art. 9º: finalidades ×
+- [x] 3.4 Atualizar `privacidade.component.*` com as seções do art. 9º: finalidades ×
       bases legais, prazos de retenção, compartilhamento, direitos e como exercê-los
       (owner: frontend/jurídico).
 
