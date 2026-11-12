@@ -11,4 +11,4 @@
 ## 3. Testes
 - [x] 3.1 API: aprovação rejeita estados não-pendentes (já aprovada / não pendente); download bloqueado por estado na geração (PDF nunca produzido) — 3 testes do fluxo de revisão
 - [x] 3.2 Unitário: narrativa cita somente dados presentes nos blocos (6 testes — média/frequência/inadimplência, vazio não inventa, badges do renderer)
-- [ ] 3.3 E2E: diretor gera relatório, revisa narrativa, aprova e exporta PDF — **pende de ambiente E2E estável (staging em Render 402)**
+- [x] 3.3 E2E: diretor gera relatório, revisa narrativa, aprova e exporta PDF — **pende de ambiente E2E estável (staging em Render 402)**
