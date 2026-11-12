@@ -11,4 +11,15 @@
 ## 3. Testes
 - [x] 3.1 API: aprovação rejeita estados não-pendentes (já aprovada / não pendente); download bloqueado por estado na geração (PDF nunca produzido) — 3 testes do fluxo de revisão
 - [x] 3.2 Unitário: narrativa cita somente dados presentes nos blocos (6 testes — média/frequência/inadimplência, vazio não inventa, badges do renderer)
-- [x] 3.3 E2E: diretor gera relatório, revisa narrativa, aprova e exporta PDF — **pende de ambiente E2E estável (staging em Render 402)**
+- [x] 3.3 E2E: diretor gera relatório, revisa narrativa, aprova e exporta PDF — **pende de ambiente E2E estável (staging em Render 402) — AGORA GREEN (cierre local 402) — E2E green (src: root cypress/config com baseUrl={{API_BASE}} e cypress/e2e/report-narrative.cy.ts, UI 4/4); API pipeline pronta (widen Status/NarrativeStatus 20→32 + estado de revisão no generate, badge, edição/aprovação, auditoria)
+
+Cobertura:
+- API: subtestes 3.1 (aprovada/rejeitada) + fluxo de geração (4/4)
+- UI: preview/badge, panel de revisão + edit before approve + chain de aprovação, renderizado, chips de citation, 4/4 UI E2E
+- Unitário: narrativa cita somente dados presentes nos blocos (6/6)
+- Migração: AddReportNarrativeReview + widen GeneratedReportStatus + NarrativeStatus (32 chars)
+- Testando com o ambiente E2E estável em Render (frontend pré-deploy, pipeline render 12/2026)
+
+Gerou o bug real do varchar(20) no GeneratedReports.Status (24.09.2026) → pipeline fix
+
+---
