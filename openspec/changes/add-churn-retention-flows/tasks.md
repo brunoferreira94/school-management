@@ -24,9 +24,9 @@
 
 ## 4. Re-engagement anchor
 
-- [ ] 4.1 Mapear eventos recorrentes do calendário (início de bimestre, matrícula, fechamento de notas)
-- [ ] 4.2 Trigger de notificação vinculado a evento via módulo `notifications`/`communications`
-- [ ] 4.3 Fallback de cadência simples quando não há calendário configurado
+- [x] 4.1 Mapear eventos recorrentes do calendário (início de bimestre, matrícula, fechamento de notas)
+- [x] 4.2 Trigger de notificação vinculado a evento via módulo `notifications`/`communications`
+- [x] 4.3 Fallback de cadência simples quando não há calendário configurado
 
 ## 5. Portal — jargão e FAQ contextual
 

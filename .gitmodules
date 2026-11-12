@@ -1,6 +1,7 @@
 [submodule "school-management-api"]
 	path = school-management-api
 	url = https://github.com/brunoferreira94/school-management-api.git
+	branch = development
 [submodule "school-management-ui"]
 	path = school-management-ui
 	url = https://github.com/brunoferreira94/school-management-ui.git
