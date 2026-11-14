@@ -14,10 +14,10 @@
 
 ## 3. Validação de entrada (400 problem-details) — back
 
-- [ ] 3.1 Provar wiring dos validators existentes via HTTP: guardian, classroom, assignment, submission, lesson-plan → 400 com problem-details — BACK
-- [ ] 3.2 Payloads malformados: JSON inválido, campos obrigatórios ausentes, tipos errados, enum inválido, GUID não-UUID — BACK
-- [ ] 3.3 CPF/e-mail com formato inválido (inclui gate gov.br já coberto só em E2E) — BACK
-- [ ] 3.4 Corrigir bugs encontrados no bloco 3 — BACK
+- [x] 3.1 Provar wiring dos validators existentes via HTTP: guardian, classroom, assignment, submission, lesson-plan → 400 com problem-details — BACK
+- [x] 3.2 Payloads malformados: JSON inválido, campos obrigatórios ausentes, tipos errados, enum inválido, GUID não-UUID — BACK
+- [x] 3.3 CPF/e-mail com formato inválido (inclui gate gov.br já coberto só em E2E) — BACK
+- [x] 3.4 Corrigir bugs encontrados no bloco 3 — BACK (nenhum bug P0/P1: wiring completo nos 5 CRUDs; corpo de erro é ErrorDto {message,code}, não RFC7807 — contrato aceito pelo teste; CPF sem dígito verificador é P2 em 6.3)
 
 ## 4. Valores de fronteira e concorrência — back
 
