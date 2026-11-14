@@ -62,4 +62,4 @@
 - [x] 7.2 `npx ng build --configuration development` + `npm test` (Karma) verdes — FRONT (build ✓; Karma 725/725)
 - [x] 7.3 Bateria Cypress live completa verde contra API `:5067` (specs novas + migradas) — FRONT (novas: students 6/6, grades/attendance 5/5, finance 4/4, permissions 5/5; migradas/existentes: tenant-isolation 12/12, whatsapp-handoff 4/4, grading-formulas 5/5, billing-cadence 6/6 — flake transiente de ordem no whatsapp quando em batch com 3 outras specs, verde em re-run e solo)
 - [x] 7.4 Commits: submodules (api/ui) + bump no root com mensagem resumida — ambos
-- [ ] 7.5 `openspec validate add-adversarial-test-battery --strict` verde — ambos
+- [x] 7.5 `openspec validate add-adversarial-test-battery --strict` verde — ambos
