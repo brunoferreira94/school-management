@@ -29,12 +29,12 @@
 
 ## 5. E2E ao vivo de escrita + negação na UI — front
 
-- [ ] 5.1 Spec live de CRUD students (create → update → delete) com validação de form exibindo erros 400 — FRONT
-- [ ] 5.2 Spec live de grades/attendance: escrita com valores inválidos → erro visível; happy path permanece verde — FRONT
-- [ ] 5.3 Spec live de finance (installments/pay): pagamento repetido/expirado → recusa com mensagem clara — FRONT
-- [ ] 5.4 Spec de negação de UI: guardian sem permissão acessando rotas admin → expulso/guard 403 (hoje só documentado, não testado) — FRONT
-- [ ] 5.5 Spec live de roles/permissions: troca de role reflete no acesso (admin → limitado) — FRONT
-- [ ] 5.6 Corrigir bugs de front encontrados nos blocos 5.1–5.5 — FRONT
+- [x] 5.1 Spec live de CRUD students (create → update → delete) com validação de form exibindo erros 400 — FRONT (`students-crud-live.cy.ts`, 6/6; 400 com mensagem em português — bug #8)
+- [x] 5.2 Spec live de grades/attendance: escrita com valores inválidos → erro visível; happy path permanece verde — FRONT (`grades-attendance-live.cy.ts`, 5/5; nota fora da escala → 400 "Nota fora do intervalo", enum inválido → 400)
+- [x] 5.3 Spec live de finance (installments/pay): pagamento repetido/expirado → recusa com mensagem clara — FRONT (`finance-pay-live.cy.ts`, 4/4; repetido → 400 "Parcela já está paga", estado preservado, parcela fantasma → 404 — bug #11)
+- [x] 5.4 Spec de negação de UI: guardian sem permissão acessando rotas admin → expulso/guard 403 (hoje só documentado, não testado) — FRONT (`permissions-live.cy.ts`; API-only, padrão live da casa: 403 estruturado sem dados, nunca 5xx)
+- [x] 5.5 Spec live de roles/permissions: troca de role reflete no acesso (admin → limitado) — FRONT (`permissions-live.cy.ts`, 5/5; mesma rota 200 diretor vs 403 guardiã, claims validadas no JWT)
+- [x] 5.6 Corrigir bugs de front encontrados nos blocos 5.1–5.5 — FRONT (bugs #8, #9, #10, #11 — ver 6.1)
 
 ## 6. Triagem e correção de bugs encontrados
 
@@ -46,6 +46,10 @@
   5. **P1 (bloco 2)** — login de tenant recém-registrado emitia `school_unit_id` vazio (leitura da unidade sob filtro do tenant ambiente) → `SchoolUnitRepository` explícitos com `IgnoreQueryFilters`.
   6. **P1 (bloco 4)** — `POST /api/classgroups/{id}/assessments`: falha de validação/turma inexistente virava exceção → 500 → command/handler retornam `Result` + controller mapeia 400/404.
   7. **P1 (bloco 4)** — `POST /api/plans` com valor/parcelas fora da regra: `ArgumentException` → 500 **com `ex.Message` vazado no corpo** → `PlanService.CreateAsync` retorna `Result` + controller mapeia 400.
+  8. **P1 (bloco 5)** — `POST /api/students`: validação/limite de assinatura lançavam exceção → **500 com stack trace no corpo** (Development) → `StudentCreationService.CreateAsync` retorna `Result` (400/409) + validação de nome/CPF que faltava.
+  9. **P1 (bloco 5)** — aluno criado via API/UI **sumia da listagem do próprio criador** (gate por StudentPlan; criação não vincula plano) → `Student.TenantId` carimbado na criação + regra OR no `StudentRepository` + migration `StudentTenantStamp` (backfill via plano).
+  10. **P1 (bloco 5)** — `PUT /api/students/{cpf}` **zerava o carimbo TenantId** (payload sem o campo + Update cego) → o aluno "sumia" do tenant na leitura seguinte → `UpdateStudentAsync` preserva `existing.TenantId`.
+  11. **P2 (bloco 5)** — pagamento de parcela inexistente → 400 em vez de 404 (substring "não encontrado" não casava com "não encontrad**a**") → `ErrorCode.NotFound` no `InstallmentService` + mapeamento no controller.
 - [x] 6.2 Fix de P0/P1: teste vermelho → correção → verde → commit (mensagem detalhada PT-BR com escopo `test`) — ambos (bugs 1–5 no commit do bloco 2; bugs 6–7 no commit do bloco 4)
 - [x] 6.3 Fix de P2 ou justificativa registrada para adiamento — ambos
   - **P2 (bloco 3)** — CPF sem dígito verificador é aceito (validação só de tamanho, `CpfValidationService`); enforce de DV exigiria decisão de produto + auditoria de CPFs sintéticos em seeds/E2Es (documentado em `InputValidationIntegrationTests.Guardian_CpfComDígitosRepetidos_AceitoPorDesign_Sem5xx`).
@@ -54,8 +58,8 @@
 
 ## 7. Validação final
 
-- [ ] 7.1 `dotnet test tests/SchoolManagement.Tests` verde (nova bateria incluída; 0 falhas) — BACK
-- [ ] 7.2 `npx ng build --configuration development` + `npm test` (Karma) verdes — FRONT
-- [ ] 7.3 Bateria Cypress live completa verde contra API `:5067` (specs novas + migradas) — FRONT
-- [ ] 7.4 Commits: submodules (api/ui) + bump no root com mensagem resumida — ambos
+- [x] 7.1 `dotnet test tests/SchoolManagement.Tests` verde (nova bateria incluída; 0 falhas) — BACK (931/931, 5 skips conhecidos)
+- [x] 7.2 `npx ng build --configuration development` + `npm test` (Karma) verdes — FRONT (build ✓; Karma 725/725)
+- [x] 7.3 Bateria Cypress live completa verde contra API `:5067` (specs novas + migradas) — FRONT (novas: students 6/6, grades/attendance 5/5, finance 4/4, permissions 5/5; migradas/existentes: tenant-isolation 12/12, whatsapp-handoff 4/4, grading-formulas 5/5, billing-cadence 6/6 — flake transiente de ordem no whatsapp quando em batch com 3 outras specs, verde em re-run e solo)
+- [x] 7.4 Commits: submodules (api/ui) + bump no root com mensagem resumida — ambos
 - [ ] 7.5 `openspec validate add-adversarial-test-battery --strict` verde — ambos
