@@ -1,7 +1,7 @@
 # adversarial-testing Specification
 
 ## Purpose
-TBD - created by archiving change add-adversarial-test-battery. Update Purpose after archive.
+Garantia contínua de robustez da API contra entradas hostis e uso indevido: matriz de status HTTP (401/403/404 com anti-5xx) em todas as rotas protegidas, isolamento cross-tenant (IDOR) nas superfícies de leitura/escrita, validação de entrada com recusas estruturadas, valores de fronteira e idempotência de re-runs. Inclui a invariante de classificação de autorização (toda action de controller tem `[Authorize]` ou `[AllowAnonymous]`) e o gate de model cache do EF para que os query filters de tenant nunca fiquem silenciosamente inativos.
 
 ## Requirements
 

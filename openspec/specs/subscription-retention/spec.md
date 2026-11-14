@@ -1,7 +1,7 @@
 # subscription-retention Specification
 
 ## Purpose
-TBD - created by archiving change add-churn-retention-flows. Update Purpose after archive.
+Retenção de assinantes do SaaS escolar: fluxo de cancelamento desenhado (export de dados portáveis na janela de grace, re-export e recusa clara fora dela), health score de churn com win-back, rascunhos assistidos por IA (AiDrafts) para re-engajamento, handoff de WhatsApp com consentimento (opt-in + fallback com motivo) e métricas de retenção públicas ao dono (NRR, save rate, opens de re-engajamento).
 
 ## Requirements
 
