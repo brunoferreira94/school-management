@@ -5,8 +5,8 @@
 - [x] 1.1 Criar middleware `IdempotencyMiddleware` para caching de chaves
 - [x] 1.2 Implementar gerador de ETag com revision + content-hash
 - [x] 1.3 Criar endpoint `POST /api/offline/sync-batch` (handler + controller)
-- [ ] 1.4 Adicionar colunas `revision`, `version`, `etag` nas entidades expostíveis
-- [ ] Migrações EF para adicionar colunas + política de retenção de 24h no cache
+- [ ] 1.4 Adicionar colunas `revision`, `version`, `etag` nas entidades expostíveis (pendente Redis)
+- [ ] Migrações EF para adicionar colunas + política de retenção de 24h no cache (pendente Redis)
 
 ## Bloco 2: Integração e Testes (BACK)
 
@@ -45,6 +45,7 @@
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
 - **Concluído**: 20
+- **Pendente (Redis)**: 2
 
 ## Critérios de Aceitação
 
