@@ -26,6 +26,7 @@ school-management/
 | Trabalhar na UI (Angular) | `school-management-ui/AGENTS.md` |
 | Criar/alterar uma proposta de mudança | `openspec/AGENTS.md` (workflow OpenSpec) |
 | Entender o mock do Auth0 | `docs/auth0-mock.md` |
+| Implementar sincronização offline | `docs/api/offline-sync.md` + `openspec/changes/api-offline-sync-contract/` |
 
 ## Comandos essenciais
 
