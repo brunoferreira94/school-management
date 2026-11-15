@@ -4,91 +4,89 @@
 
 Este contrato defina um mecanismo robusto de sincronização offline para o sistema de gestão escolar, permitindo que clientes (especialmente dispositivos móveis em ambientes de rede instável) façam upload de dados quando offline e sincronizem quando a conexão é restaurada, com garantias de idempotência, detecção de conflitos e consistência de versão.
 
-## Requirements
+## ADDED Requirements
 
 ### Requirement: Idempotency-Globale (F0)
 
-#### Scenario: Cliente repete mesma operação via Idempotency-Key
-Dado que um cliente está offline e acaba de concluir uma operação
-E o cliente sincroniza com `Idempotency-Key: abc123`
-Quando o mesmo cliente tenta sincronizar novamente com `Idempotency-Key: abc123`
-Então o servidor responde `422 Unprocessable Entity`
-E o corpo contém `type: "https://school-management.example.com/errors/idempotency-key-reused"`
-E não há alteração adicional no banco de dados
+The system SHALL provide global idempotency for critical operations.
 
-#### Scenario: Cada nova operação gera chave única
-Dado que o cliente gera uma nova operação
-Quando o cliente inclui `Idempotency-Key` com UUID único
-Então o servidor processa a operação normalmente
-E armazena o resultado no cache por 24 horas
+#### Scenario: Client repeats same operation via Idempotency-Key
+- **WHEN** a client is offline and just completed an operation
+- **AND** the client syncs with `Idempotency-Key: abc123`
+- **WHEN** the same client attempts to sync again with `Idempotency-Key: abc123`
+- **THEN** the server responds with `422 Unprocessable Entity`
+- **AND** the body contains `type: "https://school-management.example.com/errors/idempotency-key-reused"`
+- **AND** no additional database changes occur
 
-### Requirement: Revisão Otimista com ETag (F1)
+#### Scenario: Each new operation generates unique key
+- **GIVEN** that the client generates a new operation
+- **WHEN** the client includes `Idempotency-Key` with a unique UUID
+- **THEN** the server processes the operation normally
+- **AND** stores the result in cache for 24 hours
 
-#### Scenario: Update bem-sucedido com ETag válido
-Dado que um recurso existe com `ETag: "3-1.0.0-abc123"`
-Quando o cliente envia `If-Match: "4-1.0.0-def456"` (revision atualizada)
-Então o servidor aceita o update
-E retorna `200 OK` com novo `ETag`
+### Requirement: Optimistic Revision with ETag (F1)
 
-#### Scenario: Conflito de revisão detectado
-Dado que o recurso foi modificado por outro cliente
-E meu ETag está desatualizado (`revision 3`)
-Quando envio `If-Match` com ETag antigo (`revision 3`)
-Então o servidor responde `412 Precondition Failed`
-E o corpo contém `"currentRevision": 4`
+The system SHALL use optimistic revision for conflict detection.
 
-### Requirement: Sync em Lote (F2)
+#### Scenario: Update succeeds with valid ETag
+- **GIVEN** that a resource exists with `ETag: "3-1.0.0-abc123"`
+- **WHEN** the client sends `If-Match: "4-1.0.0-def456"` (updated revision)
+- **THEN** the server accepts the update
+- **AND** returns `200 OK` with a new `ETag`
 
-#### Scenario: Lote com operações mistas
-Dado que o cliente tem 5 operações pendentes
-Quando envio `POST /api/offline/sync-batch` com todas
-Então o servidor responde `200 OK`
-E o corpo contém `batchId` único
-E o array `outcomes` contém 5 elementos
-Pelo menos 3 são `applied` (operações processadas)
-Pelo menos 1 é `unchanged` (não precisou alterar nada)
+#### Scenario: Revision conflict detected
+- **GIVEN** that the resource was modified by another client
+- **AND** my ETag is stale (revision 3)
+- **WHEN** I send `If-Match` with old ETag (revision 3)
+- **THEN** the server responds with `412 Precondition Failed`
+- **AND** the body contains `"currentRevision": 4`
 
-#### Scenario: Operação rejeitada em lote
-Dado que uma operação no lote viola validação
-Quando processo o lote
-Então o outcome é `rejected`
-E o corpo contém `errors: ["CPF inválido"]`
+### Requirement: Batch Sync (F2)
+
+The system SHALL support batching multiple operations for synchronous sync.
+
+#### Scenario: Batch with mixed operations
+- **GIVEN** that the client has 5 pending operations
+- **WHEN** the client sends `POST /api/offline/sync-batch` with all operations
+- **THEN** the server responds with `200 OK`
+- **AND** the body contains a unique `batchId`
+- **AND** the `outcomes` array contains 5 elements
+- **AND** at least 3 are `applied` (operations processed)
+- **AND** at least 1 is `unchanged` (no changes needed)
+
+#### Scenario: Operation rejected in batch
+- **GIVEN** that an operation in the batch violates validation
+- **WHEN** the batch is processed
+- **THEN** the outcome is `rejected`
+- **AND** the body contains `errors: ["CPF is invalid"]`
 
 ### Requirement: X-Server-Time (F3)
 
-#### Scenario: Cliente sincroniza relógio
-Dado que o cliente faz qualquer requisição
-Quando recebo resposta com `X-Server-Time: 1763215200`
-Então o cliente calcula seu desvio de relógio
-E ajusta TTL da Idempotency-Key se necessário
+The system SHALL provide server timestamp for clock synchronization.
 
-#### Scenario: Health check inclui servidor tempo
-Quando cliente chama `GET /api/support/health`
-Então a resposta contém campo `serverTimeUtc: 1763215200`
+#### Scenario: Client synchronizes clock
+- **GIVEN** that the client makes any request
+- **WHEN** the response includes `X-Server-Time: 1763215200`
+- **THEN** the client calculates its clock offset
+- **AND** adjusts Idempotency-Key TTL if necessary
 
-### Requirement: Métricas e LGPD (F4)
+#### Scenario: Health check includes server time
+- **WHEN** the client calls `GET /api/support/health`
+- **THEN** the response body contains `serverTimeUtc: 1763215200`
 
-#### Scenario: Métricas de sync são exportadas
-Dado que operações de sync estão acontecendo
-Quando o Prometheus coleta métricas
-Então `offline_sync_total` incrementa
-E `offline_sync_success_total` incrementa apenas para successos
-E `offline_sync_conflicts_total` incrementa para conflitos
+### Requirement: Metrics and LGPD Compliance (F4)
 
-#### Scenario: Logs não continham PII
-Dado que sync ocorreu com sucesso
-Quando o log é criado
-Então o log contém apenas `tenantId`, `batchId`, `operationType`
-Não contém CPF, nomes, ou dados sensíveis
+The system SHALL collect sync metrics without exposing PII.
 
-## Configuration
+#### Scenario: Metrics are exported
+- **GIVEN** that sync operations are occurring
+- **WHEN** Prometheus scrapes metrics
+- **THEN** `offline_sync_total` increments
+- **AND** `offline_sync_success_total` increments only for successes
+- **AND** `offline_sync_conflicts_total` increments for conflicts
 
-| Config | Default | Descrição |
-|--------|---------|-----------|
-| `OfflineSync__Idempotency__RequireKey` | `false` | Requer header Idempotency-Key |
-| `OfflineSync__Revision__Enforce` | `false` | Requer ETag/If-Match em updates |
-| `OfflineSync__Redis__TTL` | `86400` | TTL do cache em segundos (24h) |
-
-## Design Reference
-
-Ver `design.md` para detalhas de arquitetura, fluxos e schema.
+#### Scenario: Logs do not contain PII
+- **GIVEN** that sync completed successfully
+- **WHEN** the log is created
+- **THEN** the log contains only `tenantId`, `batchId`, `operationType`
+- **AND** does not contain CPF, names, or other sensitive data
