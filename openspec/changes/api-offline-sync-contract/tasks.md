@@ -2,16 +2,16 @@
 
 ## Bloco 1: Implementação da API (BACK)
 
-- [ ] 1.1 Criar middleware `IdempotencyMiddleware` para caching de chaves
-- [ ] 1.2 Implementar gerador de ETag com revision + content-hash
-- [ ] 1.3 Criar endpoint `POST /api/offline/sync-batch` (handler + controller)
+- [x] 1.1 Criar middleware `IdempotencyMiddleware` para caching de chaves
+- [x] 1.2 Implementar gerador de ETag com revision + content-hash
+- [x] 1.3 Criar endpoint `POST /api/offline/sync-batch` (handler + controller)
 - [ ] 1.4 Adicionar colunas `revision`, `version`, `etag` nas entidades expostíveis
 - [ ] Migrações EF para adicionar colunas + política de retenção de 24h no cache
 
 ## Bloco 2: Integração e Testes (BACK)
 
 - [ ] 2.1 Testes unitários do IdempotencyMiddleware
-- [ ] 2.2 Testes unitários do ETag Manager
+- [x] 2.2 Testes unitários do ETag Manager
 - [ ] 2.3 Testes de integração para 422 (chave reutilizada)
 - [ ] 2.4 Testes de integração para 412 (conflito de revisão)
 - [ ] 2.5 Testes de carência offline (30 alunos × 5 turmas, 3 concorrentes)
@@ -44,7 +44,7 @@
 
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
-- **Concluído**: 17
+- **Concluído**: 20
 
 ## Critérios de Aceitação
 
