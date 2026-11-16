@@ -115,6 +115,19 @@ Estados por operação:
 - `rejected` — payload/ETag/tipo de operação inválido; corrigir antes de reenviar.
 ```
 
+## Métricas (F4 — LGPD)
+
+Contadores Prometheus agregados, sem nenhum dado do payload (LGPD):
+
+| Métrica | Incremento |
+|---------|-----------|
+| `offline_sync.total` | Por operação processada |
+| `offline_sync.success` | Por operação applied/unchanged |
+| `offline_sync.conflicts` | Por operação em conflict |
+
+Log de batch contém **apenas** `batchId`, `tenantId` e contagens por status —
+CPF, nomes, payloads e EntityIds nunca são logados.
+
 ## X-Server-Time
 
 O header `X-Server-Time` é retornado em todas as respostas:

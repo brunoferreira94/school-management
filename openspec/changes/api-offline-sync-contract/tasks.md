@@ -17,7 +17,7 @@
 - [x] 2.4 Testes de integração para 412 (conflito de revisão) — RedisETagManager coberto contra Redis real (Testcontainers); If-Match HTTP end-to-end fica p/ Bloco de hardening
 - [ ] 2.5 Testes de carência offline (30 alunos × 5 turmas, 3 concorrentes)
 - [x] 2.6 Testes de lote batch (applied/unchanged/conflict/rejected) — handler evoluído p/ estados da spec (BatchId, Outcomes); 8 unitários + 4 integração Redis; doc offline-sync.md alinhada
-- [ ] 2.7 Testes de LGPD (logs sem PII)
+- [x] 2.7 Testes de LGPD (logs sem PII) — handler loga só batchId/tenantId/contagens; métricas offline_sync.total/success/conflicts (F4) com testes
 
 ## Bloco 3: Documentação e Runbook (BACK/FRONT)
 
@@ -45,7 +45,7 @@
 
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
-- **Concluído**: 25
+- **Concluído**: 26
 - **Pendente (Redis)**: 2
 
 ## Critérios de Aceitação
