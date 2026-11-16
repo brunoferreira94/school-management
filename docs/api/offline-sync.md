@@ -73,26 +73,46 @@ Idempotency-Key: <uuid>
 Content-Type: application/json
 
 {
+  "tenantId": "00000000-0000-0000-0000-000000000001",
+  "clientId": "device-mobile-001",
+  "idempotencyKey": "e1f5c2a3-8b4d-4c6e-9f0a-1b2c3d4e5f60",
   "operations": [
     {
-      "method": "POST",
-      "path": "/api/students",
-      "body": { "cpf": "12345678901", "name": "João Silva" },
-      "metadata": { "deviceId": "mobile-001", "timestamp": "2026-11-15T10:00:00Z" }
-    },
+      "entityType": "Student",
+      "operationType": "UPDATE",
+      "entityId": "91000000-0000-0000-0000-000000000001",
+      "etag": "4-1.0.0-a1B2c3D4",
+      "payload": { "name": "João Silva", "cpf": "12345678901" }
+    }
     // ... mais operações
   ]
 }
 
-Response:
+Response (200 OK):
 {
-  "batchId": "batch-20261115-100000",
+  "batchId": "7f3e9a2b-1c4d-4e5f-8a9b-0c1d2e3f4a5b",
+  "processedCount": 2,
+  "unchangedCount": 1,
+  "conflictCount": 1,
+  "unprocessedCount": 2,
   "outcomes": [
-    { "operationId": 0, "result": "applied", "resourceId": "91000000001", "timestamp": "2026-11-15T10:00:01Z" },
-    { "operationId": 1, "result": "conflict", "reason": "revision_mismatch", "currentRevision": 5 },
-    { "operationId": 2, "result": "rejected", "reason": "validation_failed", "errors": ["CPF must be 11 digits"] }
+    { "entityId": "91000000-...", "entityType": "Student", "operationType": "UPDATE",
+      "status": "applied", "success": true, "newETag": "5-1.0.0-f6E5d4C3" },
+    { "entityId": "...", "operationType": "UPDATE",
+      "status": "unchanged", "success": true, "newETag": "5-1.0.0-f6E5d4C3" },
+    { "entityId": "...", "operationType": "UPDATE",
+      "status": "conflict", "success": false,
+      "error": "Revision conflict. Your revision is outdated. Current: 5" },
+    { "entityId": null, "operationType": "CREATE",
+      "status": "rejected", "success": false, "error": "Invalid ETag format" }
   ]
 }
+
+Estados por operação:
+- `applied` — operação aplicada; nova revisão emitida (`newETag`).
+- `unchanged` — payload idêntico ao já armazenado (replay offline); nenhum efeito, ETag corrente retornado.
+- `conflict` — revisão do cliente desatualizada; mapear para 412 no cliente (nunca retry automático).
+- `rejected` — payload/ETag/tipo de operação inválido; corrigir antes de reenviar.
 ```
 
 ## X-Server-Time
