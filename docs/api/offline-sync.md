@@ -112,5 +112,34 @@ Clientes usam isso para:
 ## Política de Retenção
 
 - **Logs de Sync**: Mantidos por 90 dias (LGPD)
-- **Cache de Idempotency**: Limpo automaticamente após 24h
+- **Cache de Idempotency**: Limpo automaticamente após 24h (TTL nativo do Redis)
 - **Dados sensíveis**: Nunca logados (CPF, nomes, etc.)
+
+## Configuração do Backend (Redis)
+
+O cache de idempotência suporta dois modos, escolhido automaticamente no DI:
+
+| Modo | Quando | Implementação |
+|------|--------|---------------|
+| **Redis (distribuído)** | `ConnectionStrings:Redis` configurada | `RedisIdempotencyService` — multi-instância, TTL nativo de 24h |
+| **Memória (POC/dev)** | Chave ausente ou vazia | `MemoryIdempotencyService` — instância única, sem persistência |
+
+### Como configurar
+
+```bash
+# Variável de ambiente (produção/staging)
+export ConnectionStrings__Redis="rediss://default:<token>@<host>:<port>"
+
+# appsettings.<env>.json (equivalente)
+"ConnectionStrings": { "Redis": "rediss://..." }
+```
+
+- A URL no formato `rediss://` (Upstash e demais provedores) é aceita diretamente por `StackExchange.Redis`.
+- `AbortOnConnectFail=false`: a API sobe mesmo se o Redis estiver indisponível (a chamada falha apenas quando usada).
+- Sem `ConnectionStrings:Redis` → cache em memória (comportamento atual de dev/testes).
+
+### Comportamento no Testing
+
+O ambiente de testes não define `ConnectionStrings:Redis`, portanto a suíte sempre
+exercita o `MemoryIdempotencyService` — determinístico e sem rede. Um teste de
+integração com Redis real (Testcontainers) é planejado no Bloco 2 da spec.
