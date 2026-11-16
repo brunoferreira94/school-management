@@ -6,8 +6,8 @@
 - [x] 1.2 Implementar gerador de ETag com revision + content-hash
 - [x] 1.3 Criar endpoint `POST /api/offline/sync-batch` (handler + controller)
 - [x] 1.5 X-Server-Time (F3): header X-Server-Time em todas as respostas + serverTimeUtc no corpo de GET /api/support/health — middleware+controller com testes unitários
-- [ ] 1.4 Adicionar colunas `revision`, `version`, `etag` nas entidades expostíveis (pendente Redis)
-- [ ] Migrações EF para adicionar colunas + política de retenção de 24h no cache (pendente Redis)
+- [x] 1.4 Adicionar colunas `revision`, `version`, `etag` nas entidades expostíveis — Student (exemplo do design.md); demais entidades seguem o mesmo padrão quando forem expostas
+- [x] Migrações EF para adicionar colunas (OfflineSyncRevisionColumns, SchoolContext) + retenção de 24h do cache (TTL nativo nos serviços Memory/Redis)
 
 ## Bloco 2: Integração e Testes (BACK)
 
@@ -45,8 +45,8 @@
 
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
-- **Concluído**: 26
-- **Pendente (Redis)**: 2
+- **Concluído**: 28
+- **Pendente (Redis)**: 0
 
 ## Critérios de Aceitação
 
