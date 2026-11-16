@@ -11,7 +11,7 @@
 
 ## Bloco 2: Integração e Testes (BACK)
 
-- [ ] 2.1 Testes unitários do IdempotencyMiddleware
+- [x] 2.1 Testes do fluxo de idempotência do lote — marca IsProcessed só com lote 100% OK (verificado no registro Redis); replay → 422; sem-chave no-op; E2E HTTP no controller fica p/ hardening
 - [x] 2.2 Testes unitários do ETag Manager
 - [x] 2.3 Testes de integração para 422 (chave reutilizada) — cobertura no serviço contra Redis real (Testcontainers); E2E HTTP no controller fica p/ Bloco de hardening
 - [x] 2.4 Testes de integração para 412 (conflito de revisão) — RedisETagManager coberto contra Redis real (Testcontainers); If-Match HTTP end-to-end fica p/ Bloco de hardening
@@ -45,7 +45,7 @@
 
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
-- **Concluído**: 24
+- **Concluído**: 25
 - **Pendente (Redis)**: 2
 
 ## Critérios de Aceitação
