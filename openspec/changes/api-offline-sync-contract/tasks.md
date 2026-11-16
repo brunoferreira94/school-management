@@ -5,6 +5,7 @@
 - [x] 1.1 Criar middleware `IdempotencyMiddleware` para caching de chaves
 - [x] 1.2 Implementar gerador de ETag com revision + content-hash
 - [x] 1.3 Criar endpoint `POST /api/offline/sync-batch` (handler + controller)
+- [x] 1.5 X-Server-Time (F3): header X-Server-Time em todas as respostas + serverTimeUtc no corpo de GET /api/support/health — middleware+controller com testes unitários
 - [ ] 1.4 Adicionar colunas `revision`, `version`, `etag` nas entidades expostíveis (pendente Redis)
 - [ ] Migrações EF para adicionar colunas + política de retenção de 24h no cache (pendente Redis)
 
@@ -44,7 +45,7 @@
 
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
-- **Concluído**: 22
+- **Concluído**: 23
 - **Pendente (Redis)**: 2
 
 ## Critérios de Aceitação
