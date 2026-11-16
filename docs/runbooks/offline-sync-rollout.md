@@ -1,11 +1,12 @@
 # Runbook: Ativação da Sincronização Offline
 
-> **Estado atual (2026-11-16)**: contrato POC ativo — sync-batch (F2),
-> X-Server-Time (F3), métricas `offline_sync_*` e ETag/revisão via Redis (F1)
-> implementados e testados (suíte 977/0). As flags `RequireKey`/`Enforce`
-> **ainda não são lidas pela API** — ligá-las sem implementar enforcement e
-> métricas de adesão não tem efeito. Este runbook vale para o momento do
-> hardening, quando o enforcement for ativado.
+> **Estado atual (2026-11-16)**: contrato POC + hardening implementados —
+> sync-batch (F2), X-Server-Time (F3), ETag/revisão via Redis (F1), métricas
+> `offline_sync_*` **e** métricas de adesão (`idempotency_key.missing/provided`,
+> `revision.missing`). Flags `OfflineSync__Idempotency__RequireKey` /
+> `OfflineSync__Revision__Enforce` são lidas pela API (default false — clientes
+> sem headers nunca são rejeitados). Fluxo do rollout: medir adesão com flags
+> desligadas → ligar → observação 24h → produção.
 
 ## Pré-requisitos
 
@@ -55,14 +56,18 @@ Monitorar dashboards:
 - **Erros 5xx**: `sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))`
 
 Critérios de sucesso:
-- `missing_key < 1%` (clientes sem chave) — **requer métrica de adesão, ainda não implementada (hardening)**
-- `revision_missing < 1%` (clientes sem revision) — idem
+- `missing_key < 1%`: `idempotency_key.missing / (idempotency_key.missing + idempotency_key.provided)`
+- `revision_missing < 1%`: `revision.missing / offline_sync.total`
 - Nenhum spike de 5xx
 
-> Métricas hoje disponíveis: `offline_sync_total`, `offline_sync_success_total`,
-> `offline_sync_conflicts_total` (F4). Métricas de adesão (`missing_key`,
-> `revision_missing`) são pré-requisito para ligar as flags em staging —
-> implementar no Bloco de hardening antes do Passo 2.
+> Métricas disponíveis: `offline_sync_total`, `offline_sync_success_total`,
+> `offline_sync_conflicts_total` (F4) + adesão `idempotency_key.missing`,
+> `idempotency_key.provided`, `revision.missing` (medidas sempre, flags
+> ligadas ou não). Métricas de adesão ficam registradas em memória (Meter do
+> System.Diagnostics) — coletadas pelo exporter Prometheus da API.
+
+**Antes do Passo 2**: deixar as flags desligadas por ≥ 7 dias em staging e
+confirmar adesão < 1% (não ligar flags sem adesão medida).
 
 ## Smoke Test
 
@@ -151,21 +156,23 @@ Se os critérios de erro forem excedidos:
 ### Dashboard Prometheus
 
 ```
-# Métricas implementadas (F4):
+# Métricas implementadas (F4 + adesão):
 offline_sync_total
 offline_sync_success_total
 offline_sync_conflicts_total
+idempotency_key_missing_total   # exported as idempotency_key.missing
+idempotency_key_provided_total  # exported as idempotency_key.provided
+revision_missing_total          # exported as revision.missing
 
 # Taxa de sucesso de sync
 sum(increase(offline_sync_success_total[5m])) / sum(increase(offline_sync_total[5m]))
 
 # Taxa de conflitos
 sum(increase(offline_sync_conflicts_total[5m])) / sum(increase(offline_sync_total[5m]))
-```
 
-> `offline_sync_errors_total` e as métricas de adesão (`idempotency_key_missing_total`,
-> `idempotency_key_provided_total`) ainda não existem — implementar no Bloco de
-> hardening antes de ativar flags.
+# Adesão de chave
+sum(increase(idempotency_key_missing_total[5m])) / sum(increase(idempotency_key_missing_total[5m]) + increase(idempotency_key_provided_total[5m]))
+```
 
 ### Alertas
 
@@ -173,6 +180,7 @@ sum(increase(offline_sync_conflicts_total[5m])) / sum(increase(offline_sync_tota
 |--------|----------|------|
 | `OfflineSyncHighConflicts` | `offline_sync_conflicts_total / offline_sync_total > 1%` em 5min | Notificar #alert-offline-sync |
 | `OfflineSync5xxErrors` | `sum(rate(http_requests_total{path="/api/offline/*",status=~"5.."}[5m])) > 0` | Notificar on-call |
+| `OfflineSyncMissingKey` | `idempotency_key_missing_total / total de sync > 1%` em 10min | Notificar #product |
 
 ## Pós-ativação em Produção
 

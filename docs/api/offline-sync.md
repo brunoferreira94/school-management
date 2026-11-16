@@ -11,8 +11,9 @@ Este documento descreve o contrato de sincronização offline para o sistema de 
 | `POST /api/offline/sync-batch` (F2) | ✅ Ativo — idempotência, revisão otimista e estados applied/unchanged/conflict/rejected |
 | `X-Server-Time` em todas as respostas + `serverTimeUtc` no health check (F3) | ✅ Ativo |
 | Métricas `offline_sync.total/success/conflicts` (F4) | ✅ Ativas |
+| Métricas de adesão (`idempotency_key.missing/provided`, `revision.missing`) | ✅ Ativas — medidas sempre, flags ligadas ou não |
 | Cache de idempotência Redis (multi-instância) | ✅ Ativo quando `ConnectionStrings:Redis` configurado; fallback em memória |
-| Enforcement de flags (`RequireKey`, `Enforce`) | ⏳ Pendente (hardening) — clientes **sem** headers nunca são rejeitados |
+| Flags `OfflineSync__Idempotency__RequireKey` / `OfflineSync__Revision__Enforce` | ✅ Lidas pela API (default **false**) — RequireKey: sync-batch sem chave → 400; Enforce: UPDATE sem ETag → outcome `rejected` |
 | `If-Match` nos endpoints individuais (F1 HTTP) | ⏳ Pendente (hardening) — hoje a revisão otimista atua no sync-batch |
 
 ## Headers Necessários
