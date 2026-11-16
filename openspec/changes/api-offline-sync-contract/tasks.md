@@ -13,7 +13,7 @@
 - [ ] 2.1 Testes unitários do IdempotencyMiddleware
 - [x] 2.2 Testes unitários do ETag Manager
 - [x] 2.3 Testes de integração para 422 (chave reutilizada) — cobertura no serviço contra Redis real (Testcontainers); E2E HTTP no controller fica p/ Bloco de hardening
-- [ ] 2.4 Testes de integração para 412 (conflito de revisão)
+- [x] 2.4 Testes de integração para 412 (conflito de revisão) — RedisETagManager coberto contra Redis real (Testcontainers); If-Match HTTP end-to-end fica p/ Bloco de hardening
 - [ ] 2.5 Testes de carência offline (30 alunos × 5 turmas, 3 concorrentes)
 - [ ] 2.6 Testes de lote batch (applied/unchanged/conflict/rejected)
 - [ ] 2.7 Testes de LGPD (logs sem PII)
@@ -44,7 +44,7 @@
 
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
-- **Concluído**: 21
+- **Concluído**: 22
 - **Pendente (Redis)**: 2
 
 ## Critérios de Aceitação
