@@ -21,10 +21,10 @@
 
 ## Bloco 3: Documentação e Runbook (BACK/FRONT)
 
-- [ ] 3.1 Atualizar `docs/api/offline-sync.md` com exemplos de uso
-- [ ] 3.2 Atualizar `docs/runbooks/offline-sync-rollout.md`
-- [ ] 3.3 Documentar migração de dados (revisões existentes)
-- [ ] 3.4 Criar guia de troubleshooting do cliente
+- [x] 3.1 Atualizar `docs/api/offline-sync.md` com exemplos de uso — sync-batch real, X-Server-Time, métricas F4, Redis config, estado da implementação (POC), migração de revisões (3.3)
+- [x] 3.2 Atualizar `docs/runbooks/offline-sync-rollout.md` — nota de estado atual, smoke tests com formato real, rollback sem endpoint inexistente, métricas implementadas vs. adesão (pré-requisito de hardening)
+- [x] 3.3 Documentar migração de dados (revisões existentes) — seção em docs/api/offline-sync.md (defaults + consequências p/ clientes legados)
+- [x] 3.4 Criar guia de troubleshooting do cliente — docs/client/offline-sync-troubleshooting.md (422/412/unchanged/rejected, relógio, falha de rede)
 
 ## Bloco 4: Desenvolvimento Frontend (FRONT)
 
@@ -45,7 +45,7 @@
 
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
-- **Concluído**: 28
+- **Concluído**: 32
 - **Pendente (Redis)**: 0
 
 ## Critérios de Aceitação

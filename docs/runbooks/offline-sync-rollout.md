@@ -1,5 +1,12 @@
 # Runbook: Ativação da Sincronização Offline
 
+> **Estado atual (2026-11-16)**: contrato POC ativo — sync-batch (F2),
+> X-Server-Time (F3), métricas `offline_sync_*` e ETag/revisão via Redis (F1)
+> implementados e testados (suíte 977/0). As flags `RequireKey`/`Enforce`
+> **ainda não são lidas pela API** — ligá-las sem implementar enforcement e
+> métricas de adesão não tem efeito. Este runbook vale para o momento do
+> hardening, quando o enforcement for ativado.
+
 ## Pré-requisitos
 
 - API rodando com `OfflineSync__Idempotency__RequireKey = false` (default)
@@ -43,14 +50,19 @@ render deploy --service school-management-api --clear-cache
 
 Monitorar dashboards:
 
-- **Taxa de idempotência**: `sum(increase(sync_idempotency_2xx_total[5m])) by (status)`
-- **Taxa de conflitos**: `rate(offline_sync_conflicts_total[5m])`
+- **Taxa de sucesso**: `sum(increase(offline_sync_success_total[5m])) / sum(increase(offline_sync_total[5m]))`
+- **Taxa de conflitos**: `sum(increase(offline_sync_conflicts_total[5m])) / sum(increase(offline_sync_total[5m]))`
 - **Erros 5xx**: `sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))`
 
 Critérios de sucesso:
-- `missing_key < 1%` (clientes sem chave)
-- `revision_missing < 1%` (clientes sem revision)
+- `missing_key < 1%` (clientes sem chave) — **requer métrica de adesão, ainda não implementada (hardening)**
+- `revision_missing < 1%` (clientes sem revision) — idem
 - Nenhum spike de 5xx
+
+> Métricas hoje disponíveis: `offline_sync_total`, `offline_sync_success_total`,
+> `offline_sync_conflicts_total` (F4). Métricas de adesão (`missing_key`,
+> `revision_missing`) são pré-requisito para ligar as flags em staging —
+> implementar no Bloco de hardening antes do Passo 2.
 
 ## Smoke Test
 
@@ -97,18 +109,24 @@ curl -X PUT "https://staging-api:5067/api/students/91000000001" \
 
 ```bash
 curl -X POST "https://staging-api:5067/api/offline/sync-batch" \
-  -H "Idempotency-Key: $(uuidgen)_$(date +%s)" \
+  -H "Idempotency-Key: $(uuidgen)" \
   -H "Content-Type: application/json" \
   -d '{
+    "tenantId": "00000000-0000-0000-0000-000000000001",
+    "clientId": "device-mobile-001",
+    "idempotencyKey": "$(uuidgen)",
     "operations": [
-      {"method": "GET", "path": "/api/students/91000000001"},
-      {"method": "POST", "path": "/api/students", "body": {"cpf":"99999999999","name":"New Student"}},
-      {"method": "PUT", "path": "/api/students/99999999999", "body": {"cpf":"99999999999","name":"Updated"}}
+      {"entityType": "Student", "operationType": "CREATE", "payload": {"name": "New Student", "cpf": "99999999999"}},
+      {"entityType": "Student", "operationType": "UPDATE", "entityId": "91000000-0000-0000-0000-000000000001",
+       "etag": "4-1.0.0-a1B2c3D4", "payload": {"name": "Updated"}}
     ]
   }'
 
-# Verificar outcome
-# 400 Bad Request → {"outcomes": [{"result": "applied"}, {"result": "applied"}, {"result": "applied"}]}
+# Esperado: 200 OK com batchId, contagens e outcomes por operação:
+# { "batchId": "...", "processedCount": 2, "unchangedCount": 0, "conflictCount": 0,
+#   "unprocessedCount": 0,
+#   "outcomes": [ {"status": "applied", "newETag": "5-1.0.0-..."}, ... ] }
+# Reenvio com MESMA Idempotency-Key → 422 Unprocessable Entity
 ```
 
 ## Rollback
@@ -121,11 +139,10 @@ Se os critérios de erro forem excedidos:
    OfflineSync__Revision__Enforce=false
    ```
 
-2. **Limpar cache de idempotency** (TTL expira naturalmente em 24h):
-   ```bash
-   # Se necessário imediatamente
-   curl -X DELETE "https://staging-api:5067/api/support/idempotency-cache"
-   ```
+2. **Cache de idempotency**: expira naturalmente em 24h (TTL nativo do Redis e
+   do serviço em memória). Não há endpoint de flush — para limpeza imediata,
+   usar o console do provedor Redis (ex.: Upstash → Flush Database). Entradas
+   em memória desaparecem no restart da instância.
 
 3. **Reportar incidente**: #alert-offline-sync no Slack
 
@@ -134,30 +151,34 @@ Se os critérios de erro forem excedidos:
 ### Dashboard Prometheus
 
 ```
+# Métricas implementadas (F4):
+offline_sync_total
+offline_sync_success_total
+offline_sync_conflicts_total
+
 # Taxa de sucesso de sync
 sum(increase(offline_sync_success_total[5m])) / sum(increase(offline_sync_total[5m]))
 
 # Taxa de conflitos
-rate(offline_sync_conflicts_total[5m])
-
-# Erros por tipo
-rate(offline_sync_errors_total{error_type="idempotency"}[5m])
-rate(offline_sync_errors_total{error_type="conflict"}[5m])
+sum(increase(offline_sync_conflicts_total[5m])) / sum(increase(offline_sync_total[5m]))
 ```
+
+> `offline_sync_errors_total` e as métricas de adesão (`idempotency_key_missing_total`,
+> `idempotency_key_provided_total`) ainda não existem — implementar no Bloco de
+> hardening antes de ativar flags.
 
 ### Alertas
 
 | Alerta | Condição | Ação |
 |--------|----------|------|
-| `OfflineSyncHighConflicts` | `rate(offline_sync_conflicts_total[5m]) > 0.01` | Notificar #alert-offline-sync |
+| `OfflineSyncHighConflicts` | `offline_sync_conflicts_total / offline_sync_total > 1%` em 5min | Notificar #alert-offline-sync |
 | `OfflineSync5xxErrors` | `sum(rate(http_requests_total{path="/api/offline/*",status=~"5.."}[5m])) > 0` | Notificar on-call |
-| `OfflineSyncMissingKey` | `rate(idempotency_key_missing_total[5m]) > 10` | Notificar #product |
 
 ## Pós-ativação em Produção
 
 Após 7 dias de operação estável:
 
-1. **Verificar adesão**:
+1. **Verificar adesão** (após implementar métricas de adesão no hardening):
    ```bash
    # Taxa de clientes usando chave
    sum(increase(idempotency_key_provided_total[1d])) / sum(increase(http_requests_total[1d]))

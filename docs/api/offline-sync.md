@@ -4,6 +4,17 @@
 
 Este documento descreve o contrato de sincronização offline para o sistema de gestão escolar, permitindo que clientes ressincronicem dados quando conectados, com garantias de idempotência e detecção de conflitos.
 
+## Estado da Implementação (POC)
+
+| Recurso | Estado |
+|---------|--------|
+| `POST /api/offline/sync-batch` (F2) | ✅ Ativo — idempotência, revisão otimista e estados applied/unchanged/conflict/rejected |
+| `X-Server-Time` em todas as respostas + `serverTimeUtc` no health check (F3) | ✅ Ativo |
+| Métricas `offline_sync.total/success/conflicts` (F4) | ✅ Ativas |
+| Cache de idempotência Redis (multi-instância) | ✅ Ativo quando `ConnectionStrings:Redis` configurado; fallback em memória |
+| Enforcement de flags (`RequireKey`, `Enforce`) | ⏳ Pendente (hardening) — clientes **sem** headers nunca são rejeitados |
+| `If-Match` nos endpoints individuais (F1 HTTP) | ⏳ Pendente (hardening) — hoje a revisão otimista atua no sync-batch |
+
 ## Headers Necessários
 
 ### Idempotency-Key
@@ -19,13 +30,16 @@ Idempotency-Key: <uuid-v4>_<hmac-signature>
 ### ETag (para Updates)
 
 ```
-ETag: "<revision>-<version>-<content-hash>"
-If-Match: "<revision>-<version>-<content-hash>"
+ETag: "{revision}-1.0.0-{hash8}"
+If-Match: "{revision}-1.0.0-{hash8}"
 ```
 
-- **Revisão**: counter global de modificações no recurso (incremental)
-- **Version**: semantic version (ex: 1.0.0)
-- **Content-hash**: SHA-256 do corpo da requisição
+- **Revisão**: contador incremental de escritas no recurso (`Revision` na tabela, `etag-revision:{entityId}` no Redis)
+- **Version**: `1.0.0` (evolução do formato do ETag)
+- **hash8**: 8 caracteres Base64 do SHA-256 do conteúdo — informativo; a detecção de
+  conflito compara a **revisão** (simplificação POC, ver `MemoryETagManager.Validate`)
+- **ETag ausente = sem precondition** — a requisição sempre passa (compatibilidade com
+  clientes sem headers enquanto as flags estiverem desligadas)
 
 ## Códigos de Status Específicos
 
@@ -39,15 +53,15 @@ If-Match: "<revision>-<version>-<content-hash>"
 }
 ```
 
-### 409 Conflict - Execução em Voo
-```json
-{
-  "type": "https://school-management.example.com/errors/conflict-in-flight",
-  "title": "Conflict with in-flight operation",
-  "status": 409,
-  "detail": "A operação já foi sincronizada por outro cliente. Estado atual: ..."
-}
-```
+> **Regra de cliente: 422 NUNCA é retry automático.** Chave reutilizada significa
+> replay — o cliente deve gerar uma Idempotency-Key nova (UUID v4) para cada
+> operação de negócio diferente.
+
+### 409 Conflict — não utilizado
+
+O contrato original previa 409 para "execução em voo". Na implementação atual,
+conflitos de revisão são mapeados para **412** (abaixo) e replays de chave para
+**422** — 409 não é emitido pelo sync offline.
 
 ### 412 Precondition Failed - Conflito de Revisão
 ```json
@@ -173,6 +187,28 @@ export ConnectionStrings__Redis="rediss://default:<token>@<host>:<port>"
 
 ### Comportamento no Testing
 
-O ambiente de testes não define `ConnectionStrings:Redis`, portanto a suíte sempre
-exercita o `MemoryIdempotencyService` — determinístico e sem rede. Um teste de
-integração com Redis real (Testcontainers) é planejado no Bloco 2 da spec.
+A suíte de testes não define `ConnectionStrings:Redis` (unitários exercitam o
+`MemoryIdempotencyService`, determinístico e sem rede). Além disso, a suíte tem
+**testes de integração contra Redis real** via Testcontainers (`redis:7-alpine`):
+idempotência (F0), ETag/revisão (F1), lote batch (F2) e flag `IsProcessed` —
+ver `tests/SchoolManagement.Tests/OfflineSync/`.
+
+## Migração de Revisões Existentes (3.3)
+
+A migration `OfflineSyncRevisionColumns` (SchoolContext, 2026-11-16) adiciona
+as colunas em `Students` com defaults que preenchem as linhas existentes:
+
+```sql
+Revision  INTEGER NOT NULL DEFAULT 1,
+Version   VARCHAR(20) NOT NULL DEFAULT '1.0.0',
+ETag      VARCHAR(64) NULL
+```
+
+Consequências para dados pré-existentes:
+
+- **Clientes legados sem `If-Match`**: sempre passam (sem precondition) — sem mudança de comportamento.
+- **Clientes offline com ETag emitido antes da migration**: nenhum existe (o ETag
+  HTTP individual ainda não é emitido); no sync-batch, a revisão corrente parte de 1.
+- **Após a migration**, as primeiras escritas incrementam `Revision` (1 → 2 → ...).
+  Emissão e leitura do ETag persistido (`Students.ETag`) serão ativadas no
+  hardening, quando os endpoints individuais passarem a devolver/validar If-Match.
