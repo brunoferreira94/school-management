@@ -121,6 +121,15 @@ via flag — default **false**):
 }
 ```
 
+> **Escopo do enforcement (importante)**: com `Enforce=true`, a exigência é
+> **global** — **toda** mutação em escopo sem `If-Match` recebe 428, inclusive
+> **criações** (`POST /api/grades`) e **upserts de collection** (diário,
+> chamada). Como o ETag só existe para recursos já lidos (revisão por path),
+> criações não têm ETag a enviar — por isso a flag só pode ser ligada depois
+> que **todos** os clientes enviarem `If-Match` nas mutações que o exigem
+> (ou quando o enforcement passar a ser escopado por path). Enquanto isso,
+> `Enforce=false` (default) preserva a compatibilidade.
+
 ## Endpoints Específicos
 
 ### POST /api/offline/sync-batch

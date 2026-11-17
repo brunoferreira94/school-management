@@ -55,7 +55,7 @@
 
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
-- **Nota**: Bloco 5 (staging) depende de janela de observação real (≥7 dias com adesão medida). A M2 (If-Match) está implementada na UI (4.6) — o `Enforce=true` pode ser ligado quando a adesão medida confirmar que todos os clientes enviam `If-Match` nas mutações de recurso (upserts de collection seguem sem If-Match por desenho).
+- **Nota**: Bloco 5 (staging) depende de janela de observação real (≥7 dias com adesão medida). A M2 (If-Match) está implementada na UI (4.6) **apenas nas telas de nota e fórmula**. Atenção: o `Enforce=true` hoje é **global** — toda mutação em escopo sem `If-Match` (inclusive `POST` de criação e upserts de collection) recebe 428, e criação não tem ETag a enviar. Portanto a flag só pode ser ligada depois de (a) o enforcement passar a ser **escopado por path** (ex.: só `PUT /api/grades/{id}` e `PUT /api/grading-formulas/{id}`) ou (b) todas as telas mutáveis enviarem `If-Match`. Decisão pendente do dono do produto.
 - **Concluído**: 44
 - **Pendente (Redis)**: 0
 
