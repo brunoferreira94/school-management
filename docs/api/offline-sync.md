@@ -10,10 +10,10 @@ Este documento descreve o contrato de sincronização offline para o sistema de 
 |---------|--------|
 | `POST /api/offline/sync-batch` (F2) | ✅ Ativo — idempotência, revisão otimista e estados applied/unchanged/conflict/rejected |
 | `X-Server-Time` em todas as respostas + `serverTimeUtc` no health check (F3) | ✅ Ativo |
-| Métricas `offline_sync.total/success/conflicts` (F4) | ✅ Ativas |
-| Métricas de adesão (`idempotency_key.missing/provided`, `revision.missing`) | ✅ Ativas — medidas sempre, flags ligadas ou não |
 | Cache de idempotência Redis (multi-instância) | ✅ Ativo quando `ConnectionStrings:Redis` configurado; fallback em memória |
-| Flags `OfflineSync__Idempotency__RequireKey` / `OfflineSync__Revision__Enforce` | ✅ Lidas pela API (default **false**) — RequireKey: sync-batch sem chave → 400; Enforce: UPDATE sem ETag → outcome `rejected` |
+| **Idempotência global (F0) nos endpoints individuais** | ✅ **Ativa** — middleware global: POST/PUT/PATCH/DELETE com `Idempotency-Key` (opt-in). Chave inédita → executa; resposta 2xx → chave consumida (reuso → **422**); resposta 4xx/5xx → chave **liberada** (retry com a mesma chave é permitido). Rotas excluídas: `/api/auth`, `/api/webhooks`, `/api/support`, `/api/offline`, `/metrics`, `/swagger` |
+| Métricas de adesão (`idempotency_key.missing/provided/reused`, `revision.missing`) | ✅ Ativas — middleware mede **todo** tráfego de mutação (além do sync-batch) |
+| Flags `OfflineSync__Idempotency__RequireKey` / `OfflineSync__Revision__Enforce` | ✅ Lidas pela API (default **false**) — RequireKey: sync-batch sem chave → 400; Enforce: UPDATE sem ETag → outcome `rejected`. O enforcement **global** é deliberadamente opt-in: endpoints individuais só bloqueiam quando o cliente envia a chave |
 | `If-Match` nos endpoints individuais (F1 HTTP) | ⏳ Pendente (hardening) — hoje a revisão otimista atua no sync-batch |
 
 ## Headers Necessários
@@ -21,12 +21,17 @@ Este documento descreve o contrato de sincronização offline para o sistema de 
 ### Idempotency-Key
 
 ```
-Idempotency-Key: <uuid-v4>_<hmac-signature>
+Idempotency-Key: <uuid-v4>
 ```
 
-- **Formato**: UUID v4 + HMAC-SHA256(sub, método, path, timestamp)
+- **Formato**: UUID v4 por operação de negócio (a assinatura HMAC não é exigida)
 - **TTL**: 24 horas (cache automaticamente expira)
-- **Uso**: Para garantir replay fiel de requisições
+- **Escopo**: endpoints individuais de mutação (POST/PUT/PATCH/DELETE) e `sync-batch`
+- **Comportamento (middleware global, opt-in por header)**:
+  - Chave inédita → operação executa; resposta 2xx **consome** a chave
+  - Reuso de chave consumida → **422** (a operação já foi aplicada — nunca retry)
+  - Resposta 4xx/5xx → chave **liberada**: retente com a **mesma** chave
+  - Sem header → requisição normal (adesão medida, nunca rejeitada)
 
 ### ETag (para Updates)
 
@@ -47,16 +52,15 @@ If-Match: "{revision}-1.0.0-{hash8}"
 ### 422 Unprocessable Entity - Chave Reutilizada
 ```json
 {
-  "type": "https://school-management.example.com/errors/idempotency-key-reused",
-  "title": "Idempotency key already used",
-  "status": 422,
-  "detail": "Uma operação com a mesma Idempotency-Key já foi processada. Use uma chave única para nova operação."
+  "message": "Uma operação com a mesma Idempotency-Key já foi processada com sucesso. Gere uma chave nova (UUID v4) para uma operação nova.",
+  "code": "idempotency-key-reused"
 }
 ```
 
 > **Regra de cliente: 422 NUNCA é retry automático.** Chave reutilizada significa
-> replay — o cliente deve gerar uma Idempotency-Key nova (UUID v4) para cada
-> operação de negócio diferente.
+> que a tentativa anterior **foi bem-sucedida** (resposta 2xx consome a chave;
+> 4xx/5xx a liberam). Vale para o `sync-batch` e para endpoints individuais
+> de mutação que enviarem o header.
 
 ### 409 Conflict — não utilizado
 

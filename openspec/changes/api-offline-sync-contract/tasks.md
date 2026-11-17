@@ -19,6 +19,11 @@
 - [x] 2.6 Testes de lote batch (applied/unchanged/conflict/rejected) — handler evoluído p/ estados da spec (BatchId, Outcomes); 8 unitários + 4 integração Redis; doc offline-sync.md alinhada
 - [x] 2.7 Testes de LGPD (logs sem PII) — handler loga só batchId/tenantId/contagens; métricas offline_sync.total/success/conflicts (F4) com testes
 
+## Bloco 2b: Hardening (integração com a UI)
+
+- [x] H.1 Idempotência global (F0) nos endpoints individuais — IdempotencyMiddleware opt-in por header (POST/PUT/PATCH/DELETE, rotas auth/webhooks/support/offline excluídas); 2xx consome a chave (reuso → 422), 4xx/5xx/exception LIBERA a chave (retry com a mesma chave); adesão medida em todo tráfego de mutação; counter idempotency_key.reused; RequireKey permanece escopado ao sync-batch; 8 testes middleware + 2 Redis (ReleaseAsync)
+- [x] H.2 Revisão da integração com a UI (modo offline) — UI usa handlers por feature (não sync-batch): chave preservada em retries ✓, 412 sem retry ✓; pendência da UI: tratar 422 como "já processado" (hoje vira erro permanente); F1 HTTP (If-Match) segue pendente
+
 ## Bloco 3: Documentação e Runbook (BACK/FRONT)
 
 - [x] 3.1 Atualizar `docs/api/offline-sync.md` com exemplos de uso — sync-batch real, X-Server-Time, métricas F4, Redis config, estado da implementação (POC), migração de revisões (3.3)
@@ -45,7 +50,7 @@
 
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
-- **Concluído**: 32
+- **Concluído**: 34
 - **Pendente (Redis)**: 0
 
 ## Critérios de Aceitação

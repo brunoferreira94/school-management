@@ -5,15 +5,16 @@ contrato de sync offline. Pares de "sintoma → causa → ação".
 
 ## 422 Unprocessable Entity — "Idempotency key already used"
 
-**Causa**: a mesma `Idempotency-Key` foi enviada duas vezes (replay).
+**Causa**: a tentativa anterior com esta `Idempotency-Key` **foi bem-sucedida** —
+a operação já foi aplicada (a API consome a chave em resposta 2xx; 4xx/5xx a
+liberam para retry).
 
 **Ação**:
-- **NUNCA faça retry automático com a mesma chave** — o servidor garante replay
-  fiel; um retry cegamente repetiria a mesma operação.
+- **NUNCA faça retry automático com a mesma chave** — a operação já está aplicada.
 - Cada operação de negócio nova recebe uma chave nova (UUID v4).
-- Para **retransmitir a MESMA operação** após falha de rede, reenvie com a
-  **mesma chave** e trate o 422 como "já processado" — a operação não precisa
-  ser aplicada de novo (consulte o estado local antes de descartar).
+- Para retransmitir a MESMA operação após **falha de rede**, reenvie com a
+  **mesma chave** — se a tentativa anterior não chegou a aplicar nada (nunca
+  respondeu 2xx), a chave continua livre e a retentativa executa normalmente.
 
 ## 412 Precondition Failed — "Revision conflict... Current: N"
 
@@ -65,8 +66,11 @@ Idempotency-Key calculado errado.
 **Ação**:
 - Mantenha a fila de operações pendentes localmente **com as chaves originais**
   (não gere chaves novas a cada tentativa — isso quebra a idempotência).
-- Retente ao reconectar; o lote completo com a mesma chave responde 422 se já
-  tinha sido processado por inteiro — trate como sucesso.
+- Retente ao reconectar com a **mesma chave**: se a tentativa anterior terminou
+  em erro (4xx/5xx) ou nunca respondeu, a API liberou a chave e a retentativa
+  executa; se a resposta 2xx foi perdida no caminho, a retentativa recebe 422 —
+  a operação **já foi aplicada** no servidor, trate como sucesso e sincronize
+  o estado local.
 - Lote parcialmente processado (algum `rejected`): corrija e reenvie como lote
   novo com chave nova.
 
