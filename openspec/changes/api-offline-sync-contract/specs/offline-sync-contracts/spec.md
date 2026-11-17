@@ -41,6 +41,19 @@ The system SHALL use optimistic revision for conflict detection.
 - **THEN** the server responds with `412 Precondition Failed`
 - **AND** the body contains `"currentRevision": 4`
 
+#### Scenario: Concurrent updates with the same ETag — only one applies
+- **GIVEN** that two clients read the same revision of a resource (same ETag)
+- **WHEN** both send a mutation with that `If-Match` concurrently
+- **THEN** exactly one mutation is applied
+- **AND** the other responds with `412 Precondition Failed`
+- **AND** the revision reservation is atomic (no lost update)
+
+#### Scenario: Failed write does not consume the revision
+- **GIVEN** that a client sent a mutation with a valid `If-Match`
+- **WHEN** the endpoint fails (4xx/5xx) and nothing is applied
+- **THEN** the revision returns to its previous value
+- **AND** the client can retry with the **same** `If-Match` and succeed
+
 ### Requirement: Batch Sync (F2)
 
 The system SHALL support batching multiple operations for synchronous sync.

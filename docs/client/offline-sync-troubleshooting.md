@@ -40,6 +40,16 @@ completo: `GET` → guarde o `ETag` do header → `PUT`/`POST` com
 edição). Sem `If-Match` a requisição ainda passa (flag Enforce desligada), mas
 o ideal é sempre enviar.
 
+> **Dois clientes, o mesmo ETag**: a reserva da revisão é **atômica** — quando
+> duas mutações com o mesmo `If-Match` chegam juntas, **uma** é aplicada e a
+> outra recebe 412. Ou seja: o 412 também pode chegar **sem** um GET
+> intermediário do outro cliente (era o comportamento antes do CAS).
+>
+> **Falha do endpoint ≠ conflito**: se a mutação falhou (4xx/5xx) **depois** da
+> verificação do `If-Match`, a API **desfaz** a reserva da revisão — o cliente
+> pode reenviar com o **mesmo** ETag. Já em um 412 (conflito), a revisão
+> avançou: reenviar com o ETag antigo vai conflitar de novo — faça o re-fetch.
+
 ## Outcome `rejected` no sync-batch
 
 **Causa**: operação inválida — payload não-JSON, tipo de operação desconhecido

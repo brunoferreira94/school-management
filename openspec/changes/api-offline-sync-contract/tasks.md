@@ -23,7 +23,8 @@
 
 - [x] H.1 Idempotência global (F0) nos endpoints individuais — IdempotencyMiddleware opt-in por header (POST/PUT/PATCH/DELETE, rotas auth/webhooks/support/offline excluídas); 2xx consome a chave (reuso → 422), 4xx/5xx/exception LIBERA a chave (retry com a mesma chave); adesão medida em todo tráfego de mutação; counter idempotency_key.reused; RequireKey permanece escopado ao sync-batch; 8 testes middleware + 2 Redis (ReleaseAsync)
 - [x] H.3 F1 HTTP nos endpoints individuais — OptimisticRevisionMiddleware genérico por path (chave `tenant:path`): GET em escopo devolve `ETag` corrente; mutação com `If-Match` stale → 412 `{message, code: revision-conflict, currentRevision}`; 2xx INCR a revisão e devolve ETag novo; sem If-Match passa (Enforce=false) ou 428 `revision-required` (Enforce=true); guard HasStarted (não tocar header em resposta streaming); counter revision.conflict; parser aceita "5", "5-1.0.0-hash", quoted e W/; 10 testes middleware + 2 Redis (persistência entre instâncias)
-- [x] H.2 Revisão da integração com a UI (modo offline) — UI usa handlers por feature (não sync-batch): chave preservada em retries ✓, 412 sem retry ✓; pendência da UI: tratar 422 como "já processado" (hoje vira erro permanente); F1 HTTP (If-Match) segue pendente
+- [x] H.2 Revisão da integração com a UI (modo offline) — UI usa handlers por feature (não sync-batch): chave preservada em retries ✓, 412 sem retry ✓, 422 tratado como "já processado" (M1) ✓; F1 HTTP (If-Match) implementado na UI (M2 — ver 4.6)
+- [x] H.4 Reserva atômica da revisão (CAS) — a mutação com `If-Match` **reserva** a próxima revisão antes de executar o endpoint (Redis: script Lua `GET`+`INCR`; memória: `TryUpdate` em laço): dois clientes com o mesmo ETag — só um executa, o outro recebe 412 (sem CAS, ambos passariam na verificação e o último sobrescreveria o outro). Falha do endpoint → **rollback** da reserva: o cliente reenvia com o MESMO ETag (retry da fila offline). `IETagManager.TryReserveResourceRevisionAsync`/`ReleaseResourceRevisionAsync`; 3 testes middleware (conflito após sucesso, concorrência, rollback) + 4 testes Redis (CAS, stale, release, release obsoleto)
 
 ## Bloco 3: Documentação e Runbook (BACK/FRONT)
 
@@ -38,7 +39,9 @@
 - [x] 4.2 Implementar armazenamento local de operações pendentes — IndexedDB (`offline-db.service.ts`, stores `drafts`/`meta`), TTL 14 dias, limite de 20 rascunhos/usuário, limpeza LGPD
 - [x] 4.3 Implementar sync automático ao reconectar — `offline-sync.service.ts`: fila FIFO (≤3 em paralelo), backoff exponencial, pausa em 401/403, 422 = já processado (remove o rascunho), aba líder com `navigator.locks`, retomada de `syncing` interrompido
 - [x] 4.4 Exibir estados de sync (pending/applied/conflict) na UI — `shared/offline-banner` + card "Rascunhos não enviados" em Minha área (com descarte e "Limpar dados salvos neste dispositivo")
-- [x] 4.5 Notas e fórmulas offline (F3) — `features/grades` e `features/grading-formulas` enfileiram o rascunho no `save()` offline; handlers `grades`/`grading-formulas` reenviam com a `Idempotency-Key` (POST/PUT /api/grades, POST|PUT /api/grading-formulas); 5 testes de handler (spec `offline-sync.handlers.spec.ts`)
+- [x] 4.5 Notas e fórmulas offline (F3) — `features/grades` e `features/grading-formulas` enfileiram o rascunho no `save()` offline; handlers `grades`/`grading-formulas` reenviam com a `Idempotency-Key` (POST/PUT /api/grades, POST|PUT /api/grading-formulas); 8 testes de handler (spec `offline-sync.handlers.spec.ts`)
+- [x] 4.6 M2 — consumo de ETag/If-Match na UI — o `GET` **por recurso** (`GET /api/grades/{id}`, `GET /api/grading-formulas/{id}`) devolve o ETag; a edição o envia no `If-Match` do `PUT` (`GradeService.getByIdWithETag`, `GradingFormulaService.getFormulaWithETag`); o rascunho guarda o ETag em `baseVersion` (campo top-level do draft) e o handler o reenvia no reenvio offline; 412 no caminho online → toast de conflito + recarrega a lista (sem retry); na fila offline → rascunho `conflict` (preservado); upserts de collection (chamada/diário) seguem **sem** `If-Match`; 4 testes de serviço + 3 de handler
+- [x] 4.7 Determinismo dos testes da fila — o lock de "aba líder" (`navigator.locks`) é concedido de forma determinística nos specs da fila (a liberação real é assíncrona e fazia drains consecutivos falharem de forma ordem-dependente); `offline-sync.service.spec.ts` e `offline-sync.handlers.spec.ts` sem flakiness
 
 ## Bloco 5: Ativação em Staging (OPS)
 
@@ -52,8 +55,8 @@
 
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
-- **Nota**: Bloco 5 (staging) depende de janela de observação real (≥7 dias com adesão medida) e da M2 (If-Match) implementada na UI — hoje as telas listam via collection, então não há ETag por recurso para enviar.
-- **Concluído**: 41
+- **Nota**: Bloco 5 (staging) depende de janela de observação real (≥7 dias com adesão medida). A M2 (If-Match) está implementada na UI (4.6) — o `Enforce=true` pode ser ligado quando a adesão medida confirmar que todos os clientes enviam `If-Match` nas mutações de recurso (upserts de collection seguem sem If-Match por desenho).
+- **Concluído**: 44
 - **Pendente (Redis)**: 0
 
 ## Critérios de Aceitação

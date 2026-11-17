@@ -14,7 +14,7 @@ Este documento descreve o contrato de sincronização offline para o sistema de 
 | **Idempotência global (F0) nos endpoints individuais** | ✅ **Ativa** — middleware global: POST/PUT/PATCH/DELETE com `Idempotency-Key` (opt-in). Chave inédita → executa; resposta 2xx → chave consumida (reuso → **422**); resposta 4xx/5xx → chave **liberada** (retry com a mesma chave é permitido). Rotas excluídas: `/api/auth`, `/api/webhooks`, `/api/support`, `/api/offline`, `/metrics`, `/swagger` |
 | Métricas de adesão (`idempotency_key.missing/provided/reused`, `revision.missing`) | ✅ Ativas — middleware mede **todo** tráfego de mutação (além do sync-batch) |
 | Flags `OfflineSync__Idempotency__RequireKey` / `OfflineSync__Revision__Enforce` | ✅ Lidas pela API (default **false**) — RequireKey: sync-batch sem chave → 400; Enforce: UPDATE sem ETag → outcome `rejected`. O enforcement **global** é deliberadamente opt-in: endpoints individuais só bloqueiam quando o cliente envia a chave |
-| `If-Match` nos endpoints individuais (F1 HTTP) | ✅ **Ativo** — `OptimisticRevisionMiddleware`: GET em escopo devolve o ETag corrente no header `ETag`; mutação com `If-Match` desatualizada → **412** com `currentRevision` no corpo; sucesso (2xx) INCRementa a revisão e devolve o ETag **novo**. Sem `If-Match`: passa com Enforce=false; **428 Precondition Required** com Enforce=true. Revisão por **path** (`tenant:path` no Redis, `etag-revision:r:...`) — dois clientes editando o mesmo recurso disputam a mesma revisão. Rotas excluídas: as mesmas do middleware de idempotência |
+| `If-Match` nos endpoints individuais (F1 HTTP) | ✅ **Ativo** — `OptimisticRevisionMiddleware`: GET em escopo devolve o ETag corrente no header `ETag`; mutação com `If-Match` desatualizada → **412** com `currentRevision` no corpo; sucesso (2xx) devolve o ETag **novo**. A mutação com `If-Match` **reserva** a próxima revisão de forma **atômica** (CAS — Redis: Lua `GET`+`INCR`; memória: `TryUpdate`): dois clientes com o mesmo ETag — só um executa, o outro recebe 412. Falha do endpoint → a reserva é **desfeita** (rollback) e o cliente pode reenviar com o mesmo ETag. Sem `If-Match`: passa com Enforce=false; **428 Precondition Required** com Enforce=true. Revisão por **path** (`tenant:path` no Redis, `etag-revision:r:...`). Rotas excluídas: as mesmas do middleware de idempotência |
 
 ## Headers Necessários
 
@@ -47,11 +47,24 @@ If-Match: "{revision}-1.0.0-{hash8}"
 - **Ciclo individual**: `GET` → resposta traz `ETag` corrente → cliente edita →
   `PUT`/`POST` com `If-Match` → conferindo: executa e devolve o ETag **novo**;
   desatualizado: **412** (abaixo); ausente: passa (Enforce=false) ou **428** (Enforce=true)
+- **Reserva atômica (CAS)**: a mutação com `If-Match` **reserva** a próxima revisão
+  *antes* de executar o endpoint (Redis: script Lua `GET`+`INCR` numa execução;
+  memória: `TryUpdate` em laço). Dois clientes que editaram a mesma versão
+  (mesmo ETag) — **só um executa**; o outro recebe **412**. Sem o CAS, a janela
+  entre "verificar" e "incrementar" permitiria que ambos passassem (último a
+  escrever sobrescreve o outro — perda silenciosa de atualização).
+- **Rollback**: se o endpoint falhar (4xx/5xx) depois da reserva, a reserva é
+  **desfeita** e a revisão volta à anterior — o cliente pode reenviar com o
+  **mesmo ETag** (essencial para o retry da fila offline). A reserva só é
+  desfeita se a revisão corrente ainda for a reservada (ninguém escreveu por cima).
 - **Version**: `1.0.0` (evolução do formato do ETag)
 - **hash8**: 8 caracteres Base64 do SHA-256 do conteúdo — informativo; a detecção de
   conflito compara a **revisão** (simplificação POC, ver `MemoryETagManager.Validate`)
 - **ETag ausente = sem precondition** — a requisição sempre passa (compatibilidade com
   clientes sem headers enquanto as flags estiverem desligadas)
+- **Granularidade por path**: a revisão é do **path** (`/api/grades/{id}`), então o
+  ETag do GET de um recurso não vale para outro. Mutações de *collection* (upserts
+  sem id na URL) não enviam `If-Match` — a revisão seria granular demais.
 
 ## Códigos de Status Específicos
 
@@ -89,6 +102,12 @@ Emitido pelo `sync-batch` (op-level) e pelo `OptimisticRevisionMiddleware`
 
 > **Regra de cliente: 412 NUNCA é retry automático.** Re-fetch do recurso
 > (o GET devolve o ETag corrente), rebase da alteração e reenvio com o ETag novo.
+>
+> Na UI, 412 no caminho online mostra a mensagem de conflito e recarrega a
+> lista; na fila offline o rascunho é marcado como `conflict` (preservado para
+> o usuário decidir). **Nunca** reenviar o mesmo `If-Match` depois de um 412 —
+> a revisão já avançou (por isso o rollback só acontece em falha do endpoint,
+> não em conflito).
 
 ### 428 Precondition Required — só com `OfflineSync:Revision:Enforce=true`
 
