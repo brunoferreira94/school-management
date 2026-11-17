@@ -14,6 +14,7 @@ Este documento descreve o contrato de sincronização offline para o sistema de 
 | **Idempotência global (F0) nos endpoints individuais** | ✅ **Ativa** — middleware global: POST/PUT/PATCH/DELETE com `Idempotency-Key` (opt-in). Chave inédita → executa; resposta 2xx → chave consumida (reuso → **422**); resposta 4xx/5xx → chave **liberada** (retry com a mesma chave é permitido). Rotas excluídas: `/api/auth`, `/api/webhooks`, `/api/support`, `/api/offline`, `/metrics`, `/swagger` |
 | Métricas de adesão (`idempotency_key.missing/provided/reused`, `revision.missing`) | ✅ Ativas — middleware mede **todo** tráfego de mutação (além do sync-batch) |
 | Flags `OfflineSync__Idempotency__RequireKey` / `OfflineSync__Revision__Enforce` | ✅ Lidas pela API (default **false**) — RequireKey: sync-batch sem chave → 400; Enforce: UPDATE sem ETag → outcome `rejected`. O enforcement **global** é deliberadamente opt-in: endpoints individuais só bloqueiam quando o cliente envia a chave |
+| Escopo do enforcement `OfflineSync__Revision__EnforcedPaths` | ✅ **Ativo** — lista de padrões `"MÉTODO /path/{id}"` que restringe o 428 (sem `If-Match`) às mutações cobertas pelo cliente; lista vazia = enforcement global. Ex.: `["PUT /api/grades/{id}", "PUT /api/grading-formulas/{id}"]` |
 | `If-Match` nos endpoints individuais (F1 HTTP) | ✅ **Ativo** — `OptimisticRevisionMiddleware`: GET em escopo devolve o ETag corrente no header `ETag`; mutação com `If-Match` desatualizada → **412** com `currentRevision` no corpo; sucesso (2xx) devolve o ETag **novo**. A mutação com `If-Match` **reserva** a próxima revisão de forma **atômica** (CAS — Redis: Lua `GET`+`INCR`; memória: `TryUpdate`): dois clientes com o mesmo ETag — só um executa, o outro recebe 412. Falha do endpoint → a reserva é **desfeita** (rollback) e o cliente pode reenviar com o mesmo ETag. Sem `If-Match`: passa com Enforce=false; **428 Precondition Required** com Enforce=true. Revisão por **path** (`tenant:path` no Redis, `etag-revision:r:...`). Rotas excluídas: as mesmas do middleware de idempotência |
 
 ## Headers Necessários
@@ -129,6 +130,43 @@ via flag — default **false**):
 > que **todos** os clientes enviarem `If-Match` nas mutações que o exigem
 > (ou quando o enforcement passar a ser escopado por path). Enquanto isso,
 > `Enforce=false` (default) preserva a compatibilidade.
+
+#### Enforcement escopado por path (`OfflineSync:Revision:EnforcedPaths`)
+
+Para o rollout incremental — exigir `If-Match` **só** onde o cliente já o
+envia — o enforcement pode ser restrito a padrões de método+path:
+
+```json
+{
+  "OfflineSync": {
+    "Revision": {
+      "Enforce": true,
+      "EnforcedPaths": [
+        "PUT /api/grades/{id}",
+        "PUT /api/grading-formulas/{id}"
+      ]
+    }
+  }
+}
+```
+
+- **`{id}`** casa exatamente **um** segmento do path (o identificador):
+  `PUT /api/grades/{id}` casa `/api/grades/42` e **não** casa
+  `/api/grades/42/observacoes` nem `/api/grades`.
+- **O método faz parte do padrão**: `POST /api/grades` (criação) e
+  `POST /api/grading-formulas/{id}/activate` (ativação) ficam de fora mesmo
+  com o padrão de `PUT` da mesma coleção.
+- **Demais segmentos são literais** (sem distinção de maiúsculas/minúsculas).
+- **Lista vazia = enforcement global** (comportamento anterior, preservado).
+- Quem **envia** `If-Match` continua sujeito à validação de revisão (412) em
+  qualquer path — o escopo restringe apenas quem é **bloqueado** por falta do
+  header.
+- O escopo vale para os **endpoints individuais** (middleware). O `sync-batch`
+  tem enforcement próprio, por operação (ETag da entidade), não por path.
+
+Com essa configuração, a UI atual (notas e fórmulas) fica **integralmente
+coberta**: todo `PUT` de recurso com id envia `If-Match`, e as demais
+mutações (criação, ativação, upserts de collection) não são bloqueadas.
 
 ## Endpoints Específicos
 

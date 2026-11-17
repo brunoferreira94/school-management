@@ -25,6 +25,7 @@
 - [x] H.3 F1 HTTP nos endpoints individuais — OptimisticRevisionMiddleware genérico por path (chave `tenant:path`): GET em escopo devolve `ETag` corrente; mutação com `If-Match` stale → 412 `{message, code: revision-conflict, currentRevision}`; 2xx INCR a revisão e devolve ETag novo; sem If-Match passa (Enforce=false) ou 428 `revision-required` (Enforce=true); guard HasStarted (não tocar header em resposta streaming); counter revision.conflict; parser aceita "5", "5-1.0.0-hash", quoted e W/; 10 testes middleware + 2 Redis (persistência entre instâncias)
 - [x] H.2 Revisão da integração com a UI (modo offline) — UI usa handlers por feature (não sync-batch): chave preservada em retries ✓, 412 sem retry ✓, 422 tratado como "já processado" (M1) ✓; F1 HTTP (If-Match) implementado na UI (M2 — ver 4.6)
 - [x] H.4 Reserva atômica da revisão (CAS) — a mutação com `If-Match` **reserva** a próxima revisão antes de executar o endpoint (Redis: script Lua `GET`+`INCR`; memória: `TryUpdate` em laço): dois clientes com o mesmo ETag — só um executa, o outro recebe 412 (sem CAS, ambos passariam na verificação e o último sobrescreveria o outro). Falha do endpoint → **rollback** da reserva: o cliente reenvia com o MESMO ETag (retry da fila offline). `IETagManager.TryReserveResourceRevisionAsync`/`ReleaseResourceRevisionAsync`; 3 testes middleware (conflito após sucesso, concorrência, rollback) + 4 testes Redis (CAS, stale, release, release obsoleto)
+- [x] H.5 Enforcement de revisão **escopado por path** — `OfflineSync:Revision:EnforcedPaths` (lista de padrões `"MÉTODO /path/{id}"`) restringe o 428 (sem `If-Match`) às mutações cobertas pelo cliente; lista vazia = enforcement global (comportamento anterior). Sem isso, `Enforce=true` bloquearia também criações (`POST`, sem ETag possível) e upserts de collection, impedindo o rollout incremental. `RevisionEnforcementPatterns` (casamento por método + contagem de segmentos; `{id}` = 1 segmento); 7 cenários no middleware + 16 casos no matcher; UI: 428 classificado como `conflict` na fila (nunca erro permanente) e mensagem específica no caminho online (notas e fórmulas)
 
 ## Bloco 3: Documentação e Runbook (BACK/FRONT)
 
@@ -42,6 +43,7 @@
 - [x] 4.5 Notas e fórmulas offline (F3) — `features/grades` e `features/grading-formulas` enfileiram o rascunho no `save()` offline; handlers `grades`/`grading-formulas` reenviam com a `Idempotency-Key` (POST/PUT /api/grades, POST|PUT /api/grading-formulas); 8 testes de handler (spec `offline-sync.handlers.spec.ts`)
 - [x] 4.6 M2 — consumo de ETag/If-Match na UI — o `GET` **por recurso** (`GET /api/grades/{id}`, `GET /api/grading-formulas/{id}`) devolve o ETag; a edição o envia no `If-Match` do `PUT` (`GradeService.getByIdWithETag`, `GradingFormulaService.getFormulaWithETag`); o rascunho guarda o ETag em `baseVersion` (campo top-level do draft) e o handler o reenvia no reenvio offline; 412 no caminho online → toast de conflito + recarrega a lista (sem retry); na fila offline → rascunho `conflict` (preservado); upserts de collection (chamada/diário) seguem **sem** `If-Match`; 4 testes de serviço + 3 de handler
 - [x] 4.7 Determinismo dos testes da fila — o lock de "aba líder" (`navigator.locks`) é concedido de forma determinística nos specs da fila (a liberação real é assíncrona e fazia drains consecutivos falharem de forma ordem-dependente); `offline-sync.service.spec.ts` e `offline-sync.handlers.spec.ts` sem flakiness
+- [x] 4.8 Tratamento de 428 na UI — 428 (`revision-required`, enforcement de `If-Match` ligado) entra como **conflito** na fila (rascunho preservado, nunca retry automático) e ganha mensagem específica no caminho online (notas e fórmulas): "reabra a edição para capturar a versão atual"; 1 teste na fila
 
 ## Bloco 5: Ativação em Staging (OPS)
 
@@ -55,8 +57,8 @@
 
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
-- **Nota**: Bloco 5 (staging) depende de janela de observação real (≥7 dias com adesão medida). A M2 (If-Match) está implementada na UI (4.6) **apenas nas telas de nota e fórmula**. Atenção: o `Enforce=true` hoje é **global** — toda mutação em escopo sem `If-Match` (inclusive `POST` de criação e upserts de collection) recebe 428, e criação não tem ETag a enviar. Portanto a flag só pode ser ligada depois de (a) o enforcement passar a ser **escopado por path** (ex.: só `PUT /api/grades/{id}` e `PUT /api/grading-formulas/{id}`) ou (b) todas as telas mutáveis enviarem `If-Match`. Decisão pendente do dono do produto.
-- **Concluído**: 44
+- **Nota**: Bloco 5 (staging) depende de janela de observação real (≥7 dias com adesão medida). A M2 (If-Match) está implementada na UI (4.6) **apenas nas telas de nota e fórmula**. O `Enforce=true` pode agora ser ligado **de forma incremental** com `OfflineSync:Revision:EnforcedPaths` (H.5) — ex.: `PUT /api/grades/{id}` e `PUT /api/grading-formulas/{id}`, onde a UI já envia `If-Match`; as demais mutações (criação, ativação, upserts de collection) não são bloqueadas. O enforcement **global** (lista vazia) só deve ser ligado quando todas as telas mutáveis enviarem `If-Match`.
+- **Concluído**: 46
 - **Pendente (Redis)**: 0
 
 ## Critérios de Aceitação

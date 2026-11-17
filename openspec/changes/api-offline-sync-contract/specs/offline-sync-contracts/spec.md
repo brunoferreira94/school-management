@@ -54,6 +54,13 @@ The system SHALL use optimistic revision for conflict detection.
 - **THEN** the revision returns to its previous value
 - **AND** the client can retry with the **same** `If-Match` and succeed
 
+#### Scenario: Enforcement scoped to the paths the client protects
+- **GIVEN** that the revision enforcement is enabled for the patterns `PUT /api/grades/{id}` and `PUT /api/grading-formulas/{id}`
+- **WHEN** a client sends `PUT /api/grades/42` without `If-Match`
+- **THEN** the server responds with `428 Precondition Required`
+- **WHEN** the same client creates a grade (`POST /api/grades`) or updates a formula outside the pattern
+- **THEN** the server processes the request normally (no ETag exists for those operations)
+
 ### Requirement: Batch Sync (F2)
 
 The system SHALL support batching multiple operations for synchronous sync.

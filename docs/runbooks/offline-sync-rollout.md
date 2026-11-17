@@ -36,6 +36,26 @@ OfflineSync__Idempotency__RequireKey=true
 OfflineSync__Revision__Enforce=true
 ```
 
+> **Importante — escopo do `Enforce`**: sem `EnforcedPaths`, o `Enforce=true` é
+> **global**: toda mutação em escopo sem `If-Match` recebe 428 — inclusive
+> criações (`POST`) e upserts de collection, que não têm ETag a enviar. Só
+> ligue o enforcement global depois que **todos** os clientes enviarem
+> `If-Match` nas mutações que o exigem.
+>
+> **Rollout incremental (recomendado)**: restrinja o enforcement aos paths
+> onde o cliente já envia `If-Match`:
+>
+> ```
+> OfflineSync__Revision__Enforce=true
+> OfflineSync__Revision__EnforcedPaths__0=PUT /api/grades/{id}
+> OfflineSync__Revision__EnforcedPaths__1=PUT /api/grading-formulas/{id}
+> ```
+>
+> (em `appsettings.json`: `"OfflineSync": { "Revision": { "EnforcedPaths": [...] } }`).
+> A UI atual (notas e fórmulas) fica integralmente coberta por esses dois
+> padrões: todo `PUT` de recurso com id envia `If-Match`; criação, ativação e
+> upserts de collection não são bloqueados.
+
 ### Passo 3: Reiniciar os containers
 
 ```bash
@@ -143,6 +163,10 @@ Se os critérios de erro forem excedidos:
    OfflineSync__Idempotency__RequireKey=false
    OfflineSync__Revision__Enforce=false
    ```
+
+   Rollback parcial (manter o resto): basta remover os padrões de
+   `OfflineSync__Revision__EnforcedPaths` (ou esvaziá-los → enforcement global)
+   e reiniciar — o `Enforce=false` já impede qualquer 428.
 
 2. **Cache de idempotency**: expira naturalmente em 24h (TTL nativo do Redis e
    do serviço em memória). Não há endpoint de flush — para limpeza imediata,
