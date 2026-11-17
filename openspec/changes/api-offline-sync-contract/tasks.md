@@ -15,7 +15,7 @@
 - [x] 2.2 Testes unitários do ETag Manager
 - [x] 2.3 Testes de integração para 422 (chave reutilizada) — cobertura no serviço contra Redis real (Testcontainers); E2E HTTP no controller fica p/ Bloco de hardening
 - [x] 2.4 Testes de integração para 412 (conflito de revisão) — RedisETagManager coberto contra Redis real (Testcontainers); If-Match HTTP end-to-end fica p/ Bloco de hardening
-- [ ] 2.5 Testes de carência offline (30 alunos × 5 turmas, 3 concorrentes)
+- [x] 2.5 Testes de carência offline (30 alunos × 5 turmas, 3 concorrentes) — `OfflineSyncConcurrencyTests`: 150 ops com 3 remetentes concorrentes (nenhuma perdida/duplicada) + 3 remetentes com a MESMA chave (só 1 lote aplica); revelou e motivou a correção da corrida da reserva de chave (GET→SET → SET NX/TryAdd)
 - [x] 2.6 Testes de lote batch (applied/unchanged/conflict/rejected) — handler evoluído p/ estados da spec (BatchId, Outcomes); 8 unitários + 4 integração Redis; doc offline-sync.md alinhada
 - [x] 2.7 Testes de LGPD (logs sem PII) — handler loga só batchId/tenantId/contagens; métricas offline_sync.total/success/conflicts (F4) com testes
 
@@ -34,10 +34,11 @@
 
 ## Bloco 4: Desenvolvimento Frontend (FRONT)
 
-- [ ] 4.1 Implementar geração de Idempotency-Key no cliente
-- [ ] 4.2 Implementar armazenamento local de operações pendentes
-- [ ] 4.3 Implementar sync automático ao reconectar
-- [ ] 4.4 Exibir estados de sync (pending/applied/conflict) na UI
+- [x] 4.1 Implementar geração de Idempotency-Key no cliente — UUID v4 gerado no primeiro enfileiramento e **preservado nos retries** (`offline-draft.service.ts`); a API consome a chave em 2xx e a libera em 4xx/5xx (F0 global)
+- [x] 4.2 Implementar armazenamento local de operações pendentes — IndexedDB (`offline-db.service.ts`, stores `drafts`/`meta`), TTL 14 dias, limite de 20 rascunhos/usuário, limpeza LGPD
+- [x] 4.3 Implementar sync automático ao reconectar — `offline-sync.service.ts`: fila FIFO (≤3 em paralelo), backoff exponencial, pausa em 401/403, 422 = já processado (remove o rascunho), aba líder com `navigator.locks`, retomada de `syncing` interrompido
+- [x] 4.4 Exibir estados de sync (pending/applied/conflict) na UI — `shared/offline-banner` + card "Rascunhos não enviados" em Minha área (com descarte e "Limpar dados salvos neste dispositivo")
+- [x] 4.5 Notas e fórmulas offline (F3) — `features/grades` e `features/grading-formulas` enfileiram o rascunho no `save()` offline; handlers `grades`/`grading-formulas` reenviam com a `Idempotency-Key` (POST/PUT /api/grades, POST|PUT /api/grading-formulas); 5 testes de handler (spec `offline-sync.handlers.spec.ts`)
 
 ## Bloco 5: Ativação em Staging (OPS)
 
@@ -51,7 +52,8 @@
 
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
-- **Concluído**: 35
+- **Nota**: Bloco 5 (staging) depende de janela de observação real (≥7 dias com adesão medida) e da M2 (If-Match) implementada na UI — hoje as telas listam via collection, então não há ETag por recurso para enviar.
+- **Concluído**: 41
 - **Pendente (Redis)**: 0
 
 ## Critérios de Aceitação
