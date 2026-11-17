@@ -32,6 +32,14 @@ No `sync-batch`, o 412 não derruba o lote: ele aparece como
 `outcome.status = "conflict"` com `"error": "Revision conflict... Current: N"`.
 Processe os outcomes elemento a elemento.
 
+Nos **endpoints individuais**, o 412 vem do `OptimisticRevisionMiddleware` com
+corpo `{message, code: "revision-conflict", currentRevision: N}` — o ETag
+corrente para o reenvio está no header `ETag` do `GET` do recurso. Fluxo
+completo: `GET` → guarde o `ETag` do header → `PUT`/`POST` com
+`If-Match: <etag>` → resposta 2xx traz o ETag **novo** (guarde para a próxima
+edição). Sem `If-Match` a requisição ainda passa (flag Enforce desligada), mas
+o ideal é sempre enviar.
+
 ## Outcome `rejected` no sync-batch
 
 **Causa**: operação inválida — payload não-JSON, tipo de operação desconhecido

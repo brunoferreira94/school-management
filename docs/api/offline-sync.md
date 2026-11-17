@@ -14,7 +14,7 @@ Este documento descreve o contrato de sincronização offline para o sistema de 
 | **Idempotência global (F0) nos endpoints individuais** | ✅ **Ativa** — middleware global: POST/PUT/PATCH/DELETE com `Idempotency-Key` (opt-in). Chave inédita → executa; resposta 2xx → chave consumida (reuso → **422**); resposta 4xx/5xx → chave **liberada** (retry com a mesma chave é permitido). Rotas excluídas: `/api/auth`, `/api/webhooks`, `/api/support`, `/api/offline`, `/metrics`, `/swagger` |
 | Métricas de adesão (`idempotency_key.missing/provided/reused`, `revision.missing`) | ✅ Ativas — middleware mede **todo** tráfego de mutação (além do sync-batch) |
 | Flags `OfflineSync__Idempotency__RequireKey` / `OfflineSync__Revision__Enforce` | ✅ Lidas pela API (default **false**) — RequireKey: sync-batch sem chave → 400; Enforce: UPDATE sem ETag → outcome `rejected`. O enforcement **global** é deliberadamente opt-in: endpoints individuais só bloqueiam quando o cliente envia a chave |
-| `If-Match` nos endpoints individuais (F1 HTTP) | ⏳ Pendente (hardening) — hoje a revisão otimista atua no sync-batch |
+| `If-Match` nos endpoints individuais (F1 HTTP) | ✅ **Ativo** — `OptimisticRevisionMiddleware`: GET em escopo devolve o ETag corrente no header `ETag`; mutação com `If-Match` desatualizada → **412** com `currentRevision` no corpo; sucesso (2xx) INCRementa a revisão e devolve o ETag **novo**. Sem `If-Match`: passa com Enforce=false; **428 Precondition Required** com Enforce=true. Revisão por **path** (`tenant:path` no Redis, `etag-revision:r:...`) — dois clientes editando o mesmo recurso disputam a mesma revisão. Rotas excluídas: as mesmas do middleware de idempotência |
 
 ## Headers Necessários
 
@@ -40,7 +40,13 @@ ETag: "{revision}-1.0.0-{hash8}"
 If-Match: "{revision}-1.0.0-{hash8}"
 ```
 
-- **Revisão**: contador incremental de escritas no recurso (`Revision` na tabela, `etag-revision:{entityId}` no Redis)
+- **Revisão**: contador incremental de escritas no recurso. No `sync-batch`, por
+  entidade (`Revision` na tabela, `etag-revision:{entityId}` no Redis); nos
+  endpoints individuais, por **path** (`etag-revision:r:{tenant}:{path}` no
+  Redis, emitido/validado pelo `OptimisticRevisionMiddleware`)
+- **Ciclo individual**: `GET` → resposta traz `ETag` corrente → cliente edita →
+  `PUT`/`POST` com `If-Match` → conferindo: executa e devolve o ETag **novo**;
+  desatualizado: **412** (abaixo); ausente: passa (Enforce=false) ou **428** (Enforce=true)
 - **Version**: `1.0.0` (evolução do formato do ETag)
 - **hash8**: 8 caracteres Base64 do SHA-256 do conteúdo — informativo; a detecção de
   conflito compara a **revisão** (simplificação POC, ver `MemoryETagManager.Validate`)
@@ -69,13 +75,30 @@ conflitos de revisão são mapeados para **412** (abaixo) e replays de chave par
 **422** — 409 não é emitido pelo sync offline.
 
 ### 412 Precondition Failed - Conflito de Revisão
+
+Emitido pelo `sync-batch` (op-level) e pelo `OptimisticRevisionMiddleware`
+(endpoints individuais — formato `{message, code, currentRevision}`):
+
 ```json
 {
-  "type": "https://school-management.example.com/errors/revision-conflict",
-  "title": "Precondition Failed",
-  "status": 412,
-  "detail": "A revisão especificada não corresponde ao estado atual do recurso.",
-  "currentRevision": 42
+  "message": "Recurso modificado por outro usuário. Reenvie (re-fetch) e reaplique sua alteração. Current: 41",
+  "code": "revision-conflict",
+  "currentRevision": 41
+}
+```
+
+> **Regra de cliente: 412 NUNCA é retry automático.** Re-fetch do recurso
+> (o GET devolve o ETag corrente), rebase da alteração e reenvio com o ETag novo.
+
+### 428 Precondition Required — só com `OfflineSync:Revision:Enforce=true`
+
+Mutações **sem** `If-Match` em endpoints individuais (opt-in do dono do produto
+via flag — default **false**):
+
+```json
+{
+  "message": "Envie o header If-Match com o ETag obtido no GET do recurso antes de editar.",
+  "code": "revision-required"
 }
 ```
 
@@ -212,8 +235,11 @@ ETag      VARCHAR(64) NULL
 Consequências para dados pré-existentes:
 
 - **Clientes legados sem `If-Match`**: sempre passam (sem precondition) — sem mudança de comportamento.
-- **Clientes offline com ETag emitido antes da migration**: nenhum existe (o ETag
-  HTTP individual ainda não é emitido); no sync-batch, a revisão corrente parte de 1.
+- **Clientes offline com ETag emitido antes da migration**: nenhum existe; no
+  sync-batch, a revisão corrente parte de 1. No middleware individual, a revisão
+  por path parte de 0 (recurso nunca escrito) e é **independente** da coluna
+  `Students.Revision` (chave `tenant:path`, não entidade).
 - **Após a migration**, as primeiras escritas incrementam `Revision` (1 → 2 → ...).
-  Emissão e leitura do ETag persistido (`Students.ETag`) serão ativadas no
-  hardening, quando os endpoints individuais passarem a devolver/validar If-Match.
+  A emissão/validação individual via middleware já está ativa (ETag derivado da
+  revisão do path); a coluna `Students.ETag` persistida segue reservada para o
+  acoplamento por entidade futuro.

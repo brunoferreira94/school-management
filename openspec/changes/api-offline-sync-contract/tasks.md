@@ -22,6 +22,7 @@
 ## Bloco 2b: Hardening (integração com a UI)
 
 - [x] H.1 Idempotência global (F0) nos endpoints individuais — IdempotencyMiddleware opt-in por header (POST/PUT/PATCH/DELETE, rotas auth/webhooks/support/offline excluídas); 2xx consome a chave (reuso → 422), 4xx/5xx/exception LIBERA a chave (retry com a mesma chave); adesão medida em todo tráfego de mutação; counter idempotency_key.reused; RequireKey permanece escopado ao sync-batch; 8 testes middleware + 2 Redis (ReleaseAsync)
+- [x] H.3 F1 HTTP nos endpoints individuais — OptimisticRevisionMiddleware genérico por path (chave `tenant:path`): GET em escopo devolve `ETag` corrente; mutação com `If-Match` stale → 412 `{message, code: revision-conflict, currentRevision}`; 2xx INCR a revisão e devolve ETag novo; sem If-Match passa (Enforce=false) ou 428 `revision-required` (Enforce=true); guard HasStarted (não tocar header em resposta streaming); counter revision.conflict; parser aceita "5", "5-1.0.0-hash", quoted e W/; 10 testes middleware + 2 Redis (persistência entre instâncias)
 - [x] H.2 Revisão da integração com a UI (modo offline) — UI usa handlers por feature (não sync-batch): chave preservada em retries ✓, 412 sem retry ✓; pendência da UI: tratar 422 como "já processado" (hoje vira erro permanente); F1 HTTP (If-Match) segue pendente
 
 ## Bloco 3: Documentação e Runbook (BACK/FRONT)
@@ -50,7 +51,7 @@
 
 - **Aguardando implementação**: 0
 - **Em progresso**: 0
-- **Concluído**: 34
+- **Concluído**: 35
 - **Pendente (Redis)**: 0
 
 ## Critérios de Aceitação
