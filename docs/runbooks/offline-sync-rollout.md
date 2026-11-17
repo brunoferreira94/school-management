@@ -89,6 +89,31 @@ Critérios de sucesso:
 **Antes do Passo 2**: deixar as flags desligadas por ≥ 7 dias em staging e
 confirmar adesão < 1% (não ligar flags sem adesão medida).
 
+### Adesão por rota (decidir resource a resource)
+
+O `revision.adherence` mede, **por rota normalizada**, se o cliente enviou
+`If-Match` (`state="provided"`, `state="wildcard"` ou `state="missing"`):
+
+```promql
+# Taxa de adesão por rota (o que interessa para ligar o enforcement)
+sum by (route) (rate(revision_adherence_total{state="provided"}[1h]))
+  / sum by (route) (rate(revision_adherence_total[1h]))
+
+# Rotas que ainda não aderem (candidatas a NÃO entrar no enforcement)
+sum by (route) (rate(revision_adherence_total{state="missing"}[1h])) > 0
+```
+
+Fluxo recomendado:
+
+1. Espere ≥ 7 dias com as flags desligadas.
+2. Consulte a adesão **por rota** — só ligue o enforcement nas rotas com
+   `provided` ≥ 99% (e `wildcard` ≈ 0: wildcard não protege a atualização).
+3. Ligue `Enforce=true` **com `EnforcedPaths` restrito a essas rotas**.
+4. Acompanhe `revision.conflict` (412) e os 428 por rota durante a janela.
+
+> A métrica tem cardinalidade limitada (50 rotas + bucket `__other__`) — se
+> aparecer `__other__`, há paths arbitrários no tráfego (cliente estranho).
+
 ## Smoke Test
 
 ### Cenário 1: Sincronização bem-sucedida
@@ -187,6 +212,8 @@ offline_sync_conflicts_total
 idempotency_key_missing_total   # exported as idempotency_key.missing
 idempotency_key_provided_total  # exported as idempotency_key.provided
 revision_missing_total          # exported as revision.missing
+revision_conflict_total         # exported as revision.conflict
+revision_adherence_total        # exported as revision.adherence (tags: route, state)
 
 # Taxa de sucesso de sync
 sum(increase(offline_sync_success_total[5m])) / sum(increase(offline_sync_total[5m]))
@@ -196,6 +223,10 @@ sum(increase(offline_sync_conflicts_total[5m])) / sum(increase(offline_sync_tota
 
 # Adesão de chave
 sum(increase(idempotency_key_missing_total[5m])) / sum(increase(idempotency_key_missing_total[5m]) + increase(idempotency_key_provided_total[5m]))
+
+# Adesão de If-Match POR ROTA (decide o enforcement por recurso)
+sum by (route) (rate(revision_adherence_total{state="provided"}[1h]))
+  / sum by (route) (rate(revision_adherence_total[1h]))
 ```
 
 ### Alertas
@@ -205,6 +236,7 @@ sum(increase(idempotency_key_missing_total[5m])) / sum(increase(idempotency_key_
 | `OfflineSyncHighConflicts` | `offline_sync_conflicts_total / offline_sync_total > 1%` em 5min | Notificar #alert-offline-sync |
 | `OfflineSync5xxErrors` | `sum(rate(http_requests_total{path="/api/offline/*",status=~"5.."}[5m])) > 0` | Notificar on-call |
 | `OfflineSyncMissingKey` | `idempotency_key_missing_total / total de sync > 1%` em 10min | Notificar #product |
+| `OfflineSyncLowRevisionAdherence` | por rota: `provided / total < 99%` em 1h (só nas rotas com `EnforcedPaths`) | Não ampliar o `EnforcedPaths` nessa rota até a adesão normalizar |
 
 ## Pós-ativação em Produção
 

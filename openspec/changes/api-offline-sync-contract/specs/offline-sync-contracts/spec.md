@@ -61,6 +61,14 @@ The system SHALL use optimistic revision for conflict detection.
 - **WHEN** the same client creates a grade (`POST /api/grades`) or updates a formula outside the pattern
 - **THEN** the server processes the request normally (no ETag exists for those operations)
 
+#### Scenario: Revision adherence measured per resource
+- **GIVEN** that a client mutates a resource in scope
+- **WHEN** the request carries a specific `If-Match`
+- **THEN** the server records the adherence counter for the normalized route with state `provided`
+- **WHEN** the request carries `If-Match: *` or no `If-Match` at all
+- **THEN** the server records the same counter with state `wildcard` or `missing` respectively
+- **AND** the route label never contains a raw resource identifier (cardinality is bounded)
+
 ### Requirement: Batch Sync (F2)
 
 The system SHALL support batching multiple operations for synchronous sync.
