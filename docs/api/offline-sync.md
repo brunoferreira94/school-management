@@ -16,7 +16,7 @@ Este documento descreve o contrato de sincronização offline para o sistema de 
 | Flags `OfflineSync__Idempotency__RequireKey` / `OfflineSync__Revision__Enforce` | ✅ Lidas pela API (default **false**) — RequireKey: sync-batch sem chave → 400; Enforce: UPDATE sem ETag → outcome `rejected`. O enforcement **global** é deliberadamente opt-in: endpoints individuais só bloqueiam quando o cliente envia a chave |
 | Escopo do enforcement `OfflineSync__Revision__EnforcedPaths` | ✅ **Ativo** — lista de padrões `"MÉTODO /path/{id}"` que restringe o 428 (sem `If-Match`) às mutações cobertas pelo cliente; lista vazia = enforcement global. Ex.: `["PUT /api/grades/{id}", "PUT /api/grading-formulas/{id}"]` |
 | Adesão de revisão **por rota** (`revision.adherence`) | ✅ **Ativa** — toda mutação em escopo é medida com tags `route` (rota normalizada, ex.: `PUT /api/grades/{id}`) e `state` (`provided` \| `wildcard` \| `missing`). Cardinalidade limitada (50 rotas + bucket `__other__`) — base para decidir, **por recurso**, se o enforcement pode ser ligado |
-| Pipeline de exportação das métricas | ⚠️ As métricas do `Meter "SchoolManagement"` **não** aparecem em `/metrics` da API (esse endpoint é do prometheus-net). O caminho é **Meter → OTLP (`OTEL_EXPORTER_OTLP_ENDPOINT`) → otel-collector → exporter prometheus (:8889) → Prometheus (job `otel-collector`)**. O exporter converte o ponto em underscore **sem** sufixo `_total`: `revision.adherence` → série `revision_adherence`. Sem `OTEL_EXPORTER_OTLP_ENDPOINT` configurado **nada é exportado** e o rollout fica sem dado — smoke test: `school-management-api/observability/test-offline-sync-metrics.sh` |
+| Pipeline de exportação das métricas | ✅ **Dois caminhos, mesma nomenclatura** — (1) **produção**: o Prometheus scrapeia `GET /metrics` da API (a API no Render **não tem** collector OTLP); o endpoint serve as gauges de analytics + as métricas do `Meter "SchoolManagement"` (via `SchoolManagementMetricsCollector`) + o registro do prometheus-net. (2) **stack local/self-hosted**: Meter → OTLP (`OTEL_EXPORTER_OTLP_ENDPOINT`) → otel-collector → exporter prometheus (:8889) → Prometheus (job `otel-collector`). Em ambos, o ponto vira underscore **sem** sufixo `_total`: `revision.adherence` → série `revision_adherence`. Smoke test dos dois caminhos: `school-management-api/observability/test-offline-sync-metrics.sh` |
 | `If-Match` nos endpoints individuais (F1 HTTP) | ✅ **Ativo** — `OptimisticRevisionMiddleware`: GET em escopo devolve o ETag corrente no header `ETag`; mutação com `If-Match` desatualizada → **412** com `currentRevision` no corpo; sucesso (2xx) devolve o ETag **novo**. A mutação com `If-Match` **reserva** a próxima revisão de forma **atômica** (CAS — Redis: Lua `GET`+`INCR`; memória: `TryUpdate`): dois clientes com o mesmo ETag — só um executa, o outro recebe 412. Falha do endpoint → a reserva é **desfeita** (rollback) e o cliente pode reenviar com o mesmo ETag. Sem `If-Match`: passa com Enforce=false; **428 Precondition Required** com Enforce=true. Revisão por **path** (`tenant:path` no Redis, `etag-revision:r:...`). Rotas excluídas: as mesmas do middleware de idempotência |
 
 ## Headers Necessários
@@ -249,10 +249,20 @@ Contadores Prometheus agregados, sem nenhum dado do payload (LGPD):
 > **Nomes no Prometheus**: o exporter do otel-collector converte o ponto em
 > underscore e **não** acrescenta sufixo `_total` (versão pinada 0.83.0). Logo
 > a série é `revision_adherence`, **não** `revision_adherence_total`. O sufixo
-> `_total` existe só nas métricas do prometheus-net (`http_requests_total`),
-> que são outro pipeline (`/metrics` da API). Um nome errado na query/regra
-> devolve vazio em silêncio — use sempre o nome da tabela acima e o smoke test
+> `_total` existe só nas métricas do prometheus-net
+> (`http_requests_received_total`), que são outro conjunto dentro do mesmo
+> endpoint. Um nome errado na query/regra devolve vazio em silêncio — use
+> sempre o nome da tabela acima e o smoke test
 > `observability/test-offline-sync-metrics.sh` para validar.
+
+> **Onde o Prometheus lê**: as séries acima estão disponíveis em **dois
+> pipelines** (mesmos nomes): (1) **produção** — `GET /metrics` da API, que o
+> Prometheus local scrapeia (job `school-management-prod`); o endpoint agrega
+> as gauges de analytics, as métricas do `Meter "SchoolManagement"` (via
+> `SchoolManagementMetricsCollector`) e o registro do prometheus-net; (2)
+> **stack self-hosted** — OTLP → otel-collector → exporter prometheus (:8889).
+> Em produção **não** há collector OTLP, então o caminho (1) é o que alimenta o
+> rollout.
 
 A **`revision_adherence`** é a métrica que permite decidir o rollout **por
 recurso**: ela mede a adesão do cliente em cada rota, normalizada

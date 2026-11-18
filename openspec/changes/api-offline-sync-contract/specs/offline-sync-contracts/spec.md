@@ -131,3 +131,11 @@ The system SHALL collect sync metrics without exposing PII.
 - **WHEN** the rule is validated against the exported metric names
 - **THEN** the validation fails if the name does not exist in the OTLP pipeline
 - **AND** the validation fails if an OTLP metric is referenced with a `_total` suffix
+
+#### Scenario: Adherence metrics reach the production Prometheus
+- **GIVEN** that the API runs without an OTLP collector (production topology)
+- **WHEN** Prometheus scrapes `GET /metrics` of the API
+- **THEN** the response contains the adherence series `revision_adherence` with the normalized `route` and `state` labels
+- **AND** the response contains the idempotency series (`idempotency_key_missing`, `idempotency_key_provided`)
+- **AND** the response keeps the analytics gauges and the prometheus-net registry in the same scrape
+- **AND** the HTTP request metric label `route` never contains a raw resource identifier

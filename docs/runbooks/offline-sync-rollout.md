@@ -81,29 +81,35 @@ Critérios de sucesso:
 - Nenhum spike de 5xx
 
 > **Onde as métricas estão** — as métricas do `Meter "SchoolManagement"` (F4 +
-> adesão) **não** estão em `/metrics` da API (esse endpoint é do prometheus-net).
-> O caminho real é:
+> adesão) são exportadas por **dois caminhos**, com a **mesma nomenclatura**:
 >
 > ```text
-> API (Meter "SchoolManagement")
->   → OTLP (OTEL_EXPORTER_OTLP_ENDPOINT na API)
->     → otel-collector (:4317)
->       → exporter prometheus (:8889)
->         → Prometheus (job "otel-collector")
+> [produção]  API → GET /metrics → Prometheus (job "school-management-prod")
+>             (a API no Render não tem collector OTLP — o Prometheus local
+>              scrapeia /metrics direto)
+>
+> [stack local] API → OTLP (OTEL_EXPORTER_OTLP_ENDPOINT) → otel-collector (:4317)
+>              → exporter prometheus (:8889) → Prometheus (job "otel-collector")
 > ```
 >
-> O exporter converte o ponto em underscore **sem** sufixo `_total` (collector
-> 0.83.0): `revision.adherence` → série `revision_adherence`,
-> `idempotency_key.missing` → `idempotency_key_missing`,
-> `offline_sync.total` → `offline_sync_total`. O `_total` existe só nas
-> métricas do prometheus-net (`http_requests_total`).
+> O endpoint `/metrics` da API serve as três fontes no mesmo scrape: as gauges
+> de analytics (`school_*`), as métricas do Meter (adesão, idempotência, billing,
+> ano letivo — via `SchoolManagementMetricsCollector`) e o registro do
+> prometheus-net (métricas HTTP do processo). Sem essa ponte, **produção não
+> receberia nenhuma métrica de adesão** — o rollout ficaria sem dado.
 >
-> **Pré-requisito**: a API precisa de `OTEL_EXPORTER_OTLP_ENDPOINT` (ou
-> `OTEL:Endpoint` no `appsettings`) apontando para o collector. Sem isso
-> **nenhuma** métrica de adesão sai da API e o rollout fica sem dado — o alerta
-> `OfflineSyncRevisionMetricAbsent` dispara exatamente nesse caso.
+> **Nomes**: o ponto vira underscore **sem** sufixo `_total` (convenção do
+> exporter do otel-collector, collector 0.83.0): `revision.adherence` →
+> `revision_adherence`, `idempotency_key.missing` → `idempotency_key_missing`,
+> `offline_sync.total` → `offline_sync_total`. O `_total` existe só nas métricas
+> do prometheus-net (`http_requests_received_total`).
 >
-> Smoke test do caminho completo (API → OTLP → collector → Prometheus):
+> > ⚠️ `OTEL_EXPORTER_OTLP_ENDPOINT` **não é necessário em produção** (e não há
+> > collector lá). Ele só importa no stack self-hosted. O alerta
+> > `OfflineSyncRevisionMetricAbsent` dispara se a série não aparecer no
+> > Prometheus de produção.
+>
+> Smoke test dos dois caminhos:
 >
 > ```bash
 > bash school-management-api/observability/test-offline-sync-metrics.sh
