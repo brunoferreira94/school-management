@@ -41,6 +41,13 @@ git push origin main          # branch `main` → redeploy produção (vercel)
        https://api.render.com/v1/services/srv-d82eofrbc2fs73b4jh1g/deploys \
        -d '{"clearCache":"do_not_clear"}'
   ```
+- **Script pronto** (deploy + espera + verificação das métricas de rollout):
+  ```bash
+  # a chave é lida do ambiente ou do .env do repo (gitignored)
+  echo 'RENDER_API_KEY=rnd_...' >> .env
+  bash scripts/deploy-render-api.sh
+  ```
+  Ao final ele confere se `revision_adherence`, `idempotency_key_missing`, as séries do prometheus-net e as gauges de analytics estão em `https://school-management-api-sik5.onrender.com/metrics`.
 - Últimas env vars via `PUT /v1/services/.../env-vars` (a lista completa precisa ser enviada — a **operação substitui tudo**).
 - ⚠️ **Auto-deploy DESLIGADO** (2026-10-28, via API: `PATCH /v1/services/{id}` `{"autoDeploy":"no"}`) em `school-management-api` (main) e `school-management-api-dev` (development). **Push no git não constrói mais nada** — deploy é sempre manual (comando acima).
 - 📌 **Diagnóstico do incidente 10/27–28 (corrigido em 10/28):** **não houve fatura nem cobrança** — spend limit do pipeline já está em `US$ 0` (dashboard-only, Billing → Build Pipeline) e a conta nunca gerou invoice. A série de `update_failed` (17 dos últimos 20 deploys até 10/27) coincide com o incidente clássico documentado abaixo (Supabase pausado → API crash-loop → deploy falha) e/ou estado temporário dos limites de uso. Em 10/28 04:00 o deploy da `development` subiu `live` com o código completo (AiDrafts/trust/export). Staging **Healthy** (health 200, DB conectado 53ms, Supabase Dev `ACTIVE_HEALTHY`).
