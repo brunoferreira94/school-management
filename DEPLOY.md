@@ -76,10 +76,10 @@ git push origin main          # branch `main` → redeploy produção (vercel)
 | `/metrics` | Prometheus |
 
 - **Keep-alive:** `.github/workflows/keep-alive.yml` — cron por hora no `main` do repo raiz (custo zero: repo público). Ele acorda o Render e mantém o Supabase ativo; falha depois de 3 pings → a notificação do GitHub chega por e-mail.
-- Prometheus local: `monitoring-package-api/observability/` (docker) — o `prometheus.yml` também scrapeia a API cloud.
+- Prometheus (docker): **duas cópias idênticas** de `observability/` — a que roda é `school-management-api/observability/` (montada pelo `docker-compose.yml` da API; jobs locais + `school-management-prod` + `school-management-staging`, ambos com label `environment`); `monitoring-package-api/observability/` é o espelho, p/ subir como stack isolado (as duas usam a porta 9090 — só uma por vez). Após alterar arquivos: `curl -X POST http://127.0.0.1:9090/-/reload`.
 - **Métricas da aplicação:** o `GET /metrics` da API serve as três fontes no mesmo scrape — as gauges de analytics (`school_*`), as métricas do `Meter "SchoolManagement"` (adesão de revisão `revision_adherence`, idempotência `idempotency_key_*`, billing, ano letivo) e o registro do prometheus-net (HTTP do processo). Em produção **não há collector OTLP** — o Prometheus local lê esse endpoint (job `school-management-prod`); o pipeline OTLP (`:4317` → `:8889`) é do stack self-hosted. Convenção de nomes: ponto → underscore, **sem** sufixo `_total` (ex.: `revision.adherence` → `revision_adherence`).
   - Smoke test dos dois caminhos: `bash school-management-api/observability/test-offline-sync-metrics.sh`
-  - Regras de alerta do rollout: `monitoring-package-api/observability/prometheus-offline-sync-alerts.yml` (após mudar os arquivos, reinicie o Prometheus: `docker compose -f monitoring-package-api/observability/docker-compose.observability.yml up -d prometheus`)
+  - Regras de alerta do rollout: `prometheus-offline-sync-alerts.yml` (nas **duas** pastas — 6 regras, todas filtrando `environment=production|staging`); recarregue com `curl -X POST http://127.0.0.1:9090/-/reload` ou `docker compose restart prometheus` no diretório da API
 
 ## 🚦 Incidentes comuns
 

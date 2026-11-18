@@ -88,6 +88,11 @@ Critérios de sucesso:
 >             (a API no Render não tem collector OTLP — o Prometheus local
 >              scrapeia /metrics direto)
 >
+> [staging]   mesma ponte, job "school-management-staging" (branch development)
+>             — é AQUI que a janela de ≥7 dias é contada; o scrape de 60s
+>             mantém a instância free-tier acordada (dormindo não há mutação
+>             para medir)
+>
 > [stack local] API → OTLP (OTEL_EXPORTER_OTLP_ENDPOINT) → otel-collector (:4317)
 >              → exporter prometheus (:8889) → Prometheus (job "otel-collector")
 > ```
@@ -105,9 +110,11 @@ Critérios de sucesso:
 > do prometheus-net (`http_requests_received_total`).
 >
 > > ⚠️ `OTEL_EXPORTER_OTLP_ENDPOINT` **não é necessário em produção** (e não há
-> > collector lá). Ele só importa no stack self-hosted. O alerta
-> > `OfflineSyncRevisionMetricAbsent` dispara se a série não aparecer no
-> > Prometheus de produção.
+> > collector lá). Ele só importa no stack self-hosted. Os alertas
+> > `OfflineSyncRevisionMetricAbsent` (produção) e
+> > `OfflineSyncRevisionMetricAbsentStaging` (staging) disparam se a série não
+> > aparecer — `absent()` é avaliado **por ambiente** (label `environment`), senão
+> > a presença num job mascararia a ausência no outro.
 >
 > Smoke test dos dois caminhos:
 >
@@ -116,7 +123,10 @@ Critérios de sucesso:
 > ```
 
 **Antes do Passo 2**: deixar as flags desligadas por ≥ 7 dias em staging e
-confirmar adesão < 1% (não ligar flags sem adesão medida).
+confirmar adesão < 1% (não ligar flags sem adesão medida). A medição é do job
+`school-management-staging` (`environment="staging"`): enquanto o alvo estiver
+`up` sem a série, `OfflineSyncRevisionMetricAbsentStaging` sinaliza que os dias
+**não** estão contando.
 
 ### Adesão por rota (decidir resource a resource)
 
@@ -124,12 +134,16 @@ O `revision_adherence` mede, **por rota normalizada**, se o cliente enviou
 `If-Match` (`state="provided"`, `state="wildcard"` ou `state="missing"`):
 
 ```promql
+# O gate é POR AMBIENTE (label `environment` do job de scrape): sem ele o rate
+# soma o stack local (api:5000 / otel-collector) ao de produção/staging.
+# Troque environment="staging" por "production" ao julgar produção.
+
 # Taxa de adesão por rota (o que interessa para ligar o enforcement)
-sum by (route) (rate(revision_adherence{state="provided"}[1h]))
-  / sum by (route) (rate(revision_adherence[1h]))
+sum by (route) (rate(revision_adherence{state="provided", environment="staging"}[1h]))
+  / sum by (route) (rate(revision_adherence{environment="staging"}[1h]))
 
 # Rotas que ainda não aderem (candidatas a NÃO entrar no enforcement)
-sum by (route) (rate(revision_adherence{state="missing"}[1h])) > 0
+sum by (route) (rate(revision_adherence{state="missing", environment="staging"}[1h])) > 0
 ```
 
 Fluxo recomendado:
@@ -263,8 +277,9 @@ sum(increase(offline_sync_conflicts[5m])) / sum(increase(offline_sync_total[5m])
 sum(increase(idempotency_key_missing[5m])) / sum(increase(idempotency_key_missing[5m]) + increase(idempotency_key_provided[5m]))
 
 # Adesão de If-Match POR ROTA (decide o enforcement por recurso)
-sum by (route) (rate(revision_adherence{state="provided"}[1h]))
-  / sum by (route) (rate(revision_adherence[1h]))
+# filtrando por ambiente — senão o rate soma o stack local ao gate
+sum by (route) (rate(revision_adherence{state="provided", environment="staging"}[1h]))
+  / sum by (route) (rate(revision_adherence{environment="staging"}[1h]))
 ```
 
 > `http_requests_total` (com `_total`) vem do **prometheus-net** (`/metrics` da
@@ -274,12 +289,12 @@ sum by (route) (rate(revision_adherence{state="provided"}[1h]))
 
 | Alerta | Condição | Ação |
 |--------|----------|------|
-| `OfflineSyncHighConflicts` | `offline_sync_conflicts / offline_sync_total > 1%` em 15min | Notificar #alert-offline-sync |
-| `OfflineSync5xxErrors` | `sum(rate(http_requests_total{path="/api/offline/*",status=~"5.."}[5m])) > 0` | Notificar on-call |
-| `OfflineSyncHighMissingIdempotencyKey` | `idempotency_key_missing / (missing + provided) > 1%` em 30min | Notificar #product |
-| `OfflineSyncLowRevisionAdherence` | por rota: `provided / total < 99%` em 1h (só nas rotas com `EnforcedPaths`) | Não ampliar o `EnforcedPaths` nessa rota até a adesão normalizar |
-| `OfflineSyncRevisionMetricAbsent` | `absent(revision_adherence) == 1` em 15min | Pipeline de métricas quebrado — sem dado para decidir o rollout |
-| `OfflineSyncHighRevisionConflictRate` | `revision_conflict / revision_adherence > 5%` em 15min | Verificar reaplicação do ETag no cliente |
+| `OfflineSyncBatchConflictRateHigh` | `offline_sync_conflicts / offline_sync_total > 1%` em 15min (por ambiente) | Notificar #alert-offline-sync |
+| `OfflineSyncHighMissingIdempotencyKey` | `idempotency_key_missing / (missing + provided) > 1%` em 30min (por ambiente) | Notificar #product |
+| `OfflineSyncLowRevisionAdherence` | por rota, `environment=~"production\|staging"`: `provided / total < 99%` em 1h | Não ampliar o `EnforcedPaths` nessa rota até a adesão normalizar |
+| `OfflineSyncRevisionMetricAbsent` | `absent(revision_adherence{environment="production"}) == 1` em 15min | Sem dado em produção p/ decidir o rollout (build sem a ponte, scraping ou sem mutações) |
+| `OfflineSyncRevisionMetricAbsentStaging` | `absent(revision_adherence{environment="staging"}) == 1` em 15min (severity **info**) | Janela de ≥7 dias não está contando (staging dormindo, build antigo ou sem mutações) |
+| `OfflineSyncHighRevisionConflictRate` | `revision_conflict / revision_adherence > 5%` em 15min (por ambiente) | Verificar reaplicação do ETag no cliente |
 
 > Arquivo: `school-management-api/observability/prometheus-offline-sync-alerts.yml`
 > (registrado em `prometheus.yml` e montado no `docker-compose.yml`).

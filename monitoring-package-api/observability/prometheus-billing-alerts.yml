@@ -1,0 +1,64 @@
+groups:
+  - name: billing_reconciliation_alerts
+    interval: 15s
+    rules:
+      # ================================================================
+      # CRITICAL: Falhas de checkout Premium (provedor de pagamento)
+      # Dispara se houver >= 5 falhas em 10 min (sinal de Asaas fora do ar
+      # ou credenciais inválidas em produção).
+      # ================================================================
+      - alert: BillingCheckoutFailures
+        expr: increase(billing_checkout_failure[10m]) >= 5
+        for: 10m
+        labels:
+          severity: critical
+          component: billing
+        annotations:
+          summary: "CRITICAL: Falhas de checkout Premium (>=5 em 10min)"
+          description: "{{ $value }} falhas de checkout no provedor de pagamento nas últimas 10min. Verificar conectividade/credenciais Asaas e o fluxo de contratação Premium."
+          runbook_url: "https://wiki.internal/runbooks/billing-checkout-failure"
+
+      # ================================================================
+      # WARNING: Webhooks de cobrança falhando (token inválido / payload)
+      # Indica problema de integração com o Asaas ou segredo de webhook.
+      # ================================================================
+      - alert: BillingWebhookFailures
+        expr: increase(billing_webhook_failure[10m]) >= 10
+        for: 10m
+        labels:
+          severity: warning
+          component: billing
+        annotations:
+          summary: "WARNING: Webhooks de cobrança Asaas falhando"
+          description: "{{ $value }} webhooks de cobrança inválidos/rejeitados nas últimas 10min. Checar token de webhook (Asaas:WebhookToken) e mapeamento de assinaturas."
+          runbook_url: "https://wiki.internal/runbooks/billing-webhook-failure"
+
+      # ================================================================
+      # WARNING: Discrepâncias de reconciliação
+      # Assinaturas ativas no provedor sem parcela paga correspondente.
+      # ================================================================
+      - alert: BillingReconciliationDiscrepancies
+        expr: increase(billing_reconciliation_discrepancies[1h]) >= 3
+        for: 1h
+        labels:
+          severity: warning
+          component: billing
+        annotations:
+          summary: "WARNING: Discrepâncias de reconcilação de cobrança"
+          description: "{{ $value }} novas discrepâncias de reconcilação detectadas na última hora (assinaturas ativas sem pagamento mapeado). Revisar relatório de reconcilação financeira."
+          runbook_url: "https://wiki.internal/runbooks/billing-reconciliation"
+
+      # ================================================================
+      # WARNING: Latência alta do provedor de pagamento (Asaas)
+      # p95 > 3s indica degradação do gateway de pagamento.
+      # ================================================================
+      - alert: BillingProviderLatencyHigh
+        expr: histogram_quantile(0.95, rate(billing_provider_latency_ms_bucket[10m])) > 3000
+        for: 10m
+        labels:
+          severity: warning
+          component: billing
+        annotations:
+          summary: "WARNING: Latência alta do provedor de pagamento (p95 > 3s)"
+          description: "O p95 da latência das chamadas ao Asaas está acima de 3s por 10min (valor atual: {{ $value }}ms). Impacta checkout e webhooks."
+          runbook_url: "https://wiki.internal/runbooks/billing-latency"

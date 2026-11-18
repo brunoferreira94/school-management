@@ -16,6 +16,7 @@ rule_files:
   - "prometheus-academic-year-alerts.yml"
   - "prometheus-health-alerts.yml"
   - "prometheus-support-health-alerts.yml"
+  - "prometheus-billing-alerts.yml"
   - "prometheus-offline-sync-alerts.yml"
 
 scrape_configs:
@@ -26,7 +27,8 @@ scrape_configs:
     scrape_interval: 10s
 
   # API em produção (Render, free tier hiberna — aquecida pelo keep-alive CI)
-  # O Render /metrics é público (confirmado); usa /api/support/health path
+  # O /metrics é público; production entrega as três fontes no mesmo scrape
+  # (analytics + Meter + prometheus-net) desde a ponte SchoolManagementMetricsCollector.
   - job_name: "school-management-prod"
     metrics_path: "/metrics"
     scrape_interval: 60s
@@ -34,6 +36,20 @@ scrape_configs:
       - targets: ["school-management-api-sik5.onrender.com"]
         labels:
           environment: "production"
+          platform: "render"
+
+  # Staging/dev (Render) — branch `development`. É AQUI que a janela de
+  # observação de ≥7 dias do rollout acontece (adesão medida com as flags
+  # desligadas, antes de ampliar OfflineSync:Revision:EnforcedPaths).
+  # O scrape de 60s mantém a instância free-tier acordada — intencional:
+  # instância dormindo não recebe mutação, logo não há o que medir.
+  - job_name: "school-management-staging"
+    metrics_path: "/metrics"
+    scrape_interval: 60s
+    static_configs:
+      - targets: ["school-management-api-dev.onrender.com"]
+        labels:
+          environment: "staging"
           platform: "render"
 
   - job_name: "otel-collector"

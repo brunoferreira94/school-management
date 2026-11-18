@@ -270,19 +270,22 @@ recurso**: ela mede a adesão do cliente em cada rota, normalizada
 nova por id). A cardinalidade é limitada a **50 rotas distintas**; acima disso,
 as rotas novas caem no bucket `__other__`.
 
-Taxa de adesão por rota (PromQL):
+Taxa de adesão por rota (PromQL). O label `environment` vem do job de scrape
+(`production` = `school-management-prod`, `staging` = `school-management-staging`);
+sem ele o rate somaria o stack local (`api:5000` / `otel-collector`) ao gate:
 
 ```promql
-sum by (route) (rate(revision_adherence{state="provided"}[5m]))
-  / sum by (route) (rate(revision_adherence[5m]))
+sum by (route) (rate(revision_adherence{state="provided", environment="staging"}[5m]))
+  / sum by (route) (rate(revision_adherence{environment="staging"}[5m]))
 ```
 
 > `state="wildcard"` **não** protege a atualização (equivale a "qualquer
 > revisão") — conte-o como não aderência ao decidir se liga o enforcement.
 
 Alertas prontos: `observability/prometheus-offline-sync-alerts.yml`
-(adesão baixa por rota, métrica ausente, chave ausente > 1%, taxa de 412,
-conflitos do sync-batch).
+(adesão baixa por rota, métrica ausente **por ambiente** — produção e staging —,
+chave ausente > 1%, taxa de 412, conflitos do sync-batch; todos filtram por
+`environment=production|staging`).
 
 Log de batch contém **apenas** `batchId`, `tenantId` e contagens por status —
 CPF, nomes, payloads e EntityIds nunca são logados.
