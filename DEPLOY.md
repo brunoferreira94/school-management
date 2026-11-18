@@ -70,6 +70,9 @@ git push origin main          # branch `main` → redeploy produção (vercel)
 
 - **Keep-alive:** `.github/workflows/keep-alive.yml` — cron por hora no `main` do repo raiz (custo zero: repo público). Ele acorda o Render e mantém o Supabase ativo; falha depois de 3 pings → a notificação do GitHub chega por e-mail.
 - Prometheus local: `monitoring-package-api/observability/` (docker) — o `prometheus.yml` também scrapeia a API cloud.
+- **Métricas da aplicação:** o `GET /metrics` da API serve as três fontes no mesmo scrape — as gauges de analytics (`school_*`), as métricas do `Meter "SchoolManagement"` (adesão de revisão `revision_adherence`, idempotência `idempotency_key_*`, billing, ano letivo) e o registro do prometheus-net (HTTP do processo). Em produção **não há collector OTLP** — o Prometheus local lê esse endpoint (job `school-management-prod`); o pipeline OTLP (`:4317` → `:8889`) é do stack self-hosted. Convenção de nomes: ponto → underscore, **sem** sufixo `_total` (ex.: `revision.adherence` → `revision_adherence`).
+  - Smoke test dos dois caminhos: `bash school-management-api/observability/test-offline-sync-metrics.sh`
+  - Regras de alerta do rollout: `monitoring-package-api/observability/prometheus-offline-sync-alerts.yml` (após mudar os arquivos, reinicie o Prometheus: `docker compose -f monitoring-package-api/observability/docker-compose.observability.yml up -d prometheus`)
 
 ## 🚦 Incidentes comuns
 
