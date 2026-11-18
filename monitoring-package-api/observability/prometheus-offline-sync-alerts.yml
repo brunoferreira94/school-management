@@ -53,12 +53,16 @@ groups:
       # Adesão de If-Match baixa em uma rota — o enforcement NÃO deve ser
       # ampliado para essa rota. `wildcard` conta como não adesão (If-Match: *
       # não protege a atualização).
+      # Escopo `route=~"PUT .*"`: por contrato (runbook §Passo 2) só o PUT de
+      # recurso envia If-Match — POST (criação/upsert de collection) e DELETE
+      # nunca enviam e ficariam estruturalmente em 0%, gerando falso positivo
+      # em tráfego intenso de criação. Rotas candidatas a EnforcedPaths são PUT.
       - alert: OfflineSyncLowRevisionAdherence
         expr: |
-          sum by (environment, route) (rate(revision_adherence{state="provided", environment=~"production|staging"}[1h]))
-            / sum by (environment, route) (rate(revision_adherence{environment=~"production|staging"}[1h])) < 0.99
+          sum by (environment, route) (rate(revision_adherence{state="provided", environment=~"production|staging", route=~"PUT .*"}[1h]))
+            / sum by (environment, route) (rate(revision_adherence{environment=~"production|staging", route=~"PUT .*"}[1h])) < 0.99
           and
-          sum by (environment, route) (increase(revision_adherence{environment=~"production|staging"}[1h])) > 20
+          sum by (environment, route) (increase(revision_adherence{environment=~"production|staging", route=~"PUT .*"}[1h])) > 20
         for: 1h
         labels:
           severity: warning
@@ -83,10 +87,13 @@ groups:
 
       # Taxa de conflito de revisão (412) alta — sinal de ETag stale demais
       # na UI (baseVersion desatualizado) ou de concorrência real.
+      # Denominador só em PUT: o 412 só existe onde If-Match é enviado; somar
+      # POST/DELETE (estruturalmente sem If-Match) diluiria a taxa e esconderia
+      # um conflito real abaixo do limiar de 5%.
       - alert: OfflineSyncHighRevisionConflictRate
         expr: |
           sum by (environment) (rate(revision_conflict{environment=~"production|staging"}[15m]))
-            / sum by (environment) (rate(revision_adherence{environment=~"production|staging"}[15m])) > 0.05
+            / sum by (environment) (rate(revision_adherence{environment=~"production|staging", route=~"PUT .*"}[15m])) > 0.05
         for: 15m
         labels:
           severity: warning

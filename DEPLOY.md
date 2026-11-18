@@ -28,7 +28,8 @@ git push origin main          # branch `main` → redeploy produção (vercel)
 ```
 
 - Configuração: `vercel.json` (rewrites) fica na raiz e é copiado pro output do build (commit `35b65dc`).
-- ⚠️ Se o subdomínio Render mudar, atualizar `vercel.json:5` e dar push.
+- ⚠️ Se um subdomínio Render mudar, atualizar os destinos em `vercel.json` — produção na `main`, staging na `development` — e dar push.
+- **Pairing por branch**: `main` → produção (API `school-management-api-sik5`); `development` → preview apontando para a API de **staging** (`school-management-api-dev`). O preview é o cliente da janela de observação do offline-sync (`docs/runbooks/offline-sync-rollout.md`) e um preview nunca escreve em produção.
 
 ### API (Render)
 

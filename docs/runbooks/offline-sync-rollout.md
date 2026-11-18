@@ -128,6 +128,45 @@ confirmar adesão < 1% (não ligar flags sem adesão medida). A medição é do 
 `up` sem a série, `OfflineSyncRevisionMetricAbsentStaging` sinaliza que os dias
 **não** estão contando.
 
+### Cliente de staging (por onde os dias são contados)
+
+O `revision_adherence` do staging só aparece quando **um cliente real** faz
+mutação naquela API — e nenhum front apontava para o staging. Há dois caminhos
+prontos (pairing `development` ↔ `development`; produção continua na `main`):
+
+```bash
+# (a) Local — proxy same-origin p/ a API de staging. O proxy é obrigatório:
+#     o CORS do staging (AllowedHeaders) não lista If-Match/Idempotency-Key e
+#     bloquearia o preflight de uma chamada cross-origin.
+cd school-management-ui && npm run start:staging   # ng serve em 127.0.0.1:4200
+
+# (b) Preview no Vercel — push em `development` gera preview cujo vercel.json
+#     roteia /api e /metrics para o staging. A URL muda a cada push; pegue a
+#     atual em Vercel → school-management-ui → Deployments (ex. de hoje:
+#     https://school-management-a6603y37o-brunoferreira94s-projects.vercel.app)
+```
+
+Conferindo que o caminho serve o staging — `process_start_time_seconds` é o
+fingerprint do processo (a produção tem outro valor; troque o host para
+comparar):
+
+```bash
+curl -s https://school-management-a6603y37o-brunoferreira94s-projects.vercel.app/metrics \
+  | grep process_start_time_seconds
+curl -s https://school-management-api-dev.onrender.com/metrics \
+  | grep process_start_time_seconds   # ← tem que ser igual ao do preview
+```
+
+> **Login**: mesmo Auth0 (`rare-softwares`); `localhost:4200` já é origem
+> permitida no fluxo dev. Se o **preview** recusar o callback, adicione o
+> domínio em Auth0 → Applications → Allowed Callback URLs.
+>
+> **Dia 0 da janela**: a primeira mutação autenticada cria a série
+> `revision_adherence{environment="staging"}` e resolve
+> `OfflineSyncRevisionMetricAbsentStaging`. Enquanto ninguém usar um dos
+> clientes, o alerta (severity **info**) continua sinalizando que os dias
+> **não** estão contando — é ele o relógio da janela.
+
 ### Adesão por rota (decidir resource a resource)
 
 O `revision_adherence` mede, **por rota normalizada**, se o cliente enviou
@@ -291,10 +330,10 @@ sum by (route) (rate(revision_adherence{state="provided", environment="staging"}
 |--------|----------|------|
 | `OfflineSyncBatchConflictRateHigh` | `offline_sync_conflicts / offline_sync_total > 1%` em 15min (por ambiente) | Notificar #alert-offline-sync |
 | `OfflineSyncHighMissingIdempotencyKey` | `idempotency_key_missing / (missing + provided) > 1%` em 30min (por ambiente) | Notificar #product |
-| `OfflineSyncLowRevisionAdherence` | por rota, `environment=~"production\|staging"`: `provided / total < 99%` em 1h | Não ampliar o `EnforcedPaths` nessa rota até a adesão normalizar |
+| `OfflineSyncLowRevisionAdherence` | por rota **PUT** (`route=~"PUT .*"` — POST/DELETE nunca enviam `If-Match` por contrato) + `environment=~"production\|staging"`: `provided / total < 99%` em 1h | Não ampliar o `EnforcedPaths` nessa rota até a adesão normalizar |
 | `OfflineSyncRevisionMetricAbsent` | `absent(revision_adherence{environment="production"}) == 1` em 15min | Sem dado em produção p/ decidir o rollout (build sem a ponte, scraping ou sem mutações) |
 | `OfflineSyncRevisionMetricAbsentStaging` | `absent(revision_adherence{environment="staging"}) == 1` em 15min (severity **info**) | Janela de ≥7 dias não está contando (staging dormindo, build antigo ou sem mutações) |
-| `OfflineSyncHighRevisionConflictRate` | `revision_conflict / revision_adherence > 5%` em 15min (por ambiente) | Verificar reaplicação do ETag no cliente |
+| `OfflineSyncHighRevisionConflictRate` | `revision_conflict / revision_adherence` (denominador só rotas PUT) > 5% em 15min (por ambiente) | Verificar reaplicação do ETag no cliente |
 
 > Arquivo: `school-management-api/observability/prometheus-offline-sync-alerts.yml`
 > (registrado em `prometheus.yml` e montado no `docker-compose.yml`).
