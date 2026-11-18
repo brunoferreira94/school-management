@@ -110,11 +110,24 @@ The system SHALL collect sync metrics without exposing PII.
 - **GIVEN** that sync operations are occurring
 - **WHEN** Prometheus scrapes metrics
 - **THEN** `offline_sync_total` increments
-- **AND** `offline_sync_success_total` increments only for successes
-- **AND** `offline_sync_conflicts_total` increments for conflicts
+- **AND** `offline_sync_success` increments only for successes
+- **AND** `offline_sync_conflicts` increments for conflicts
 
 #### Scenario: Logs do not contain PII
 - **GIVEN** that sync completed successfully
 - **WHEN** the log is created
 - **THEN** the log contains only `tenantId`, `batchId`, `operationType`
 - **AND** does not contain CPF, names, or other sensitive data
+
+#### Scenario: Adherence metrics are queryable by resource
+- **GIVEN** that the metrics pipeline is configured (OTLP endpoint pointing to the collector)
+- **WHEN** Prometheus queries the adherence counters
+- **THEN** the revision adherence series is named `revision_adherence` (instrument name translated to underscore, without a `_total` suffix)
+- **AND** the series carries the normalized `route` and the `state` (`provided` | `wildcard` | `missing`) labels
+- **AND** the key adherence series are named `idempotency_key_missing` and `idempotency_key_provided`
+
+#### Scenario: Metric naming drift is caught before the rollout
+- **GIVEN** that an alerting rule references a metric name
+- **WHEN** the rule is validated against the exported metric names
+- **THEN** the validation fails if the name does not exist in the OTLP pipeline
+- **AND** the validation fails if an OTLP metric is referenced with a `_total` suffix

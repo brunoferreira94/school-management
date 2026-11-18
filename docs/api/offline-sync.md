@@ -16,6 +16,7 @@ Este documento descreve o contrato de sincronização offline para o sistema de 
 | Flags `OfflineSync__Idempotency__RequireKey` / `OfflineSync__Revision__Enforce` | ✅ Lidas pela API (default **false**) — RequireKey: sync-batch sem chave → 400; Enforce: UPDATE sem ETag → outcome `rejected`. O enforcement **global** é deliberadamente opt-in: endpoints individuais só bloqueiam quando o cliente envia a chave |
 | Escopo do enforcement `OfflineSync__Revision__EnforcedPaths` | ✅ **Ativo** — lista de padrões `"MÉTODO /path/{id}"` que restringe o 428 (sem `If-Match`) às mutações cobertas pelo cliente; lista vazia = enforcement global. Ex.: `["PUT /api/grades/{id}", "PUT /api/grading-formulas/{id}"]` |
 | Adesão de revisão **por rota** (`revision.adherence`) | ✅ **Ativa** — toda mutação em escopo é medida com tags `route` (rota normalizada, ex.: `PUT /api/grades/{id}`) e `state` (`provided` \| `wildcard` \| `missing`). Cardinalidade limitada (50 rotas + bucket `__other__`) — base para decidir, **por recurso**, se o enforcement pode ser ligado |
+| Pipeline de exportação das métricas | ⚠️ As métricas do `Meter "SchoolManagement"` **não** aparecem em `/metrics` da API (esse endpoint é do prometheus-net). O caminho é **Meter → OTLP (`OTEL_EXPORTER_OTLP_ENDPOINT`) → otel-collector → exporter prometheus (:8889) → Prometheus (job `otel-collector`)**. O exporter converte o ponto em underscore **sem** sufixo `_total`: `revision.adherence` → série `revision_adherence`. Sem `OTEL_EXPORTER_OTLP_ENDPOINT` configurado **nada é exportado** e o rollout fica sem dado — smoke test: `school-management-api/observability/test-offline-sync-metrics.sh` |
 | `If-Match` nos endpoints individuais (F1 HTTP) | ✅ **Ativo** — `OptimisticRevisionMiddleware`: GET em escopo devolve o ETag corrente no header `ETag`; mutação com `If-Match` desatualizada → **412** com `currentRevision` no corpo; sucesso (2xx) devolve o ETag **novo**. A mutação com `If-Match` **reserva** a próxima revisão de forma **atômica** (CAS — Redis: Lua `GET`+`INCR`; memória: `TryUpdate`): dois clientes com o mesmo ETag — só um executa, o outro recebe 412. Falha do endpoint → a reserva é **desfeita** (rollback) e o cliente pode reenviar com o mesmo ETag. Sem `If-Match`: passa com Enforce=false; **428 Precondition Required** com Enforce=true. Revisão por **path** (`tenant:path` no Redis, `etag-revision:r:...`). Rotas excluídas: as mesmas do middleware de idempotência |
 
 ## Headers Necessários
@@ -228,24 +229,32 @@ Estados por operação:
 
 Contadores Prometheus agregados, sem nenhum dado do payload (LGPD):
 
-| Métrica | Incremento |
-|---------|-----------|
-| `offline_sync.total` | Por operação processada |
-| `offline_sync.success` | Por operação applied/unchanged |
-| `offline_sync.conflicts` | Por operação em conflict |
+| Métrica (nome no `Meter`) | Série no Prometheus | Incremento |
+|---------------------------|----------------------|-----------|
+| `offline_sync.total` | `offline_sync_total` | Por operação processada |
+| `offline_sync.success` | `offline_sync_success` | Por operação applied/unchanged |
+| `offline_sync.conflicts` | `offline_sync_conflicts` | Por operação em conflict |
 
 ### Adesão de rollout
 
-| Métrica | Tags | Incremento |
-|---------|------|-----------|
-| `idempotency_key.missing` | — | Mutação em escopo sem `Idempotency-Key` |
-| `idempotency_key.provided` | — | Mutação em escopo com `Idempotency-Key` |
-| `idempotency_key.reused` | — | Requisição rejeitada com 422 |
-| `revision.missing` | — | Operação do sync-batch sem ETag (op-level) |
-| `revision.conflict` | — | 412 (stale `If-Match`) |
-| **`revision.adherence`** | `route`, `state` | **Toda mutação HTTP em escopo** — `state`: `provided` (enviou ETag), `wildcard` (`If-Match: *`) ou `missing` (sem header) |
+| Métrica (nome no `Meter`) | Série no Prometheus | Tags | Incremento |
+|---------------------------|----------------------|------|-----------|
+| `idempotency_key.missing` | `idempotency_key_missing` | — | Mutação em escopo sem `Idempotency-Key` |
+| `idempotency_key.provided` | `idempotency_key_provided` | — | Mutação em escopo com `Idempotency-Key` |
+| `idempotency_key.reused` | `idempotency_key_reused` | — | Requisição rejeitada com 422 |
+| `revision.missing` | `revision_missing` | — | Operação do sync-batch sem ETag (op-level) |
+| `revision.conflict` | `revision_conflict` | — | 412 (stale `If-Match`) |
+| **`revision.adherence`** | **`revision_adherence`** | `route`, `state` | **Toda mutação HTTP em escopo** — `state`: `provided` (enviou ETag), `wildcard` (`If-Match: *`) ou `missing` (sem header) |
 
-A **`revision.adherence`** é a métrica que permite decidir o rollout **por
+> **Nomes no Prometheus**: o exporter do otel-collector converte o ponto em
+> underscore e **não** acrescenta sufixo `_total` (versão pinada 0.83.0). Logo
+> a série é `revision_adherence`, **não** `revision_adherence_total`. O sufixo
+> `_total` existe só nas métricas do prometheus-net (`http_requests_total`),
+> que são outro pipeline (`/metrics` da API). Um nome errado na query/regra
+> devolve vazio em silêncio — use sempre o nome da tabela acima e o smoke test
+> `observability/test-offline-sync-metrics.sh` para validar.
+
+A **`revision_adherence`** é a métrica que permite decidir o rollout **por
 recurso**: ela mede a adesão do cliente em cada rota, normalizada
 (`PUT /api/grades/42` → `PUT /api/grades/{id}` — o path cru viraria uma série
 nova por id). A cardinalidade é limitada a **50 rotas distintas**; acima disso,
@@ -254,12 +263,16 @@ as rotas novas caem no bucket `__other__`.
 Taxa de adesão por rota (PromQL):
 
 ```promql
-sum by (route) (rate(revision_adherence_total{state="provided"}[5m]))
-  / sum by (route) (rate(revision_adherence_total[5m]))
+sum by (route) (rate(revision_adherence{state="provided"}[5m]))
+  / sum by (route) (rate(revision_adherence[5m]))
 ```
 
 > `state="wildcard"` **não** protege a atualização (equivale a "qualquer
 > revisão") — conte-o como não aderência ao decidir se liga o enforcement.
+
+Alertas prontos: `observability/prometheus-offline-sync-alerts.yml`
+(adesão baixa por rota, métrica ausente, chave ausente > 1%, taxa de 412,
+conflitos do sync-batch).
 
 Log de batch contém **apenas** `batchId`, `tenantId` e contagens por status —
 CPF, nomes, payloads e EntityIds nunca são logados.
