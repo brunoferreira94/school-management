@@ -27,6 +27,7 @@ services:
       - ./prometheus-health-alerts.yml:/etc/prometheus/prometheus-health-alerts.yml:ro
       - ./prometheus-academic-year-alerts.yml:/etc/prometheus/prometheus-academic-year-alerts.yml:ro
       - ./prometheus-support-health-alerts.yml:/etc/prometheus/prometheus-support-health-alerts.yml:ro
+      - ./prometheus-offline-sync-alerts.yml:/etc/prometheus/prometheus-offline-sync-alerts.yml:ro
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"

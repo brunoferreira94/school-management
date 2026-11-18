@@ -1,0 +1,86 @@
+groups:
+  - name: offline_sync_alerts
+    interval: 30s
+    rules:
+      # ─────────────────────────────────────────────────────────────
+      # NOTA (nomes das séries): o pipeline OTLP (Meter "SchoolManagement"
+      # → otel-collector → exporter prometheus :8889) exporta o ponto
+      # como underscore, SEM sufixo "_total":
+      #   Meter "revision.adherence"        → série "revision_adherence"
+      #   Meter "idempotency_key.missing"   → série "idempotency_key_missing"
+      #   Meter "offline_sync.total"        → série "offline_sync_total"
+      # O sufixo "_total" só existe nas métricas do prometheus-net
+      # (ex.: http_requests_total, expostas em /metrics da API).
+      # Smoke test: observability/test-offline-sync-metrics.sh
+      # ─────────────────────────────────────────────────────────────
+
+      # A métrica de adesão sumiu → a medição do rollout está quebrada
+      # (OTLP não configurado ou collector parado). Sem esta série não é
+      # possível decidir se o enforcement de revisão pode ser ligado.
+      - alert: OfflineSyncRevisionMetricAbsent
+        expr: absent(revision_adherence) == 1
+        for: 15m
+        labels:
+          severity: warning
+          component: offline_sync
+        annotations:
+          summary: "Métrica de adesão de revisão ausente (revision_adherence)"
+          description: "Nenhuma mutação registrada em `revision_adherence` há 15min. Verifique o pipeline OTLP (OTEL_EXPORTER_OTLP_ENDPOINT na API) e o exporter prometheus do otel-collector (:8889). Sem esta série o rollout do enforcement de revisão não pode ser decidido."
+
+      # Adesão de If-Match baixa em uma rota — o enforcement NÃO deve ser
+      # ampliado para essa rota. `wildcard` conta como não adesão (If-Match: *
+      # não protege a atualização).
+      - alert: OfflineSyncLowRevisionAdherence
+        expr: |
+          sum by (route) (rate(revision_adherence{state="provided"}[1h]))
+            / sum by (route) (rate(revision_adherence[1h])) < 0.99
+          and
+          sum by (route) (increase(revision_adherence[1h])) > 20
+        for: 1h
+        labels:
+          severity: warning
+          component: offline_sync
+        annotations:
+          summary: "Adesão de If-Match abaixo de 99% na rota {{ $labels.route }}"
+          description: "Rota {{ $labels.route }}: apenas {{ $value | humanizePercentage }} das mutações enviaram If-Match na última hora. Se esta rota estiver no OfflineSync:Revision:EnforcedPaths, o enforcement vai gerar 428 para clientes legados — amplie o EnforcedPaths só após a adesão normalizar."
+
+      # Mutações sem Idempotency-Key acima de 1% — condição de bloqueio do
+      # rollout (gate: missing_key < 1%).
+      - alert: OfflineSyncHighMissingIdempotencyKey
+        expr: |
+          sum(rate(idempotency_key_missing[10m]))
+            / (sum(rate(idempotency_key_missing[10m])) + sum(rate(idempotency_key_provided[10m]))) > 0.01
+        for: 30m
+        labels:
+          severity: warning
+          component: offline_sync
+        annotations:
+          summary: "Mutações sem Idempotency-Key acima de 1%"
+          description: "{{ $value | humanizePercentage }} das mutações sem Idempotency-Key na última meia hora. O gate do rollout exige missing_key < 1%."
+
+      # Taxa de conflito de revisão (412) alta — sinal de ETag stale demais
+      # na UI (baseVersion desatualizado) ou de concorrência real.
+      - alert: OfflineSyncHighRevisionConflictRate
+        expr: |
+          sum(rate(revision_conflict[15m]))
+            / sum(rate(revision_adherence[15m])) > 0.05
+        for: 15m
+        labels:
+          severity: warning
+          component: offline_sync
+        annotations:
+          summary: "Taxa de conflito de revisão (412) acima de 5%"
+          description: "{{ $value | humanizePercentage }} das mutações resultaram em 412 (If-Match stale) nos últimos 15min. Verifique se a UI está reaplicando o ETag capturado no GET por recurso."
+
+      # Conflitos no sync-batch acima de 1% das operações.
+      - alert: OfflineSyncBatchConflictRateHigh
+        expr: |
+          sum(rate(offline_sync_conflicts[15m]))
+            / sum(rate(offline_sync_total[15m])) > 0.01
+        for: 15m
+        labels:
+          severity: warning
+          component: offline_sync
+        annotations:
+          summary: "Conflitos do sync-batch acima de 1%"
+          description: "{{ $value | humanizePercentage }} das operações do sync-batch foram marcadas como conflict nos últimos 15min."

@@ -1,0 +1,106 @@
+groups:
+  - name: academic_year_alerts
+    interval: 30s
+    rules:
+      # NOTA (nomes): o pipeline OTLP (Meter "SchoolManagement" → otel-collector)
+      # exporta o ponto como underscore, SEM sufixo "_total":
+      #   Meter "academic_year.operations" → série "academic_year_operations"
+      # (o "_total" só existe nas métricas do prometheus-net, ex.: http_requests_total).
+
+      # Alert when academic year operation errors exceed threshold
+      - alert: AcademicYearOperationErrors
+        expr: increase(academic_year_operations{status="error"}[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          component: academic_year
+        annotations:
+          summary: "High error rate in academic year operations"
+          description: "Academic year operations have {{ $value }} errors in the last 5 minutes (operation: {{ $labels.operation }})"
+
+      # Alert when academic year operation errors are critical
+      - alert: AcademicYearOperationCriticalErrors
+        expr: increase(academic_year_operations{status="error"}[5m]) > 10
+        for: 1m
+        labels:
+          severity: critical
+          component: academic_year
+        annotations:
+          summary: "CRITICAL: Very high error rate in academic year operations"
+          description: "Academic year operations have {{ $value }} errors in the last 5 minutes (operation: {{ $labels.operation }}). Immediate investigation required."
+
+      # Alert when success rate drops below threshold
+      - alert: AcademicYearLowSuccessRate
+        expr: |
+          100 * sum(rate(academic_year_operations{status="success"}[5m])) 
+          / sum(rate(academic_year_operations[5m])) < 95
+        for: 5m
+        labels:
+          severity: warning
+          component: academic_year
+        annotations:
+          summary: "Academic year operations success rate below 95%"
+          description: "Success rate is {{ $value | humanize }}% over the last 5 minutes"
+
+      # Alert when no academic years have been created in a long time (business hours)
+      - alert: NoAcademicYearsCreatedRecently
+        expr: |
+          (time() - (academic_years_created > 0)) > 604800
+          and hour() >= 8 and hour() <= 18
+        for: 10m
+        labels:
+          severity: info
+          component: academic_year
+        annotations:
+          summary: "No academic years created in the last 7 days"
+          description: "No new academic years have been created in the last week during business hours. This might be expected behavior."
+
+      # Alert when delete operations fail consistently
+      - alert: AcademicYearDeleteFailures
+        expr: increase(academic_year_operations{operation="delete",status="error"}[10m]) > 3
+        for: 2m
+        labels:
+          severity: warning
+          component: academic_year
+        annotations:
+          summary: "Multiple academic year delete operations failing"
+          description: "{{ $value }} delete operations have failed in the last 10 minutes. Check for foreign key constraints or data integrity issues."
+
+      # Alert when records by academic year gauge is not being updated
+      - alert: AcademicYearMetricsStale
+        expr: |
+          absent(records_by_academic_year) == 1
+          or
+          time() - timestamp(records_by_academic_year) > 300
+        for: 5m
+        labels:
+          severity: warning
+          component: observability
+        annotations:
+          summary: "Academic year metrics are stale or absent"
+          description: "The records_by_academic_year gauge has not been updated in the last 5 minutes. Check MetricsService health."
+
+      # Alert when an academic year has no records assigned
+      - alert: AcademicYearWithNoRecords
+        expr: |
+          count by (academic_year_slug) (records_by_academic_year == 0) > 0
+        for: 1h
+        labels:
+          severity: info
+          component: academic_year
+        annotations:
+          summary: "Academic year {{ $labels.academic_year_slug }} has no records"
+          description: "Academic year {{ $labels.academic_year_slug }} has no records assigned for 1 hour. This might be expected for new or archived years."
+
+      # Alert when update operations have high error rate
+      - alert: AcademicYearUpdateFailures
+        expr: |
+          rate(academic_year_operations{operation="update",status="error"}[5m]) 
+          / rate(academic_year_operations{operation="update"}[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          component: academic_year
+        annotations:
+          summary: "High failure rate for academic year updates"
+          description: "More than 10% of update operations are failing over the last 5 minutes"

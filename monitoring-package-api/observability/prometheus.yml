@@ -16,6 +16,7 @@ rule_files:
   - "prometheus-academic-year-alerts.yml"
   - "prometheus-health-alerts.yml"
   - "prometheus-support-health-alerts.yml"
+  - "prometheus-offline-sync-alerts.yml"
 
 scrape_configs:
   - job_name: "school-management"
