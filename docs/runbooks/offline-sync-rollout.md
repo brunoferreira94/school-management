@@ -270,6 +270,10 @@ curl -X PUT "https://staging-api:5067/api/students/91000000001" \
 
 ### Cenário 3: Sync em lote
 
+> O `POST /api/offline/sync-batch` exige `clientId` em formato **Guid** (body) e
+> `idempotencyKey` no **corpo** — o guard lê o corpo, não o header (o header é
+> opcional para simular cliente real).
+
 ```bash
 curl -X POST "https://staging-api:5067/api/offline/sync-batch" \
   -H "Idempotency-Key: $(uuidgen)" \
@@ -291,6 +295,49 @@ curl -X POST "https://staging-api:5067/api/offline/sync-batch" \
 #   "outcomes": [ {"status": "applied", "newETag": "5-1.0.0-..."}, ... ] }
 # Reenvio com MESMA Idempotency-Key → 422 Unprocessable Entity
 ```
+
+### Cenário 4: Soak contínuo 5×10k ops/dia (tasks 5.3)
+
+Harness: `school-management-api/observability/smoke-offline-sync.mjs` (Node,
+sem dependências). Simula 5 clientes × 10k operações/dia em lotes de 10 ops
+contra `POST /api/offline/sync-batch` no staging — gera a série
+`idempotency_key_*{source="batch"}` que o gate `missing_key < 1%` (§Passo 4)
+lê. Desenho:
+
+- **Só sync-batch** — o tráfego é batch-only de propósito: não toca em
+  `revision_adherence` (medição de cliente real por rota), então não
+  "gamela" o gate de EnforcedPaths.
+- UPDATE/DELETE **sempre com ETag** do estado local → `revision_missing` 0.
+- Chave nova (UUID) por lote + **replay deliberado** a cada 100 lotes
+  (esperado 422 — prova de F0 sob carga).
+- **Detecção de restart** via `process_start_time_seconds` (GET /metrics,
+  público) antes de cada lote: reinício da API zera o estado POC do ETag
+  manager → pools recriados antes de mandar ETag velho (0 conflitos
+  pós-deploy; sem isso, um lote que aterrissa entre o restart e a detecção
+  conflita — `currentRevision=0 ≠ N` — e encosta no limiar de 1% do
+  `OfflineSyncBatchConflictRateHigh`).
+- Fallback: outcome conflict/rejected derruba a entidade do pool (recria com
+  id novo), nunca reenvia ETag vencido.
+
+```bash
+# Iniciar (background) — defaults: 5 clientes × 10k ops/dia, 1 lote/86,4s
+NODE=$(source ~/.nvm/nvm.sh && nvm use 24 >/dev/null && which node)
+nohup "$NODE" observability/smoke-offline-sync.mjs >> /tmp/smoke-offline-sync.log 2>&1 &
+
+# Monitorar: log do processo (relatório a cada 5 min)
+tail -f /tmp/smoke-offline-sync.log
+
+# PromQL (gate §Passo 4, staging):
+#   missing_key (batch):  sum(rate(idempotency_key_missing{source="batch"}[1h]))
+#     / (sum(rate(idempotency_key_missing{source="batch"}[1h]))
+#        + sum(rate(idempotency_key_provided{source="batch"}[1h])))   # < 1%
+#   conflicts (batch):    sum(rate(offline_sync_conflicts[15m]))
+#     / sum(rate(offline_sync_total[15m]))                           # < 1%
+```
+
+Parar: `kill <pid>` (SIGTERM → relatório final no log). Reiniciar após
+reboot da máquina: repetir o comando de iniciar (o harness recria os pools;
+estado POC antigo fica órfão, inofensivo).
 
 ## Rollback
 
