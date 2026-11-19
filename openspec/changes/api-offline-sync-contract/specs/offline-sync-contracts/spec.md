@@ -125,6 +125,8 @@ The system SHALL collect sync metrics without exposing PII.
 - **THEN** the revision adherence series is named `revision_adherence` (instrument name translated to underscore, without a `_total` suffix)
 - **AND** the series carries the normalized `route` and the `state` (`provided` | `wildcard` | `missing`) labels
 - **AND** the key adherence series are named `idempotency_key_missing` and `idempotency_key_provided`
+- **AND** the key adherence series carry the `source` label (`http` for individual mutations, `batch` for sync-batch)
+- **AND** the rollout gate `missing_key < 1%` reads only `source="batch"` — the surface where `RequireKey` enforces; individual HTTP mutations are opt-in (clients may omit the key) and are measured as informational adherence
 
 #### Scenario: Metric naming drift is caught before the rollout
 - **GIVEN** that an alerting rule references a metric name

@@ -12,7 +12,7 @@ Este documento descreve o contrato de sincronização offline para o sistema de 
 | `X-Server-Time` em todas as respostas + `serverTimeUtc` no health check (F3) | ✅ Ativo |
 | Cache de idempotência Redis (multi-instância) | ✅ Ativo quando `ConnectionStrings:Redis` configurado; fallback em memória |
 | **Idempotência global (F0) nos endpoints individuais** | ✅ **Ativa** — middleware global: POST/PUT/PATCH/DELETE com `Idempotency-Key` (opt-in). Chave inédita → executa; resposta 2xx → chave consumida (reuso → **422**); resposta 4xx/5xx → chave **liberada** (retry com a mesma chave é permitido). Rotas excluídas: `/api/auth`, `/api/webhooks`, `/api/support`, `/api/offline`, `/metrics`, `/swagger` |
-| Métricas de adesão (`idempotency_key.missing/provided/reused`, `revision.missing`) | ✅ Ativas — o middleware de idempotência mede **todo** tráfego de mutação (além do sync-batch); `revision.missing` é medida no sync-batch (op-level) — para o tráfego HTTP use `revision.adherence` (por rota, ver abaixo) |
+| Métricas de adesão (`idempotency_key.missing/provided/reused`, `revision.missing`) | ✅ Ativas — o middleware de idempotência mede **todo** tráfego de mutação (além do sync-batch) com tag `source="http"`; o guard do sync-batch mede com `source="batch"` — **o gate `missing_key < 1%` lê só `source="batch"`** (única superfície em que o `RequireKey` enforça); `revision.missing` é medida no sync-batch (op-level) — para o tráfego HTTP use `revision.adherence` (por rota, ver abaixo) |
 | Flags `OfflineSync__Idempotency__RequireKey` / `OfflineSync__Revision__Enforce` | ✅ Lidas pela API (default **false**) — RequireKey: sync-batch sem chave → 400; Enforce: UPDATE sem ETag → outcome `rejected`. O enforcement **global** é deliberadamente opt-in: endpoints individuais só bloqueiam quando o cliente envia a chave |
 | Escopo do enforcement `OfflineSync__Revision__EnforcedPaths` | ✅ **Ativo** — lista de padrões `"MÉTODO /path/{id}"` que restringe o 428 (sem `If-Match`) às mutações cobertas pelo cliente; lista vazia = enforcement global. Ex.: `["PUT /api/grades/{id}", "PUT /api/grading-formulas/{id}"]` |
 | Adesão de revisão **por rota** (`revision.adherence`) | ✅ **Ativa** — toda mutação em escopo é medida com tags `route` (rota normalizada, ex.: `PUT /api/grades/{id}`) e `state` (`provided` \| `wildcard` \| `missing`). Cardinalidade limitada (50 rotas + bucket `__other__`) — base para decidir, **por recurso**, se o enforcement pode ser ligado |
@@ -239,8 +239,8 @@ Contadores Prometheus agregados, sem nenhum dado do payload (LGPD):
 
 | Métrica (nome no `Meter`) | Série no Prometheus | Tags | Incremento |
 |---------------------------|----------------------|------|-----------|
-| `idempotency_key.missing` | `idempotency_key_missing` | — | Mutação em escopo sem `Idempotency-Key` |
-| `idempotency_key.provided` | `idempotency_key_provided` | — | Mutação em escopo com `Idempotency-Key` |
+| `idempotency_key.missing` | `idempotency_key_missing` | `source` (`http` \| `batch`) | Mutação em escopo sem `Idempotency-Key` — **o gate `missing_key < 1%` lê só `source="batch"`** (sync-batch, superfície do `RequireKey`); `source="http"` é adesão informativa (opt-in por design) |
+| `idempotency_key.provided` | `idempotency_key_provided` | `source` (`http` \| `batch`) | Mutação em escopo com `Idempotency-Key` |
 | `idempotency_key.reused` | `idempotency_key_reused` | — | Requisição rejeitada com 422 |
 | `revision.missing` | `revision_missing` | — | Operação do sync-batch sem ETag (op-level) |
 | `revision.conflict` | `revision_conflict` | — | 412 (stale `If-Match`) |

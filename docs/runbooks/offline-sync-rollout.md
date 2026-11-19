@@ -76,9 +76,27 @@ Monitorar dashboards:
 - **Erros 5xx**: `sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))`
 
 Critérios de sucesso:
-- `missing_key < 1%`: `idempotency_key_missing / (idempotency_key_missing + idempotency_key_provided)`
-- `revision_missing < 1%`: `revision_missing / offline_sync_total`
+- `missing_key < 1%` — razão medida **só em `source="batch"`** (sync-batch: é
+  a superfície em que o `RequireKey` enforça; tag `source="http"|"batch"`
+  adicionada em 2026-11-19). O HTTP individual é opt-in (a UI online não
+  envia chave por design) e ficou **fora** do gate — somá-lo lerria ~100%
+  missing eterno. **Sem série `source="batch"` o gate é indescisível** (não
+  é falha): o smoke test (tasks 5.3) gera o tráfego que o torna decisível.
+- `revision_missing < 1%`: `revision_missing / offline_sync_total` (já é
+  só-batch: apenas o guard do sync-batch o incrementa)
 - Nenhum spike de 5xx
+
+```promql
+# Gate missing_key (tasks 5.1/5.4) — só sync-batch (source="batch")
+sum(rate(idempotency_key_missing{environment="staging", source="batch"}[1h]))
+  / (sum(rate(idempotency_key_missing{environment="staging", source="batch"}[1h]))
+     + sum(rate(idempotency_key_provided{environment="staging", source="batch"}[1h])))
+
+# Adesão no caminho HTTP — INFORMATIVA, não é gate (opt-in por design)
+sum(rate(idempotency_key_missing{environment="staging", source="http"}[1h]))
+  / (sum(rate(idempotency_key_missing{environment="staging", source="http"}[1h]))
+     + sum(rate(idempotency_key_provided{environment="staging", source="http"}[1h])))
+```
 
 > **Onde as métricas estão** — as métricas do `Meter "SchoolManagement"` (F4 +
 > adesão) são exportadas por **dois caminhos**, com a **mesma nomenclatura**:
@@ -305,8 +323,8 @@ Se os critérios de erro forem excedidos:
 offline_sync_total
 offline_sync_success
 offline_sync_conflicts
-idempotency_key_missing
-idempotency_key_provided
+idempotency_key_missing    # tags: source (http | batch)
+idempotency_key_provided   # tags: source (http | batch)
 idempotency_key_reused
 revision_missing
 revision_conflict
@@ -318,8 +336,17 @@ sum(increase(offline_sync_success[5m])) / sum(increase(offline_sync_total[5m]))
 # Taxa de conflitos
 sum(increase(offline_sync_conflicts[5m])) / sum(increase(offline_sync_total[5m]))
 
-# Adesão de chave
-sum(increase(idempotency_key_missing[5m])) / sum(increase(idempotency_key_missing[5m]) + increase(idempotency_key_provided[5m]))
+# Adesão de chave — GATE: só sync-batch (source="batch"); sem o filtro de
+# ambiente o número soma o stack local
+sum(rate(idempotency_key_missing{environment="staging", source="batch"}[5m]))
+  / (sum(rate(idempotency_key_missing{environment="staging", source="batch"}[5m]))
+     + sum(rate(idempotency_key_provided{environment="staging", source="batch"}[5m])))
+
+# Adesão de chave no caminho HTTP — informativa (opt-in; a UI online não
+# envia chave por design; NÃO é gate)
+sum(rate(idempotency_key_missing{environment="staging", source="http"}[5m]))
+  / (sum(rate(idempotency_key_missing{environment="staging", source="http"}[5m]))
+     + sum(rate(idempotency_key_provided{environment="staging", source="http"}[5m])))
 
 # Adesão de If-Match POR ROTA (decide o enforcement por recurso)
 # filtrando por ambiente — senão o rate soma o stack local ao gate
@@ -335,7 +362,7 @@ sum by (route) (rate(revision_adherence{state="provided", environment="staging"}
 | Alerta | Condição | Ação |
 |--------|----------|------|
 | `OfflineSyncBatchConflictRateHigh` | `offline_sync_conflicts / offline_sync_total > 1%` em 15min (por ambiente) | Notificar #alert-offline-sync |
-| `OfflineSyncHighMissingIdempotencyKey` | `idempotency_key_missing / (missing + provided) > 1%` em 30min (por ambiente) | Notificar #product |
+| `OfflineSyncHighMissingIdempotencyKey` | só `source="batch"` (sync-batch — superfície em que o `RequireKey` enforça): `missing / (missing + provided) > 1%` em 30min (por ambiente); sem tráfego de batch a razão é NaN e **não dispara** (gate indescisível, não falha) | Notificar #product |
 | `OfflineSyncLowRevisionAdherence` | por rota **PUT** (`route=~"PUT .*"` — POST/DELETE nunca enviam `If-Match` por contrato) + `environment=~"production\|staging"`: `provided / total < 99%` em 1h | Não ampliar o `EnforcedPaths` nessa rota até a adesão normalizar |
 | `OfflineSyncRevisionMetricAbsent` | `absent(revision_adherence{environment="production"}) == 1` em 15min | Sem dado em produção p/ decidir o rollout (build sem a ponte, scraping ou sem mutações) |
 | `OfflineSyncRevisionMetricAbsentStaging` | `absent(revision_adherence{environment="staging"}) == 1` em 15min (severity **info**) | Janela de ≥7 dias não está contando (staging dormindo, build antigo ou sem mutações) |
@@ -350,8 +377,11 @@ Após 7 dias de operação estável:
 
 1. **Verificar adesão** (após implementar métricas de adesão no hardening):
    ```promql
-   # Taxa de clientes usando chave (pipeline OTLP: sem sufixo "_total")
-   sum(increase(idempotency_key_provided[1d])) / sum(increase(idempotency_key_provided[1d]) + increase(idempotency_key_missing[1d]))
+   # Taxa de clientes usando chave no sync-batch (pipeline OTLP: sem sufixo
+   # "_total") — gate do RequireKey; troque environment por "production"
+   sum(rate(idempotency_key_provided{environment="production", source="batch"}[1h]))
+     / (sum(rate(idempotency_key_provided{environment="production", source="batch"}[1h]))
+        + sum(rate(idempotency_key_missing{environment="production", source="batch"}[1h])))
    ```
 
 2. **Documentar lições aprendidas**

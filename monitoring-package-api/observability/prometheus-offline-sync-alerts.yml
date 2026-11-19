@@ -71,19 +71,30 @@ groups:
           summary: "Adesão de If-Match abaixo de 99% na rota {{ $labels.route }} ({{ $labels.environment }})"
           description: "[{{ $labels.environment }}] Rota {{ $labels.route }}: apenas {{ $value | humanizePercentage }} das mutações enviaram If-Match na última hora. Se esta rota estiver no OfflineSync:Revision:EnforcedPaths, o enforcement vai gerar 428 para clientes legados — amplie o EnforcedPaths só após a adesão normalizar."
 
-      # Mutações sem Idempotency-Key acima de 1% — condição de bloqueio do
-      # rollout (gate: missing_key < 1%).
+      # Lotes do sync-batch sem Idempotency-Key acima de 1% — condição de
+      # bloqueio do rollout (gate: missing_key < 1%).
+      #
+      # ESCOPO `source="batch"` (tag adicionada em 2026-11-19): o RequireKey só
+      # enforça no sync-batch, então é essa superfície que o gate mede — mesma
+      # lógica do revision_missing, que já é incrementado só pelo guard. As
+      # mutações HTTP individuais são opt-in (a UI online não envia chave por
+      # design) e somá-las aqui leriam ~100% missing eterno, tornando o alerta
+      # ruído permanente na janela de observação; a adesão delas é consulta
+      # informativa no runbook (offline-sync-rollout.md §Passo 4).
+      # Sem tráfego de batch a razão é 0/0 = NaN → não dispara: sem série
+      # source="batch" o gate é INDESCISÍVEL (não é falha) — o smoke test
+      # (tasks 5.3) gera o tráfego que o torna decisível.
       - alert: OfflineSyncHighMissingIdempotencyKey
         expr: |
-          sum by (environment) (rate(idempotency_key_missing{environment=~"production|staging"}[10m]))
-            / (sum by (environment) (rate(idempotency_key_missing{environment=~"production|staging"}[10m])) + sum by (environment) (rate(idempotency_key_provided{environment=~"production|staging"}[10m]))) > 0.01
+          sum by (environment) (rate(idempotency_key_missing{environment=~"production|staging", source="batch"}[10m]))
+            / (sum by (environment) (rate(idempotency_key_missing{environment=~"production|staging", source="batch"}[10m])) + sum by (environment) (rate(idempotency_key_provided{environment=~"production|staging", source="batch"}[10m]))) > 0.01
         for: 30m
         labels:
           severity: warning
           component: offline_sync
         annotations:
-          summary: "Mutações sem Idempotency-Key acima de 1% ({{ $labels.environment }})"
-          description: "[{{ $labels.environment }}] {{ $value | humanizePercentage }} das mutações sem Idempotency-Key na última meia hora. O gate do rollout exige missing_key < 1%."
+          summary: "Mutações do sync-batch sem Idempotency-Key acima de 1% ({{ $labels.environment }})"
+          description: "[{{ $labels.environment }}] {{ $value | humanizePercentage }} dos lotes do sync-batch sem Idempotency-Key na última meia hora. O gate do rollout (tasks 5.1/5.4) exige missing_key < 1% justamente na superfície em que o RequireKey enforça (source=batch)."
 
       # Taxa de conflito de revisão (412) alta — sinal de ETag stale demais
       # na UI (baseVersion desatualizado) ou de concorrência real.
