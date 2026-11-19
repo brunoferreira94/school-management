@@ -166,6 +166,12 @@ curl -s https://school-management-api-dev.onrender.com/metrics \
 > `OfflineSyncRevisionMetricAbsentStaging`. Enquanto ninguém usar um dos
 > clientes, o alerta (severity **info**) continua sinalizando que os dias
 > **não** estão contando — é ele o relógio da janela.
+>
+> **Registro**: dia 0 = **2026-11-19** (preview `a7ec70a` + API `c632ad5`,
+> editor de fórmulas). Os contadores são em memória: um reinício da instância
+> zera a série e o alerta volta a `firing` **sem** que a janela tenha parado —
+> conte os dias a partir do registro acima, não pelo estado do alerta; uma
+> nova mutação reacende a série.
 
 ### Adesão por rota (decidir resource a resource)
 
