@@ -50,7 +50,7 @@
 
 ## Bloco 5: Ativação em Staging (OPS)
 
-- [ ] 5.1 Ativar flags `RequireKey=true`, `Enforce=true` (via env)
+- [ ] 5.1 Ativar flags `RequireKey=true`, `Enforce=true` (via env) — runbook mecânico pronto: **Checkpoint de ativação — 26/11** (`docs/runbooks/offline-sync-rollout.md` §Checkpoint): queries copiáveis + árvore de decisão + variáveis Render + rollback
 - [ ] 5.2 Janela de observação 24h
 - [ ] 5.3 Smoke test: 5 clientes, 10k ops/dia cada
 - [ ] 5.4 Monitorar adesão (missing_key < 1% **só em `source="batch"`** — sync-batch, superfície em que o RequireKey enforça; revision_missing < 1%)

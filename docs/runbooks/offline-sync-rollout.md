@@ -227,6 +227,94 @@ Fluxo recomendado:
 > `OfflineSyncHighRevisionConflictRate` (> 5% de 412) e
 > `OfflineSyncBatchConflictRateHigh` (> 1% de conflitos no sync-batch).
 
+## Checkpoint de ativação — 26/11 (Bloco 5, tasks 5.1–5.5)
+
+> **Quando rodar**: 2026-11-26 (7 dias completos desde o dia 0 = 2026-11-19).
+> É um runbook mecânico: rode as queries, siga a árvore de decisão, aplique as
+> flags no **staging** (a produção só recebe depois da aprovação 5.5). Tudo
+> abaixo assume o Prometheus local (jobs `school-management-staging` /
+> `school-management-prod`, label `environment`).
+
+### 1. Pré-verificação (staging) — todos têm de passar
+
+```bash
+# 1) Gate missing_key (batch) < 1%
+curl -s "http://127.0.0.1:9090/api/v1/query" --data-urlencode 'query=sum(rate(idempotency_key_missing{environment="staging", source="batch"}[1h])) / (sum(rate(idempotency_key_missing{environment="staging", source="batch"}[1h])) + sum(rate(idempotency_key_provided{environment="staging", source="batch"}[1h])))'
+
+# 2) revision_missing < 1% (batch)
+curl -s "http://127.0.0.1:9090/api/v1/query" --data-urlencode 'query=sum(rate(revision_missing{environment="staging"}[1h])) / sum(rate(offline_sync_total{environment="staging"}[1h]))'
+
+# 3) Adesão por rota — provided ≥ 99% e wildcard ≈ 0
+curl -s "http://127.0.0.1:9090/api/v1/query" --data-urlencode 'query=sum by (route) (rate(revision_adherence{state="provided", environment="staging"}[1h])) / sum by (route) (rate(revision_adherence{environment="staging"}[1h]))'
+
+# 4) Alertas sustained (devem estar todos inactive/pending, nunca firing)
+curl -s "http://127.0.0.1:9090/api/v1/query" --data-urlencode 'query=ALERTS{alertstate="firing", environment="staging"}'
+```
+
+| Verificação | Passa se | Se falhar |
+|---|---|---|
+| `missing_key` (batch) | < 1% | **Não ligar `RequireKey`** — achar o cliente batch sem chave (grep nos logs do guard) |
+| `revision_missing` | < 1% | Não ligar `Enforce` — UPDATE/DELETE sem ETag no batch |
+| `revision_adherence` por rota | `provided ≥ 99%`, `wildcard ≈ 0` | `EnforcedPaths` só nas rotas aprovadas (nunca global) |
+| Alertas staging | nenhum `firing` sustentado | investigar antes |
+
+> A série `idempotency_key_missing{source="batch"}` **ausente** = 0 missing
+> (passa). Se `provided{batch}` não cresce, o soak (5.3) morreu — reinicie
+> antes de decidir qualquer coisa.
+
+### 2. Árvore de decisão
+
+```text
+missing_key < 1%  ──não──▶ NÃO ligar RequireKey (investigar cliente)
+        │sim
+revision_missing < 1% ──não──▶ NÃO ligar Enforce
+        │sim
+aderência por rota ≥ 99% ──▶ EnforcedPaths = [rotas aprovadas]
+        │                        (nunca lista vazia/global no 1º dia)
+nenhum alerta sustained ──▶ prosseguir para 3
+```
+
+### 3. Aplicar no staging (Render)
+
+Variáveis (service `school-management-api-dev`, `srv-d9r4shvqj5pc73ap72k0`):
+
+| Variável | Valor |
+|---|---|
+| `OfflineSync__Idempotency__RequireKey` | `true` (escopo: sync-batch, onde o guard enforça) |
+| `OfflineSync__Revision__Enforce` | `true` |
+| `OfflineSync__Revision__EnforcedPaths__0` | `PUT /api/grading-formulas/{id}` (exemplo — só rotas com `provided ≥ 99%`; repita `__1`, `__2`… para as demais) |
+
+```bash
+# API Render (alternativa ao dashboard): variável + deploy manual
+#   POST /v1/services/srv-d9r4shvqj5pc73ap72k0/env-vars  {"name":"...","value":"..."}
+#   POST /v1/services/srv-d9r4shvqj5pc73ap72k0/deploys   (autoDeploy: no)
+# Dashboard: Environment → adicionar → Manual Deploy (clear cache "do_not_clear")
+```
+
+> `EnforcedPaths` é lista de padrões `"MÉTODO /path/{id}"` (`{id}` = 1
+> segmento). Lista vazia = enforcement global — **não** usar no 1º dia.
+
+### 4. Verificação pós-ligação (24h, staging)
+
+- `idempotency_key_missing{source="batch"}` continua **0** (RequireKey ligado + clientes compliant)
+- `offline_sync_conflicts / offline_sync_total` < 1%
+- `revision_conflict` (412) ~0 nas rotas do `EnforcedPaths`; 428 por rota = clientes que não enviavam `If-Match` (esperado nas rotas recém-incluídas — acompanhar, não é erro)
+- 5.2: janela 24h; 5.4: monitoramento; 5.3: soak ≥24h (log diário)
+
+### 5. Rollback
+
+Qualquer regressão: `OfflineSync__Idempotency__RequireKey=false` +
+`OfflineSync__Revision__Enforce=false` + redeploy (mesmo fluxo). O 412/428
+some imediatamente; filas offline pendentes seguem válidas (a chave é
+liberada em 4xx/5xx).
+
+### 6. Produção (após 5.5)
+
+Repetir 3–4 no service de produção (`srv-d82eofrbc2fs73b4jh1g`) **só depois**
+da aprovação do fundador (5.5). Produção ainda não tem cliente real com
+If-Match (a UI só passou a enviar em 4.6/M2 nas telas de nota/fórmula) —
+a decisão por rota sai do mesmo dado (`environment="production"`).
+
 ## Smoke Test
 
 ### Cenário 1: Sincronização bem-sucedida
