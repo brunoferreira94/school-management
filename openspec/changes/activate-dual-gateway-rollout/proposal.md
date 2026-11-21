@@ -15,9 +15,10 @@ verificação de assinatura e reconciliação. Porém **nada disso roda em produ
 2. Não há credenciais reais de Stripe (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
    `STRIPE_SUCCESS_URL`, `STRIPE_CANCEL_URL`) nem UI consumindo o `provider` retornado no
    checkout.
-3. Staging no Render está bloqueado por cartão de crédito (402 do workspace `tea-d82eakm7r5hc73bp8gg0`),
-   o que impede validar webhook sandbox end-to-end (premium-portal-activation.cy.ts exige
-   credenciais/ambiente reais).
+3. Staging no Render pode não ser viável no free tier (o 402 é **verificação de conta**, não gargalo
+   de capacidade — colocar cartão não muda nada enquanto o spend limit for US$ 0 e a cota esgotar).
+   Por isso a validação de webhook é feita **localmente via túnel** com os sandboxes gratuitos de
+   Asaas e Stripe (ver `docs/runbooks/activate-gateways.md` §0.1), sem depender do staging.
 
 ## Escopo
 

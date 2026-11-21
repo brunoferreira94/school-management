@@ -6,6 +6,13 @@
 > Pré-requisito de código já entregue: `GatewayCheckoutRouter` só usa `MockPaymentCheckoutService`
 > em Development/Testing; em Production/Staging sem credenciais, retorna erro explícito (`UnavailableGateway`).
 
+> **Nota sobre free tier (importante):** colocar cartão no Render **não muda nada** enquanto tudo
+> roda no free tier — o teto é a cota (750 h de instância/mês, hibernação, 5 GB de banda), e um
+> cartão com spend limit US$ 0 não levanta esse teto. O 402 do staging é **verificação de conta**,
+> não "pague para desbloquear capacidade"; mesmo atendendo, o free tier continua limitando. Por isso
+> a validação real do fluxo de pagamento deve ser feita **localmente via túnel** (Seção 0.1), usando
+> os **sandboxes gratuitos** do Asaas e do Stripe — sem cartão e sem depender do staging do Render.
+
 ---
 
 ## 0. Visão geral do fluxo
@@ -26,6 +33,27 @@ UI redireciona para checkoutUrl (hosted page do provedor)
 **Segurança já no código:** ambos os webhooks validam origem (token Asaas / assinatura HMAC Stripe)
 e são idempotentes (repetir o mesmo evento não duplica efeito). Rotas de webhook estão fora do
 `MutatingRoutes` (não exigem `If-Match`/idempotência de cliente).
+
+## 0.1 Validação local via túnel (recomendado — não precisa de Render/cartão)
+
+Valida o fluxo **real** (checkout → webhook → assinatura `Active`) na sua máquina, usando os
+sandboxes gratuitos, sem depender do staging do Render nem de cartão.
+
+1. Suba a API local apontando para um Postgres local e configure:
+   - `Asaas__ApiKey` = chave do **sandbox** Asaas (`sandbox.asaas.com`)
+   - `Asaas__WebhookToken` = token que você vai definir no painel Asaas
+   - `Stripe__SecretKey` = `sk_test_...` · `Stripe__WebhookSecret` = `whsec_...`
+   - `ASPNETCORE_ENVIRONMENT=Development` (usa `MockPaymentCheckoutService` só se as chaves estiverem vazias)
+2. Exponha a API com um túnel: `cloudflared tunnel --url http://localhost:5000` (ou `ngrok http 5000`).
+   Anote a URL pública (ex.: `https://xxxx.trycloudflare.com`).
+3. Cadastre o webhook apontando para o túnel:
+   - Asaas: `https://xxxx.trycloudflare.com/api/subscriptions/webhooks/asaas` (token = `Asaas__WebhookToken`)
+   - Stripe: `https://xxxx.trycloudflare.com/api/subscriptions/webhooks/stripe` (signing secret = `Stripe__WebhookSecret`)
+4. Faça um checkout (PIX sandbox no Asaas, cartão de teste `4242...` no Stripe) e confirme
+   `GET /api/subscriptions/tenant` → `Status=Active`. Repita o evento → idempotente.
+
+> Vantagem: o túnel fecha quando você termina, sem deixar serviço exposto e sem consumir cota do Render.
+> O webhook do provedor precisa alcançar a URL pública — por isso o túnel.
 
 ---
 
