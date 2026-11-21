@@ -34,4 +34,4 @@
 - [x] 5.2 `ng build` verde após unificação de sanitizer
 - [x] 5.3 `openspec validate harden-tenant-isolation-and-monetization --strict` passa
 - [x] 5.4 Migration `AddTenantIdToAcademicEntities` aplicada e validada contra Postgres 16 real (backfill + índices)
-- [ ] 5.5 Promover flags `Tenant:FailClosed` e `Entitlement:Enforce` para `true` em staging/produção após janela de observação (rollout gradual, fora do escopo de código)
+- [x] 5.5 Promover flags `Tenant:FailClosed` e `Entitlement:Enforce` para `true` em staging/produção (via `appsettings.Production/Staging`); dev/testing permanecem lenientes. Rollout gradual: middleware fail-closed só p/ autenticados (anônimos passam). Ver `docs/runbooks/activate-gateways.md`.
