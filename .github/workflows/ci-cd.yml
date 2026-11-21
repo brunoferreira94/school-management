@@ -12,8 +12,32 @@ env:
 
 jobs:
   # Matriz de Qualidade (Launch)
-  # - Bloqueantes: backend, frontend, e2e (quebram PR/main)
+  # - Bloqueantes: openspec, backend, frontend, e2e (quebram PR/main)
   # - Informativos: quality-informational (não bloqueia merge/deploy)
+
+  # =============================================
+  # OpenSpec: validate --strict (bloqueante)
+  # =============================================
+  openspec:
+    name: OpenSpec (validate --strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Validate all active changes (strict)
+        run: |
+          npx -y @fission-ai/openspec list || true
+          for change in openspec/changes/*/; do
+            name="$(basename "$change")"
+            [ "$name" = "archive" ] && continue
+            [ -f "$change/proposal.md" ] || continue
+            echo "::group::validate $name"
+            npx -y @fission-ai/openspec validate "$name" --strict
+            echo "::endgroup::"
+          done
 
   # =============================================
   # Backend: Build + Test
@@ -151,7 +175,7 @@ jobs:
   e2e:
     name: E2E Tests (Cypress)
     runs-on: ubuntu-latest
-    needs: [backend, frontend]
+    needs: [openspec, backend, frontend]
     services:
       postgres:
         image: postgres:16
@@ -274,7 +298,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: [backend, frontend, e2e]
+    needs: [openspec, backend, frontend, e2e]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:

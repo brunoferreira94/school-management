@@ -1,12 +1,17 @@
 # 🏫 School Management SaaS
 
-> Plataforma completa de gestão escolar — multi-tenant, moderna e intuitiva.
+> Plataforma multi-tenant de gestão escolar.
+
+> **⚠️ Status do projeto (2026-11): piloto fechado, pré-lançamento público.** A infra e o core
+> acadêmico estão em produção (piloto), mas **cobrança real, enforcement de plano e algumas
+> capacidades de plataforma ainda não estão ativos**. Marcos de "completo" abaixo refletem
+> capacidade técnica implementada, não disponibilidade comercial. Ver
+> `openspec/changes/finalize-public-launch-readiness/` e `reports/AUDITORIA-CRITICA-2026-11-20.md`.
 
 [![Backend](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![Frontend](https://img.shields.io/badge/Angular-22-DD0031?logo=angular)](https://angular.io/)
 [![Database](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql)](https://www.postgresql.org/)
 [![Auth](https://img.shields.io/badge/Auth0-EB5424?logo=auth0)](https://auth0.com/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
 
@@ -39,7 +44,7 @@ O **School Management SaaS** é uma plataforma multi-tenant de gestão escolar q
 - 🔐 **Auth0** — Autenticação enterprise com MFA
 - 📊 **Analytics** — Relatórios de retenção, inadimplência e frequência
 - 🔔 **Notificações** — Multi-canal (email, SMS, push, in-app)
-- ⚡ **Performance** — OnPush, lazy loading, virtual scroll
+- ⚡ **Performance** — lazy loading, virtual scroll; OnPush adotado em componentes críticos (home, grades, reports-hub)
 
 ---
 
@@ -425,7 +430,8 @@ npm run e2e:open
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a [MIT License](LICENSE).
+Projeto privado (todos os direitos reservados). O repositório não inclui um arquivo LICENSE;
+integrações e código são proprietários.
 
 ---
 

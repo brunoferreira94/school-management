@@ -24,10 +24,11 @@
 
 ## ✅ O Que Funcionou Bem
 
-### 1. Performance Excepcional 🏆
-- **TTV médio de ~614ms** — mais de **1000x mais rápido** que a meta de 10 min
+### 1. Latência de API (não confundir com "time-to-value")
+- **~614ms** é a **latência da API** medida via `curl`, **não** o tempo até o primeiro valor percebido
+  pelo usuário (que inclui renderização, rede e interação). O número real de TTV não foi medido.
 - API responde em **< 300ms** para a maioria dos casos (274ms Patrícia, 184ms Sandra)
-- Com frontend incluso, estimativa realista < 2s
+- Com frontend incluso, estimativa realista < 2s (a confirmar com medição real de renderização)
 
 ### 2. Login Consistente
 - 6/6 logins bem-sucedidos com CPF+senha
