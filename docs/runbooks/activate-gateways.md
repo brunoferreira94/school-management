@@ -75,6 +75,46 @@ Configure no Render (API `school-management-api-sik5` para produção; `school-m
 > `ASPNETCORE_ENVIRONMENT=Production` (produção) / `Staging` (staging) já define qual `appsettings.*.json`
 > é carregado. Produção usa `${...}` do `appsettings.Production.json`.
 
+## 1.1 Verificação por ambiente (leia antes de configurar chaves)
+
+Cada ambiente carrega um `appsettings` diferente e **herda** o base (`appsettings.json`) para o que
+não sobrescreve. Isso cria uma pegadinha com a `ApiBaseUrl` do Asaas:
+
+| Ambiente | `ASPNETCORE_ENVIRONMENT` | `Asaas:ApiBaseUrl` efetivo | Degrada p/ mock? |
+|---|---|---|---|
+| **Dev (local)** | `Development` | `https://sandbox.asaas.com/api/v3` (do `appsettings.Development.json`) ✅ | Sim, se chave vazia |
+| **Staging** (Render `...-dev`) | `Staging` | **`https://api.asaas.com/v3` (PRODUÇÃO)** ⚠️ — `appsettings.Staging.json` não define `Asaas`, herda o base | **Não** (usa cliente real) |
+| **Produção** (Render `...-sik5`) | `Production` | `https://api.asaas.com/v3` (produção) ✅ | **Não** (`UnavailableGateway` se sem chave) |
+
+> **Pegadinha do staging:** como o staging não sobrescreve `Asaas:ApiBaseUrl`, ele aponta para a
+> **URL de produção** do Asaas. Se você configurar lá a **chave sandbox** sem setar a URL sandbox,
+> o checkout quebra (chave sandbox contra API de produção). **Correção:** setar no staging a env var
+> `Asaas__ApiBaseUrl = https://sandbox.asaas.com/api/v3` (ou definir a seção `Asaas` no
+> `appsettings.Staging.json`).
+
+### Checklist de variáveis por ambiente
+
+**Staging (sandbox — `school-management-api-dev`):**
+- [ ] `Asaas__ApiKey` = chave **sandbox** (`sandbox.asaas.com`)
+- [ ] `Asaas__ApiBaseUrl` = `https://sandbox.asaas.com/api/v3` ← **não esqueça; sem isto aponta p/ produção**
+- [ ] `Asaas__WebhookToken` = mesmo token cadastrado no painel Asaas (sandbox)
+- [ ] `Stripe__SecretKey` = `sk_test_...` · `Stripe__WebhookSecret` = `whsec_...`
+- [ ] `Stripe__SuccessUrl`/`Stripe__CancelUrl` = URLs da UI (staging)
+
+**Produção (live — `school-management-api-sik5`):**
+- [ ] `Asaas__ApiKey` = chave **produção** (`www.asaas.com`)
+- [ ] `Asaas__ApiBaseUrl` = `https://api.asaas.com/v3` (padrão do `appsettings.Production.json`; só setar se quiser garantir)
+- [ ] `Asaas__WebhookToken` = token de produção cadastrado no painel Asaas
+- [ ] `Stripe__SecretKey` = `sk_live_...` · `Stripe__WebhookSecret` = `whsec_...` (live)
+- [ ] `Stripe__SuccessUrl`/`Stripe__CancelUrl` = URLs da UI (produção)
+
+**Dev (local):**
+- [ ] `appsettings.Development.json` já aponta `Asaas:ApiBaseUrl` para sandbox ✅
+- [ ] `Asaas__ApiKey` (user-secrets) = chave sandbox · `Asaas__WebhookToken` = token sandbox
+
+> **Regra de ouro:** a `ApiBaseUrl` tem que casar com o tipo da chave. Chave sandbox (`sandbox.asaas.com`)
+> exige `ApiBaseUrl` sandbox; chave live exige a URL de produção. Mismatch = checkout quebra.
+
 ---
 
 ## 2. Asaas (BRL — PIX/boleto/carnê)
@@ -82,6 +122,8 @@ Configure no Render (API `school-management-api-sik5` para produção; `school-m
 ### 2.1 Conta e chave
 1. Criar/entrar na conta Asaas (sandbox: `sandbox.asaas.com`; produção: `www.asaas.com`).
 2. **Sandbox primeiro**: gerar API Key de teste e configurar `ASAAS_API_KEY` no Render **de staging**.
+   ⚠️ No staging, configure também `ASAAS_API_BASE_URL = https://sandbox.asaas.com/api/v3` — o
+   `appsettings.Staging.json` **não** sobrescreve a URL e herdaria a de produção (ver §1.1).
 3. Validar no staging (passo 4). Só depois gerar a chave de produção.
 
 ### 2.2 Webhook
