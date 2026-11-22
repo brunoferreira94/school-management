@@ -1,11 +1,12 @@
 # Tasks — Sistema de Conquistas (Gamificação)
 
 > **Escopo entregue (v1):** motor, API, Central de Conquistas e toast.
-> **Fora do escopo v1 (decisão do dono):** 2.4 (evento de domínio + métrica
-> Prometheus `achievements_unlocked_total` — a docs descrevia o evento, que não
-> existe no código), 4.4 (aba do
-> Owner Dashboard foi entregue como catálogo+contagem, não ranking por usuário),
-> 4.5 (spec de service; notifier e central têm Karma), 5.3.
+> **Concluído:** os 26 itens. 2.4 saiu com evento de domínio
+> (`AchievementUnlockedEvent`) + métrica agregada `achievements.unlocked`
+> (sem `user_id` — cardinalidade); 4.4 com `GET /api/achievements/team`
+> (ranking + cobertura) e aba do Owner Dashboard; 4.5 com specs Karma de
+> `achievement.service`, `team-achievements.service` e da Central; 5.3 com a
+> linha de Achievements em `school-management-api/docs/features.md`.
 >
 > **2.3 concluído:** os 12 gatilhos emitem. `attendance-streak` e `early-bird`
 > usam `RecordDailyStreakAsync` (sequência real de dias com `TimeProvider`,
@@ -29,7 +30,7 @@
 - [x] 2.1 `IAchievementService` + `AchievementService` — `RecordEventAsync(userId, AchievementTrigger, amount)` (upsert do progresso; desbloqueia quando `>= Threshold`; idempotente por UserId+AchievementId)
 - [x] 2.2 `AchievementTrigger` (enum) — `GradeCreated`, `GradeUpdated`, `FormulaCreated`, `AttendanceSaved`, `DiarySaved`, `ReportGenerated`, `ReportExported`, `StudentCreated`, `ClassGroupCreated`, `PaymentReconciled`, `OfflineSyncCompleted`, `LoginStreakDay`
 - [x] 2.3 Listeners: hook nos handlers existentes (`UpsertGradeHandler` → GradeCreated/GradeUpdated; `GradingFormulas` create → FormulaCreated; `AttendanceService` → AttendanceSaved; `DiaryService` → DiarySaved; `ReportBuilder` generate/export → ReportGenerated/ReportExported; `StudentsService` → StudentCreated; `ClassGroupsService` → ClassGroupCreated; `PaymentReconciliation` → PaymentReconciled; `OfflineSyncService` drain → OfflineSyncCompleted; login diário → LoginStreakDay) — handler de conquista tolerante a falha (nunca derruba a operação de negócio)
-- [ ] 2.4 `AchievementUnlockedEvent` (evento de domínio) + handler que persiste `UserAchievement` e publica `achievements_unlocked_total{user_id, achievement}` no Meter (H.8)
+- [x] 2.4 `AchievementUnlockedEvent` (evento de domínio) + handler que persiste `UserAchievement` e publica `achievements_unlocked_total{user_id, achievement}` no Meter (H.8)
 - [x] 2.5 Testes: motor (threshold exato, idempotência — 2 eventos = 1 desbloqueio, progresso acumula, streak de login, tolerância a falha), listeners (1 por trigger, todos verdes)
 
 ## 3. API HTTP (BACK)
@@ -43,14 +44,14 @@
 - [x] 4.1 `achievement.service.ts` (GET /me/achievements, catálogo, progresso) + models
 - [x] 4.2 **Central de Conquistas** (Minha Área) — card: nível/pontos/progresso, conquistas desbloqueadas (data) e bloqueadas (barra de progresso), filtro por categoria
 - [x] 4.3 **Toast de desbloqueio** — `AchievementUnlockedComponent` global (signal no service; "🏆 Conquista desbloqueada: {título} (+{pontos} pts)")
-- [ ] 4.4 **Painel do diretor** (Owner Dashboard) — seção "Conquistas da equipe": por usuário (pontos, nível, últimas conquistas), ranking, cobertura do catálogo
-- [ ] 4.5 Testes Karma (service, central de conquistas, painel)
+- [x] 4.4 **Painel do diretor** (Owner Dashboard) — seção "Conquistas da equipe": por usuário (pontos, nível, últimas conquistas), ranking, cobertura do catálogo
+- [x] 4.5 Testes Karma (service, central de conquistas, painel)
 
 ## 5. Documentação (BACK/FRONT)
 
 - [x] 5.1 `docs/api/achievements.md` (endpoints + catálogo v1 + como adicionar conquista nova)
 - [x] 5.2 Seção no runbook de rollout (como ligar/desligar a gamificação: feature flag `Achievements__Enabled` default true; desligar esconde a UI e o engine vira no-op) → `docs/runbooks/achievements-rollout.md`
-- [ ] 5.3 Atualizar `docs/features.md` (índice de features)
+- [x] 5.3 Atualizar `docs/features.md` (índice de features)
 
 ## 6. Critérios de aceite
 

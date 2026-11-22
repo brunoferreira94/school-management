@@ -49,6 +49,32 @@ Catálogo + contagem de desbloqueios (diretoria/secretaria).
 
 **Permissão:** `achievements.manage`
 
+### `GET /api/Achievements/team`
+Visão da equipe (diretoria/secretaria): ranking por pontos, nível, última
+conquista e cobertura do catálogo.
+
+**Permissão:** `achievements.manage`
+
+```json
+{
+  "totalUsers": 1,
+  "catalogTotal": 12,
+  "distinctUnlocked": 1,
+  "coveragePercent": 8.3,
+  "users": [
+    {
+      "userId": "…",
+      "username": "diretor.demo",
+      "points": 50,
+      "level": 1,
+      "unlockedCount": 1,
+      "lastUnlockedTitle": "Turma criada",
+      "lastUnlockedAtUtc": "2026-11-22T16:36:37Z"
+    }
+  ]
+}
+```
+
 ### `GET /api/Achievements/progress/{userId}`
 Progresso de um usuário (diretoria/secretaria). Só responde 200 para usuário
 **do mesmo tenant** do chamador (qualquer outro devolve 404 — sem enumerar
@@ -110,10 +136,17 @@ da UI (ou feature toggle no sidebar — aberto, item 6.4).
 
 ## Métricas
 
-Não há métrica Prometheus no v1 (o desenho previa
-`achievements_unlocked_total{user_id, achievement}`, item 2.4 do `tasks.md` —
-fora do escopo entregue). O motor loga cada desbloqueio em Information:
-`Achievement unlocked: {Achievement} for user {UserId}`.
+- `achievements_unlocked{achievement, category}` — contador por conquista.
+  **Sem `user_id`** de propósito: uma série por usuário multiplicaria a
+  cardinalidade (mesma razão da normalização de `route` no
+  `MetricsMiddleware`). O desenho original previa
+  `achievements_unlocked_total{user_id, achievement}`; a versão entregue usa
+  apenas os rótulos agregados.
+- O motor também loga cada desbloqueio em Information:
+  `Achievement unlocked: {Achievement} for user {UserId}`.
+
+Fluxo: `AchievementService` → `AchievementUnlockedEvent` (domínio) →
+`IncrementAchievementUnlockedOnEvent` → `IMetricsService`.
 - `achievements_unlocked_total` — total por usuário (rate)
 ## Concorrência e isolamento do `DbContext`
 
