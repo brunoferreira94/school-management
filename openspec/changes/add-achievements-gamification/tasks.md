@@ -10,6 +10,11 @@
 > **2.3 concluído:** os 12 gatilhos emitem. `attendance-streak` e `early-bird`
 > usam `RecordDailyStreakAsync` (sequência real de dias com `TimeProvider`,
 > não contador de eventos).
+>
+> **Robustez do motor:** escrita atômica (`ExecuteUpdate` com delta relativo +
+> `INSERT ... ON CONFLICT DO NOTHING`), sem `SaveChanges` no contexto
+> compartilhado (não faz flush de mudanças pendentes da operação de negócio).
+> Testes de corrida (concorrência real) e de não-flush cobertos.
 
 ## 1. Modelo de domínio (BACK)
 
@@ -25,7 +30,7 @@
 - [x] 2.2 `AchievementTrigger` (enum) — `GradeCreated`, `GradeUpdated`, `FormulaCreated`, `AttendanceSaved`, `DiarySaved`, `ReportGenerated`, `ReportExported`, `StudentCreated`, `ClassGroupCreated`, `PaymentReconciled`, `OfflineSyncCompleted`, `LoginStreakDay`
 - [x] 2.3 Listeners: hook nos handlers existentes (`UpsertGradeHandler` → GradeCreated/GradeUpdated; `GradingFormulas` create → FormulaCreated; `AttendanceService` → AttendanceSaved; `DiaryService` → DiarySaved; `ReportBuilder` generate/export → ReportGenerated/ReportExported; `StudentsService` → StudentCreated; `ClassGroupsService` → ClassGroupCreated; `PaymentReconciliation` → PaymentReconciled; `OfflineSyncService` drain → OfflineSyncCompleted; login diário → LoginStreakDay) — handler de conquista tolerante a falha (nunca derruba a operação de negócio)
 - [ ] 2.4 `AchievementUnlockedEvent` (evento de domínio) + handler que persiste `UserAchievement` e publica `achievements_unlocked_total{user_id, achievement}` no Meter (H.8)
-- [x] 2.5 Testes: motor (threshold exato, idempotência — 2 eventos = 1 desbloqueio, progresso acumula, streak de login, tolerância a falha), listeners (1 por trigger, todos verdes)
+- [ ] 2.5 Testes: motor (threshold exato, idempotência — 2 eventos = 1 desbloqueio, progresso acumula, streak de login, tolerância a falha), listeners (1 por trigger, todos verdes) — **parcial**: motor coberto (10 unitários) + 2 listeners HTTP (turma, sync-batch); faltam os outros 5
 
 ## 3. API HTTP (BACK)
 

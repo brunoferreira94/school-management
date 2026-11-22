@@ -115,6 +115,21 @@ Não há métrica Prometheus no v1 (o desenho previa
 fora do escopo entregue). O motor loga cada desbloqueio em Information:
 `Achievement unlocked: {Achievement} for user {UserId}`.
 - `achievements_unlocked_total` — total por usuário (rate)
+## Concorrência e isolamento do `DbContext`
+
+O motor escreve via `ExecuteUpdate`/`ExecuteSql` (`INSERT ... ON CONFLICT DO
+NOTHING`), **nunca** via `SaveChanges`:
+
+- **Sem lost update**: o progresso é incrementado com
+  `SET ProgressCurrent = ProgressCurrent + delta` (atômico no Postgres). A
+  corrida só existe na inserção da linha; aí o conflito de índice único faz o
+  delta ser reaplicado sobre a linha vencedora.
+- **Sem flush indevido**: como o motor não chama `SaveChanges`, ele nunca
+  persiste mudanças pendentes da operação de negócio que compartilha o mesmo
+  `DbContext` (ex.: aluno adicionado mas ainda não salvo).
+- **Desbloqueio idempotente**: `ON CONFLICT DO NOTHING` no índice único
+  `(TenantId, UserId, AchievementId)`.
+
 ## Sequência de dias (streak)
 
 `attendance-streak` e `early-bird` medem **dias consecutivos**, não total de
