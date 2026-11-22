@@ -96,8 +96,12 @@ usuários de outra escola).
 
 `Achievements__Enabled` (default `true`). Desligada:
 - Engine vira no-op (não registra eventos nem desbloqueia)
-- UI não exibe Central de Conquistas, toast ou painel
-- Endpoints respondem 200 com lista vazia
+- Dados existentes permanecem legíveis (endpoints continuam respondendo)
+- A UI **não** esconde a Central de Conquistas/toast por flag — esconder exige
+  deploy (fora do escopo v1; ver `tasks.md` 6.4)
+
+Para desligar de verdade em produção: `Achievements__Enabled=false` + rollback
+da UI (ou feature toggle no sidebar — aberto, item 6.4).
 
 ## Permissões
 
@@ -106,8 +110,10 @@ usuários de outra escola).
 
 ## Métricas
 
-- `achievements_unlocked_total{user_id, achievement}` — contador por usuário/conquista
-- `achievements_unlocked_total` — total por conquista (rate)
+Não há métrica Prometheus no v1 (o desenho previa
+`achievements_unlocked_total{user_id, achievement}`, item 2.4 do `tasks.md` —
+fora do escopo entregue). O motor loga cada desbloqueio em Information:
+`Achievement unlocked: {Achievement} for user {UserId}`.
 - `achievements_unlocked_total` — total por usuário (rate)
 ## Tenant (isolamento)
 
