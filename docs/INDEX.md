@@ -35,6 +35,7 @@
 | [Observability — Produção](../school-management-api/docs/OBSERVABILITY_PRODUCTION.md) | Checklist de validação em produção | DevOps |
 | [Timetabling](../school-management-api/docs/timetabling.md) | Sistema de horários | Dev |
 | [Teacher Availability API](../school-management-api/docs/api/teacher-availability.md) | Disponibilidade de professores | Dev |
+| [Conquistas (Gamificação)](./api/achievements.md) | Sistema de conquistas — endpoints, catálogo v1 e feature flag | Dev / Product |
 | [Analytics MVP](../school-management-api/docs/analytics-mvp.md) | Analytics (retenção, inadimplência) | Dev / Product |
 | [CQRS Guide](../school-management-api/docs/cqrs-migration-guide.md) | Guia CQRS | Dev |
 | [Domain Events](../school-management-api/docs/domain-events-pattern.md) | Padrão Domain Events | Dev |
