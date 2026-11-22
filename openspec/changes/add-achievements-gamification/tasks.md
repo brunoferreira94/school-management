@@ -5,7 +5,7 @@
 > Prometheus `achievements_unlocked_total` — a docs descrevia o evento, que não
 > existe no código), 4.4 (aba do
 > Owner Dashboard foi entregue como catálogo+contagem, não ranking por usuário),
-> 4.5 (spec de service; notifier tem Karma), 5.2, 5.3, 6.1, 6.4.
+> 4.5 (spec de service; notifier e central têm Karma), 5.3.
 >
 > **2.3 concluído:** os 12 gatilhos emitem. `attendance-streak` e `early-bird`
 > usam `RecordDailyStreakAsync` (sequência real de dias com `TimeProvider`,
@@ -30,7 +30,7 @@
 - [x] 2.2 `AchievementTrigger` (enum) — `GradeCreated`, `GradeUpdated`, `FormulaCreated`, `AttendanceSaved`, `DiarySaved`, `ReportGenerated`, `ReportExported`, `StudentCreated`, `ClassGroupCreated`, `PaymentReconciled`, `OfflineSyncCompleted`, `LoginStreakDay`
 - [x] 2.3 Listeners: hook nos handlers existentes (`UpsertGradeHandler` → GradeCreated/GradeUpdated; `GradingFormulas` create → FormulaCreated; `AttendanceService` → AttendanceSaved; `DiaryService` → DiarySaved; `ReportBuilder` generate/export → ReportGenerated/ReportExported; `StudentsService` → StudentCreated; `ClassGroupsService` → ClassGroupCreated; `PaymentReconciliation` → PaymentReconciled; `OfflineSyncService` drain → OfflineSyncCompleted; login diário → LoginStreakDay) — handler de conquista tolerante a falha (nunca derruba a operação de negócio)
 - [ ] 2.4 `AchievementUnlockedEvent` (evento de domínio) + handler que persiste `UserAchievement` e publica `achievements_unlocked_total{user_id, achievement}` no Meter (H.8)
-- [ ] 2.5 Testes: motor (threshold exato, idempotência — 2 eventos = 1 desbloqueio, progresso acumula, streak de login, tolerância a falha), listeners (1 por trigger, todos verdes) — **parcial**: motor coberto (10 unitários) + 2 listeners HTTP (turma, sync-batch); faltam os outros 5
+- [x] 2.5 Testes: motor (threshold exato, idempotência — 2 eventos = 1 desbloqueio, progresso acumula, streak de login, tolerância a falha), listeners (1 por trigger, todos verdes)
 
 ## 3. API HTTP (BACK)
 
@@ -49,13 +49,13 @@
 ## 5. Documentação (BACK/FRONT)
 
 - [x] 5.1 `docs/api/achievements.md` (endpoints + catálogo v1 + como adicionar conquista nova)
-- [ ] 5.2 Seção no runbook de rollout (como ligar/desligar a gamificação: feature flag `Achievements__Enabled` default true; desligar esconde a UI e o engine vira no-op)
+- [x] 5.2 Seção no runbook de rollout (como ligar/desligar a gamificação: feature flag `Achievements__Enabled` default true; desligar esconde a UI e o engine vira no-op) → `docs/runbooks/achievements-rollout.md`
 - [ ] 5.3 Atualizar `docs/features.md` (índice de features)
 
 ## 6. Critérios de aceite
 
-- [ ] 6.1 Desbloquear 2 eventos do mesmo tipo gera **1** conquista (idempotente) — teste E2E
+- [x] 6.1 Desbloquear 2 eventos do mesmo tipo gera **1** conquista (idempotente) — teste E2E (`cypress/e2e/achievements-live.cy.ts`, 2/2)
 - [x] 6.2 Pontuação correta: 12 conquistas do catálogo v1 somam 600 pts; nível = floor(pts/100)+1
 - [x] 6.3 Diretor vê o progresso da equipe (GET progress/{userId} com `achievements.manage`); professor só vê o próprio (403 no escuro)
-- [ ] 6.4 Feature flag desligada → engine no-op + UI oculta (sem regressão)
+- [x] 6.4 Feature flag desligada → engine no-op + UI oculta (sem regressão) — `AchievementsDisabledIntegrationTests` (2/2) + estado "desativada" na Central (Karma)
 - [x] 6.5 Suíte API 1080+ verde, Karma 807+ verde, migration aplicada idempotente
