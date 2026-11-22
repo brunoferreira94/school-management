@@ -115,6 +115,17 @@ Não há métrica Prometheus no v1 (o desenho previa
 fora do escopo entregue). O motor loga cada desbloqueio em Information:
 `Achievement unlocked: {Achievement} for user {UserId}`.
 - `achievements_unlocked_total` — total por usuário (rate)
+## Sequência de dias (streak)
+
+`attendance-streak` e `early-bird` medem **dias consecutivos**, não total de
+eventos. O motor (`RecordDailyStreakAsync`) usa `TimeProvider`:
+
+- mesmo dia → no-op (não conta duas vezes)
+- dia seguinte → +1
+- qualquer lacuna → reinicia em 1
+
+A data do último registro vive em `AchievementProgress.UpdatedAtUtc`.
+
 ## Tenant (isolamento)
 
 `UserAchievements`/`AchievementProgresses` têm `TenantId` próprio — desbloqueios

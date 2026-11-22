@@ -3,11 +3,13 @@
 > **Escopo entregue (v1):** motor, API, Central de Conquistas e toast.
 > **Fora do escopo v1 (decisão do dono):** 2.4 (evento de domínio + métrica
 > Prometheus `achievements_unlocked_total` — a docs descrevia o evento, que não
-> existe no código), 2.3 parcial (7 dos 12 gatilhos ainda sem listener:
-> ReportGenerated, ReportExported, StudentCreated, ClassGroupCreated,
-> PaymentReconciled, OfflineSyncCompleted, LoginStreakDay), 4.4 (aba do
+> existe no código), 4.4 (aba do
 > Owner Dashboard foi entregue como catálogo+contagem, não ranking por usuário),
 > 4.5 (spec de service; notifier tem Karma), 5.2, 5.3, 6.1, 6.4.
+>
+> **2.3 concluído:** os 12 gatilhos emitem. `attendance-streak` e `early-bird`
+> usam `RecordDailyStreakAsync` (sequência real de dias com `TimeProvider`,
+> não contador de eventos).
 
 ## 1. Modelo de domínio (BACK)
 
@@ -21,7 +23,7 @@
 
 - [x] 2.1 `IAchievementService` + `AchievementService` — `RecordEventAsync(userId, AchievementTrigger, amount)` (upsert do progresso; desbloqueia quando `>= Threshold`; idempotente por UserId+AchievementId)
 - [x] 2.2 `AchievementTrigger` (enum) — `GradeCreated`, `GradeUpdated`, `FormulaCreated`, `AttendanceSaved`, `DiarySaved`, `ReportGenerated`, `ReportExported`, `StudentCreated`, `ClassGroupCreated`, `PaymentReconciled`, `OfflineSyncCompleted`, `LoginStreakDay`
-- [ ] 2.3 Listeners: hook nos handlers existentes (`UpsertGradeHandler` → GradeCreated/GradeUpdated; `GradingFormulas` create → FormulaCreated; `AttendanceService` → AttendanceSaved; `DiaryService` → DiarySaved; `ReportBuilder` generate/export → ReportGenerated/ReportExported; `StudentsService` → StudentCreated; `ClassGroupsService` → ClassGroupCreated; `PaymentReconciliation` → PaymentReconciled; `OfflineSyncService` drain → OfflineSyncCompleted; login diário → LoginStreakDay) — handler de conquista tolerante a falha (nunca derruba a operação de negócio)
+- [x] 2.3 Listeners: hook nos handlers existentes (`UpsertGradeHandler` → GradeCreated/GradeUpdated; `GradingFormulas` create → FormulaCreated; `AttendanceService` → AttendanceSaved; `DiaryService` → DiarySaved; `ReportBuilder` generate/export → ReportGenerated/ReportExported; `StudentsService` → StudentCreated; `ClassGroupsService` → ClassGroupCreated; `PaymentReconciliation` → PaymentReconciled; `OfflineSyncService` drain → OfflineSyncCompleted; login diário → LoginStreakDay) — handler de conquista tolerante a falha (nunca derruba a operação de negócio)
 - [ ] 2.4 `AchievementUnlockedEvent` (evento de domínio) + handler que persiste `UserAchievement` e publica `achievements_unlocked_total{user_id, achievement}` no Meter (H.8)
 - [x] 2.5 Testes: motor (threshold exato, idempotência — 2 eventos = 1 desbloqueio, progresso acumula, streak de login, tolerância a falha), listeners (1 por trigger, todos verdes)
 
