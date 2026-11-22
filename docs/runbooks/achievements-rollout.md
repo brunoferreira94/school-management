@@ -37,31 +37,23 @@ Efeito de `false`:
 
 ## Permissões e catálogo
 
-O banco precisa ter as permissões e o catálogo v1. O seed de demonstração
-(`IDemoDataSeeder`) **não está ligado ao `Program.cs`** — em ambientes novos ou
-já semeados antes da gamificação, aplique manualmente:
+Permissões, papéis, vínculos e o catálogo v1 são **baseline de plataforma**
+(`Infrastructure/Seeding/BaselineSeeder.cs`): idempotentes e aplicados
+automaticamente no startup de todo ambiente não-Testing — inclusive produção,
+sem `--seed-demo`.
 
-```sql
--- Permissões + vínculos com os papéis
-INSERT INTO "Permissions" ("Id", "Name", "Description")
-VALUES
-  (gen_random_uuid(), 'achievements.read', 'Vê as próprias conquistas'),
-  (gen_random_uuid(), 'achievements.manage', 'Vê catálogo e progresso da equipe')
-ON CONFLICT ("Name") DO NOTHING;
+Depois do deploy, o baseline garante:
 
-INSERT INTO "RolePermissions" ("RoleId", "PermissionId")
-SELECT r."Id", p."Id"
-FROM "Roles" r
-JOIN "Permissions" p
-  ON p."Name" = 'achievements.read'
-  OR (p."Name" = 'achievements.manage' AND r."Name" = 'Director')
-WHERE r."Name" IN ('Director', 'Coordinator', 'Teacher')
-ON CONFLICT DO NOTHING;
-```
+- `achievements.read` para `Director`, `Coordinator` e `Teacher`;
+- `achievements.manage` para `Director` e `Coordinator`;
+- as 12 conquistas do catálogo v1 (600 pts).
 
-O catálogo v1 (12 conquistas, 600 pts) está no
-[`PilotEnvironmentSeeder`](../../school-management-api/src/SchoolManagement.Infrastructure/Seeding/PilotEnvironmentSeeder.cs)
-(`achievementCatalog`) — replique as linhas se o ambiente não tiver o catálogo.
+Não é preciso comando manual. Se um ambiente **não** reiniciou desde o deploy,
+reinicie o serviço (ou rode `--seed-demo` em Development) para aplicar.
+
+> O modo demo (`--seed-demo`) só roda em Development: cria tenant piloto,
+> `diretor.demo`, guardiões e fórmulas. Em Staging/Production ele **falha de
+> propósito**.
 
 ## Verificação pós-deploy
 
@@ -106,4 +98,5 @@ curl -s "$API/api/me/achievements" -H "Authorization: Bearer $TOKEN" | jq '{enab
 
 - [`docs/api/achievements.md`](../api/achievements.md) — endpoints, catálogo, streak, concorrência.
 - `openspec/changes/add-achievements-gamification/tasks.md` — escopo e critérios.
+- `openspec/changes/fix-demo-seeder-wiring/` — baseline vs. modo demo.
 - `school-management-ui/cypress/e2e/achievements-live.cy.ts` — E2E ao vivo (idempotência).
