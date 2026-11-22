@@ -18,9 +18,9 @@
 
 ## 3. Testes
 
-- [x] 3.1 `BaselineSeederIntegrationTests`: banco vazio → 40 permissões, 4 papéis, grants esperados (Director com `achievements.manage`; Coordinator/Teacher com `achievements.read`; Teacher sem `manage`), 12 conquistas
+- [x] 3.1 `BaselineSeederIntegrationTests`: banco vazio → 38 permissões, 4 papéis, grants esperados (Director com `achievements.manage`; Coordinator/Teacher com `achievements.read`; Teacher sem `manage`), 12 conquistas
 - [x] 3.2 `BaselineSeederIntegrationTests`: idempotência (rodar 2× não duplica permissões/grants/conquistas)
-- [x] 3.3 `SeedDemoFlagTests`: `--seed-demo` em Produção/Staging falha; em Development cria tenant piloto + `diretor.demo` e encerra
+- [x] 3.3 `SeedDemoGuardTests` (política: Development passa; Staging/Production/Testing falham) + `DemoDataSeederIntegrationTests` (cria tenant piloto + `diretor.demo` com vínculo Director; idempotente). Encerramento com exit 0 e recusa em Staging verificados manualmente com o processo real
 - [x] 3.4 Regressão: `AchievementsIntegrationTests`, `AchievementsDisabledIntegrationTests` e E2E `achievements-live.cy.ts` verdes
 
 ## 4. Documentação

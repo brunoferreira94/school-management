@@ -91,15 +91,24 @@ if (seedDemoData)
 
 | Risco | Mitigação |
 |---|---|
-| Baseline lento em startup (centenas de `Any()`) | idempotente e pequeno (40 permissões, 4 papéis, ~60 grants, 12 conquistas) — milissegundos |
+| Baseline lento em startup (centenas de `Any()`) | idempotente e pequeno (38 permissões, 4 papéis, ~60 grants, 12 conquistas) — milissegundos |
 | Condição de corrida com múltiplas instâncias | `ON CONFLICT DO NOTHING` + transação; duplicatas são no-op |
 | Ambiente sem `Roles` (banco legado) | o baseline cria os papéis que faltam |
 | `--seed-demo` em produção | recusa explícita com `InvalidOperationException` |
 
+## Descoberta durante a implementação
+
+`FrontendDemoDataSeeder` cria `diretor.demo` **antes** do `PilotEnvironmentSeeder`
+e sem vínculo com staff. Como o pilot seeder só criava o vínculo quando a conta
+não existia, em banco novo o diretor ficava **sem papel Director** — logo, sem
+nenhuma permissão no login (o E2E só passava porque o banco de dev havia sido
+semeado antes dessa ordem). O pilot seeder agora faz **backfill** do vínculo
+(cria `Staff` + `StaffRole` quando `StaffId` é nulo).
+
 ## Testes
 
 - **Integração** (`BaselineSeederIntegrationTests`): banco vazio → baseline cria
-  40 permissões, 4 papéis, grants esperados (Director tem `achievements.manage`;
+  38 permissões, 4 papéis, grants esperados (Director tem `achievements.manage`;
   Coordinator/Teacher têm `achievements.read`; Teacher **não** tem
   `achievements.manage`) e 12 conquistas; rodar 2× não duplica nada.
 - **Integração** (`SeedDemoFlagTests`): `--seed-demo` fora de Development falha;
