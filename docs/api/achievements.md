@@ -2,8 +2,10 @@
 
 ## Endpoints
 
-### `GET /api/Achievements/me`
+### `GET /api/me/achievements`
 Perfil do usuário: pontos, nível e conquistas (com progresso).
+
+**Permissão:** `achievements.read` (professor e coordenador incluídos no seed)
 
 **Resposta 200:**
 ```json
@@ -48,7 +50,9 @@ Catálogo + contagem de desbloqueios (diretoria/secretaria).
 **Permissão:** `achievements.manage`
 
 ### `GET /api/Achievements/progress/{userId}`
-Progresso de um usuário (diretoria/secretaria).
+Progresso de um usuário (diretoria/secretaria). Só responde 200 para usuário
+**do mesmo tenant** do chamador (qualquer outro devolve 404 — sem enumerar
+usuários de outra escola).
 
 **Permissão:** `achievements.manage`
 
@@ -105,3 +109,9 @@ Progresso de um usuário (diretoria/secretaria).
 - `achievements_unlocked_total{user_id, achievement}` — contador por usuário/conquista
 - `achievements_unlocked_total` — total por conquista (rate)
 - `achievements_unlocked_total` — total por usuário (rate)
+## Tenant (isolamento)
+
+`UserAchievements`/`AchievementProgresses` têm `TenantId` próprio — desbloqueios
+e progresso nunca atravessam escolas, mesmo para o mesmo `UserId` (o motor
+grava o tenant do request e as consultas filtram por ele). O catálogo
+(`Achievements`) é global por design.
