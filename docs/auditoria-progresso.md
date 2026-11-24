@@ -16,7 +16,7 @@
 | 6 | Docker não-root | MÉDIA | — | **Concluída** |
 | 7 | Backup + restore testável | ALTA | 5 | **Concluída (local)** — automação em produção pendente |
 | 8 | `TenantId` em Assessment/Grade | MÉDIA | 1 | **Concluída** |
-| 9 | Token em localStorage → cookie httpOnly | MÉDIA | — | Pendente |
+| 9 | Token em localStorage → cookie httpOnly | MÉDIA | — | **Concluída** |
 | 10 | Versionamento `/api/v1` | MÉDIA | — | Pendente |
 
 ## Tarefa 1 — IDOR no boletim (CRÍTICA) — **Concluída**
@@ -142,11 +142,34 @@ era global.
 novos fluxos que criem `Assessment`/`Grade` precisam carimbar `TenantId`
 (garantido nos dois pontos de escrita atuais).
 
+## Tarefa 9 — Token em cookie HttpOnly (MÉDIA) — **Concluída**
+
+**Problema**: access/refresh em `localStorage` (`sma_auth`) — XSS rouba sessão.
+
+**Alteração**:
+- API: login/refresh gravam `sma_access_token`/`sma_refresh_token` com
+  `HttpOnly`, `SameSite=Lax`, `Path=/api`, `Secure` em HTTPS; `JwtBearer`
+  lê o token do cookie quando não há `Authorization`; novo `POST /api/auth/logout`
+  limpa os cookies.
+- UI: `AuthService` para de gravar token/refresh no storage (só metadados);
+  `refresh()` envia corpo vazio (cookie); `logout()` chama o backend;
+  bootstrap restaura a sessão via refresh.
+
+**Evidência**:
+- `AuthCookieSessionTests` 2/2 (login com HttpOnly/Path=/api; logout limpa).
+- **Ponta a ponta real** (API Development + curl): login 200 → cookie
+  `sma_access_token` → `GET /api/students` **sem Authorization** 200 → logout
+  204 → `GET /api/students` 401.
+- Karma **820/820** (spec de logout ajustada).
+
+**Risco residual**: em `ng serve` cross-origin (localhost:4200 → 127.0.0.1:5067)
+o cookie depende do proxy same-origin; em produção (Vercel rewrite) é same-origin.
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
   agendamento/retenção.
-- MÉDIA: token em localStorage (9), versionamento (10).
+- MÉDIA: versionamento `/api/v1` (10).
 - **Ação de deploy**: definir `Metrics__AccessToken` e `Jwt__Secret` reais nos
   ambientes; configurar o Prometheus com o header do `/metrics`.
 - Não auditado: UX em navegador, carga/performance, acessibilidade, upload,
