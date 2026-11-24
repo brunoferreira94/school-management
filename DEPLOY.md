@@ -17,6 +17,23 @@
 
 O front roteia `/api/*` direto para a API pelo rewrite do `vercel.json` (proxy same-origin), então o browser **não** executa CORS no fluxo principal. CORS fica configurado na API via `Cors__AllowedOrigins__0/1` para chamadas diretas (ex.: previews, apps nativos, integrações).
 
+## 🔐 Variáveis de ambiente (Render)
+
+O `.env` local (`school-management-api/.env`, gitignored) concentra os segredos.
+Para enviar sem apagar o que já existe (o PUT do Render **substitui** a lista):
+
+```bash
+scripts/render-env-vars.sh                 # dry-run (mostra o que mudaria)
+scripts/render-env-vars.sh --apply         # aplica em prod + staging
+scripts/render-env-vars.sh --apply --service prod
+```
+
+O script faz GET → merge (as chaves do `.env` vencem) → PUT. `RENDER_API_KEY`
+vem do ambiente ou de `~/workspace/secrets.env`.
+
+> ⚠️ Trocar `Jwt__Secret` invalida sessões ativas. Trocar `Metrics__AccessToken`
+> exige atualizar o `authorization` no `prometheus.yml` (mesmo valor).
+
 ## 🔩 Como funcionam os deploys
 
 ### Front (Vercel)

@@ -191,7 +191,8 @@ v2 exigirá controllers/handlers próprios ou branch explícito.
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
   agendamento/retenção.
 - Nenhuma tarefa do plano de auditoria pendente (1–10 concluídas).
-- **Ação de deploy**: definir `Metrics__AccessToken` e `Jwt__Secret` reais nos
-  ambientes; configurar o Prometheus com o header do `/metrics`.
+- **Ação de deploy**: rodar `scripts/render-env-vars.sh --apply` (env vars
+  pendentes já geradas em `school-management-api/.env`) e atualizar o
+  `authorization` do `prometheus.yml` com o mesmo `Metrics__AccessToken`.
 - Não auditado: UX em navegador, carga/performance, acessibilidade, upload,
   integrações reais Asaas/Auth0, restore de backup.
