@@ -15,7 +15,7 @@
 | 5 | Conciliação financeira stub | CRÍTICA | — | **Concluída** |
 | 6 | Docker não-root | MÉDIA | — | **Concluída** |
 | 7 | Backup + restore testável | ALTA | 5 | **Concluída (local)** — automação em produção pendente |
-| 8 | `TenantId` em Assessment/Grade | MÉDIA | 1 | Pendente (grande) |
+| 8 | `TenantId` em Assessment/Grade | MÉDIA | 1 | **Concluída** |
 | 9 | Token em localStorage → cookie httpOnly | MÉDIA | — | Pendente |
 | 10 | Versionamento `/api/v1` | MÉDIA | — | Pendente |
 
@@ -118,12 +118,35 @@ inexistente → 404) + `AchievementListenersIntegrationTests` 6/6.
 **Pendente (infra)**: automação em produção (Supabase Pro ou cron diário) e
 retenção — não é código.
 
+## Tarefa 8 — `TenantId` em Assessment/Grade (MÉDIA/ALTA) — **Concluída**
+
+**Problema**: isolamento indireto (Grade → Assessment → AcademicYear). Qualquer
+query que esquecesse o join via aluno/turma; o `GradeRepository.ListByStudentAsync`
+era global.
+
+**Alteração**:
+- `Assessment.TenantId` e `Grade.TenantId` (domínio + `SchoolContext` com índice).
+- Query filters globais em `Assessment`/`Grade` (bloco `_tenantFilterEnabled`).
+- Migration `AssessmentGradeTenantScope`: colunas + **backfill**
+  (`Assessments` ← `AcademicYears`; `Grades` ← `Assessments`); 0 linhas órfãs.
+- Escrita: `AssessmentService.CreateAsync` e `GradeService.UpsertAsync` carimbam
+  o tenant do servidor; `FrontendDemoDataSeeder` semeia com `TenantId`.
+
+**Evidência**:
+- Migration aplicada no dev: 8 avaliações / 48 notas, **0** com `TenantId` vazio.
+- `CrossTenantSurfaceSamplingIntegrationTests` + `GradingFormulasIntegrationTests`
+  **13/13** (dados com TenantId; cross-tenant continua 404).
+- Suíte API **1162/0, 5 skips**.
+
+**Riscos residuais**: dados legados sem vínculo (nenhum no dev) ficam invisíveis;
+novos fluxos que criem `Assessment`/`Grade` precisam carimbar `TenantId`
+(garantido nos dois pontos de escrita atuais).
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
   agendamento/retenção.
-- MÉDIA: `TenantId` em Assessment/Grade (8), token em localStorage (9),
-  versionamento (10).
+- MÉDIA: token em localStorage (9), versionamento (10).
 - **Ação de deploy**: definir `Metrics__AccessToken` e `Jwt__Secret` reais nos
   ambientes; configurar o Prometheus com o header do `/metrics`.
 - Não auditado: UX em navegador, carga/performance, acessibilidade, upload,
