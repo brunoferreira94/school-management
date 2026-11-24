@@ -17,7 +17,7 @@
 | 7 | Backup + restore testável | ALTA | 5 | **Concluída (local)** — automação em produção pendente |
 | 8 | `TenantId` em Assessment/Grade | MÉDIA | 1 | **Concluída** |
 | 9 | Token em localStorage → cookie httpOnly | MÉDIA | — | **Concluída** |
-| 10 | Versionamento `/api/v1` | MÉDIA | — | Pendente |
+| 10 | Versionamento `/api/v1` | MÉDIA | — | **Concluída** |
 
 ## Tarefa 1 — IDOR no boletim (CRÍTICA) — **Concluída**
 
@@ -165,11 +165,32 @@ novos fluxos que criem `Assessment`/`Grade` precisam carimbar `TenantId`
 **Risco residual**: em `ng serve` cross-origin (localhost:4200 → 127.0.0.1:5067)
 o cookie depende do proxy same-origin; em produção (Vercel rewrite) é same-origin.
 
+## Tarefa 10 — Versionamento `/api/v1` (MÉDIA) — **Concluída**
+
+**Problema**: 209 endpoints sem versão — breaking change quebra cliente.
+
+**Alteração**:
+- `ApiVersioningMiddleware`: `/api/v1/...` → `/api/...` (canônico); `/api/...`
+  segue como alias legado.
+- `UseRouting` explícito **depois** do rewrite (o `WebApplication` adiciona o
+  roteamento no início; sem isso o endpoint era selecionado pelo path original → 404).
+- UI: `apiBaseUrl` → `/api/v1` em todos os environments.
+- `docs/api-versioning.md` + política (v2 futura, alias deprecated).
+
+**Evidência**:
+- `ApiVersioningMiddlewareTests` 5/5 + `ApiVersioningIntegrationTests` 4/4
+  (v1 200, alias 200, v2 404, rota autenticada em v1).
+- Real: `/api/v1/support/health` 200, `/api/support/health` 200, `/api/v2/...` 404.
+- API **1173/0**; Karma **820/820**.
+
+**Risco residual**: versionamento é por prefixo (sem implementações paralelas);
+v2 exigirá controllers/handlers próprios ou branch explícito.
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
   agendamento/retenção.
-- MÉDIA: versionamento `/api/v1` (10).
+- Nenhuma tarefa do plano de auditoria pendente (1–10 concluídas).
 - **Ação de deploy**: definir `Metrics__AccessToken` e `Jwt__Secret` reais nos
   ambientes; configurar o Prometheus com o header do `/metrics`.
 - Não auditado: UX em navegador, carga/performance, acessibilidade, upload,
