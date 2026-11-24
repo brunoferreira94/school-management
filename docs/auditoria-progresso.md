@@ -13,8 +13,8 @@
 | 3 | Guard do segredo JWT padrão | CRÍTICA | — | **Concluída** |
 | 4 | `/metrics` público | ALTA | — | **Concluída** |
 | 5 | Conciliação financeira stub | CRÍTICA | — | **Concluída** |
-| 6 | Docker não-root | MÉDIA | — | Pendente |
-| 7 | Backup automático + restore | ALTA | 5 | Pendente (infra) |
+| 6 | Docker não-root | MÉDIA | — | **Concluída** |
+| 7 | Backup + restore testável | ALTA | 5 | **Concluída (local)** — automação em produção pendente |
 | 8 | `TenantId` em Assessment/Grade | MÉDIA | 1 | Pendente (grande) |
 | 9 | Token em localStorage → cookie httpOnly | MÉDIA | — | Pendente |
 | 10 | Versionamento `/api/v1` | MÉDIA | — | Pendente |
@@ -94,11 +94,36 @@ financeiro; controller devolve 404 e só registra a conquista em sucesso real.
 **Evidência**: `ReconciliationManualMatchTests` 2/2 (baixa persiste; parcela
 inexistente → 404) + `AchievementListenersIntegrationTests` 6/6.
 
+## Tarefa 6 — Docker não-root (MÉDIA) — **Concluída**
+
+**Alteração**: `school-management-api/Dockerfile` cria `appuser` (uid 10001) e
+`USER appuser`; `/app` com ownership do appuser.
+
+**Evidência**:
+- `docker build` OK;
+- `docker run --rm --entrypoint id sma-api-nonroot` → `uid=10001(appuser)`;
+- `/app` gravável pelo appuser;
+- app inicia como não-root (falha só na conexão DB, sem erro de permissão).
+
+## Tarefa 7 — Backup + restore (ALTA) — **Concluída localmente**
+
+**Alteração**: `scripts/backup-db.sh` (dump comprimido com timestamp) e
+`scripts/restore-db.sh` (cria banco destino e restaura); `DEPLOY.md` atualizado;
+`backups/` no `.gitignore`.
+
+**Evidência**: ciclo real — backup 183 KB → restore em
+`SchoolManagementDb_RestoreTest` → contagens idênticas (7 alunos, 12 conquistas,
+9 contas) → banco de teste removido.
+
+**Pendente (infra)**: automação em produção (Supabase Pro ou cron diário) e
+retenção — não é código.
+
 ## Problemas ainda pendentes
 
-- ALTA: backup automático + restore (7) — infra, não código.
-- MÉDIA: Docker root (6), `TenantId` em Assessment/Grade (8), token em
-  localStorage (9), versionamento (10).
+- ALTA: **automação** do backup em produção (7) — código/script pronto, falta
+  agendamento/retenção.
+- MÉDIA: `TenantId` em Assessment/Grade (8), token em localStorage (9),
+  versionamento (10).
 - **Ação de deploy**: definir `Metrics__AccessToken` e `Jwt__Secret` reais nos
   ambientes; configurar o Prometheus com o header do `/metrics`.
 - Não auditado: UX em navegador, carga/performance, acessibilidade, upload,

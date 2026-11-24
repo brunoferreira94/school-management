@@ -14,3 +14,6 @@ obj/
 
 # Graphify knowledge-graph analysis output
 graphify-out/
+
+# Backups locais (podem conter dados pessoais)
+backups/

@@ -93,11 +93,25 @@ git push origin main          # branch `main` → redeploy produção (vercel)
 
 ## 💾 Backup
 
+**Local (docker compose)** — script versionado, com timestamp e compressão:
+
 ```bash
-# Supabase (via CLI ou dashboard) — banco produção
+scripts/backup-db.sh                 # gera backups/SchoolManagementDb-<UTC>.sql.gz
+TARGET=SchoolManagementDb_RestoreTest scripts/restore-db.sh backups/<dump>.sql.gz
+```
+
+> `backups/` está no `.gitignore` (dump contém dados pessoais).
+
+**Produção (Supabase)** — o dump manual continua válido, mas **não é automático**:
+
+```bash
 supabase db dump --project-id cuiurrqwdugajuyaaaef -f backup.sql
 # pg_dump direto também funciona com a connection string do pooler
 ```
+
+> ⚠️ Pendência de infra: ativar backups gerenciados (Supabase Pro) ou agendar
+> `pg_dump` diário com retenção de 30 dias. **Teste de restore obrigatório
+> antes de vender** (o script acima é o procedimento).
 
 ---
 
