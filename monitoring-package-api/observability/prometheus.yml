@@ -27,11 +27,16 @@ scrape_configs:
     scrape_interval: 10s
 
   # API em produção (Render, free tier hiberna — aquecida pelo keep-alive CI)
-  # O /metrics é público; production entrega as três fontes no mesmo scrape
-  # (analytics + Meter + prometheus-net) desde a ponte SchoolManagementMetricsCollector.
+  # production entrega as três fontes no mesmo scrape (analytics + Meter +
+  # prometheus-net) desde a ponte SchoolManagementMetricsCollector.
+  # /metrics é protegido por Metrics__AccessToken (audit): configure o header
+  # abaixo com o MESMO valor do Render (ou use credentials_file).
   - job_name: "school-management-prod"
     metrics_path: "/metrics"
     scrape_interval: 60s
+    authorization:
+      type: Bearer
+      credentials: "<METRICS_ACCESS_TOKEN>"
     static_configs:
       - targets: ["school-management-api-sik5.onrender.com"]
         labels:
@@ -46,6 +51,9 @@ scrape_configs:
   - job_name: "school-management-staging"
     metrics_path: "/metrics"
     scrape_interval: 60s
+    authorization:
+      type: Bearer
+      credentials: "<METRICS_ACCESS_TOKEN>"
     static_configs:
       - targets: ["school-management-api-dev.onrender.com"]
         labels:
