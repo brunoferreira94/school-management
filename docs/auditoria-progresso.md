@@ -382,6 +382,22 @@ Smoke: health **200** (DB Healthy) nos dois; `espelhos (singular) restantes: (NE
 > ficou sem efeito prático — as tabelas que ela alterava foram removidas na sequência.
 > Não foi removida do histórico porque já está aplicada nos ambientes.
 
+## Segurança de upload (25/11)
+
+**Corrigido** (`AssetAttachmentsController`):
+- **Path traversal**: extensão vinda de allowlist (nunca do cliente) + nome sanitizado
+  (remove `/`, `\`, `:`, CRLF); nome final é GUID + extensão canônica.
+- **MIME spoofing**: allowlist de Content-Type + **magic bytes** (pdf `%PDF`, png, jpeg, zip).
+- **Tamanho**: limite 10 MB configurável (`Storage:AttachmentsMaxBytes`).
+- **IDOR**: download/delete/list com gate explícito de `TenantId`.
+- **Download**: `Content-Disposition: attachment` (nunca inline).
+- **Storage**: `Storage:AttachmentsPath` (default `App_Data/attachments`) em vez de temp.
+
+**Testes**: `AssetAttachmentsSecurityTests` **4/4** (válido, tipo não permitido,
+path traversal contido, download cross-tenant 404). Suíte **1217/0**.
+
+**Pendente**: storage persistente (S3/Supabase Storage) — em Render o disco é efêmero.
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
