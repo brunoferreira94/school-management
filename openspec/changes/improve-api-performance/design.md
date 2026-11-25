@@ -51,10 +51,12 @@ Cache de claims em memória: risco de permissões desatualizadas após mudança 
 ### Alternativa descartada
 Batch de auditoria no fim da requisição: ainda bloqueia; canal é melhor.
 
-## Decisão 4 — Instância Render paga (infra)
+## Decisão 4 — Free tier mantido (sem upgrade agora)
 
-O free tier (CPU 0,1) impõe ~0,4 s de overhead por request. Upgrade para o plano
-pago (Starter) resolve o baseline. Não é código; tarefa de operação.
+Decisão do dono (25/11): **manter o free tier**. O overhead base (~0,4 s/request,
+CPU 0,1) permanece — por isso os demais ajustes (paginação no banco, login em
+≤2 queries, auditoria assíncrona) são a compensação: menos trabalho por request.
+Reavaliar o upgrade quando houver receita/carga que justifique o custo.
 
 ## Decisão 5 — Orçamento de bundle
 
@@ -71,5 +73,5 @@ pago (Starter) resolve o baseline. Não é código; tarefa de operação.
 | Paginação quebra contrato (total/items) | Manter headers `X-Total-Count` e formato `PagedResult` |
 | Login em lote perde claims | Teste de regressão de permissões (roles/permissions por papel) |
 | Canal de auditoria perde eventos | `BoundedChannel` com `FullMode=Wait` + log de falha |
-| Downgrade do Render | Custo — decisão do dono |
+| Overhead do free tier | Compensado por menos trabalho/request; upgrade adiado |
 | Bundle | Orçamento + script; sem mudança funcional |

@@ -29,10 +29,10 @@
 - [ ] 4.3 `scripts/check-bundle-size.sh` (falha se main gzip > 1 MB)
 - [ ] 4.4 Atualizar `school-management-ui/AGENTS.md` com o orçamento
 
-## 5. Infra (não código)
+## 5. Infra (adiado — free tier mantido)
 
-- [ ] 5.1 Upgrade do Render para plano pago (Starter) — decisão do dono
-- [ ] 5.2 Medir latência antes/depois (mesmos endpoints) e registrar no progresso
+- [ ] 5.1 ~~Upgrade do Render para plano pago~~ — **adiado por decisão do dono (25/11)**; manter free tier
+- [ ] 5.2 Medir latência antes/depois dos ajustes 1–3 (mesmos endpoints) e registrar no progresso
 
 ## 6. Critérios de aceite
 

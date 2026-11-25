@@ -32,8 +32,6 @@ Gargalos comprovados no código:
 - **Auditoria assíncrona** (canal limitado, fail-open) — a requisição não espera
   o `SaveChanges` do log.
 - **Orçamento de bundle** (main ≤ 1 MB gzip) + auditoria das dependências pesadas.
-- **Instância Render paga** (tarefa de infra, não código) para eliminar o
-  overhead de CPU do free tier.
 
 ## Impact
 
@@ -41,7 +39,7 @@ Gargalos comprovados no código:
   (paginação), `AuthService`, `TokenAuditService`/`AuditLoggingMiddleware`,
   migration `StudentsTenantIdIndex`.
 - **UI**: auditoria de bundle (sem mudança funcional).
-- **Infra**: upgrade do plano Render (custo).
+- **Infra**: **sem mudança** — free tier mantido (decisão do dono, 25/11).
 - **Testes**: paginação (page/pageSize/total), login (claims corretos), auditoria
   (não bloqueia; eventual consistência).
 
@@ -51,3 +49,6 @@ Gargalos comprovados no código:
 - Microserviços ou CQRS distribuído.
 - Reescrita do modelo de auditoria (só torná-la assíncrona).
 - Otimização de todas as telas (foco nos 2 gargalos medidos + bundle).
+- Upgrade de plano Render (adiado; custo). O overhead base do free tier (~0,4 s)
+  passa a ser compensado por menos trabalho por request (paginação, login enxuto,
+  auditoria assíncrona).
