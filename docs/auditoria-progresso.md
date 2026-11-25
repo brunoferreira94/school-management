@@ -341,6 +341,47 @@ token e `/api/v1/students` **401** sem auth (esperado).
 - P2: instância Render paga (custo) — resolve o overhead base.
 - P3: auditar dependências pesadas no main (2 h).
 
+## Tabelas-espelho acadêmicas removidas (25/11) — API `f2df155`
+
+**Contexto**: o SchoolContext mapeia as mesmas classes de domínio do AcademicContext
+(`ClassGroup`, `Classroom`, `StudentClass`, `ClassSchedule`) — via `SkillCompetency.ClassGroup`
+e `StudentSkillEvaluation.ClassGroup`, cujas navegações **não** eram ignoradas — e por
+isso criava tabelas-espelho no **singular**. Elas eram **vazias** (0 linhas em prod e
+staging) e nunca lidas pelo app (`UnitOfWork` usava o AcademicContext/plural), mas:
+
+- as **FKs** delas bloqueavam escritas: `StudentSkillEvaluations.ClassGroupId` (NOT NULL)
+  e `SkillCompetencies.ClassGroupId` apontavam para uma `ClassGroup` espelho que nunca
+  tinha linha → **inserir competência/avaliação por turma era impossível**;
+- o `UnitOfWork`/DI tinham **fallback silencioso** para o SchoolContext: host sem o
+  AcademicContext leria a espelho vazia e devolveria "sucesso sem dados";
+- o erasure LGPD (`DataSubjectErasureService`) citava a tabela relíquia por nome.
+
+**Correção**: (1) as duas navegações foram ignoradas → o cluster acadêmico sai do modelo
+do SchoolContext; (2) migration `20261125193056_DropAcademicMirrorTables` remove as 4
+tabelas + as 2 FKs que as referenciavam (elas estavam vazias — verificado antes);
+(3) `AcademicContextGuard` substitui o fallback: os repositórios acadêmicos
+(`IClassGroupRepository`, `IStudentClassRepository`, `IClassroomRepository`,
+`IClassScheduleRepository`, `ITimetableTemplateRepository`, `ILessonPlanRepository`,
+`ITeacherAvailabilityRepository` e o `UnitOfWork`) agora **falham alto** se o
+AcademicContext não estiver registrado; (4) o erasure LGPD deixou de citar a relíquia.
+
+**Validação**: suíte **1213/0/5** (inclui teste novo: repositório acadêmico sem
+AcademicContext → `InvalidOperationException`); banco novo por migrations (Academic →
+School) sem as espelhos e com as reais intactas; schema por migrations vs. `EnsureCreated`
+→ paridade total (só as PKs das `mv_*`, que são matviews no caminho de migrations);
+`PrivacyIntegrationTests` e `DataSubjectErasureService` ajustados (a FK deferrable era na
+tabela relíquia — a real, `StudentClasses`, não tem FK para `Students`).
+
+**Deploy**: staging `dep-dc3jtdvf3r2c738pljgg` e produção `dep-dc3jukff3r2c738ppa0g`.
+Smoke: health **200** (DB Healthy) nos dois; `espelhos (singular) restantes: (NENHUMA)`,
+`reais (plural): ClassGroups, ClassSchedules, Classrooms, StudentClasses`,
+`FK para espelho: 0`, 38 migrations em prod; `/metrics` **401** sem token e
+`/api/v1/students` **401** sem auth (esperado).
+
+> A `20261125163311_AddTenantIdToAcademicMirrorTables` (migration anterior, já em prod)
+> ficou sem efeito prático — as tabelas que ela alterava foram removidas na sequência.
+> Não foi removida do histórico porque já está aplicada nos ambientes.
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
