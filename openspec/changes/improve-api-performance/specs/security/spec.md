@@ -4,14 +4,14 @@
 
 ### Requirement: Orçamento de consultas no login
 
-O login SHALL resolver usuário, papéis e permissões em **no máximo 2 consultas**
-(uma leitura de usuário + uma leitura agregada de papéis/permissões), sem N+1.
-Auditoria, refresh token e atualização de `LastLoginAt` permanecem como escritas.
+O login SHALL resolver usuário, papéis/permissões e unidade escolar em **no máximo
+3 consultas** (usuário; claims agregadas em 1 join; unidade), sem N+1. Auditoria,
+refresh token e atualização de `LastLoginAt` permanecem como escritas.
 
 #### Scenario: Login resolve claims sem N+1
 
 - **WHEN** um usuário faz login
-- **THEN** o provedor de claims executa no máximo 2 leituras
+- **THEN** o provedor de claims executa no máximo 3 leituras (usuário, claims, unidade)
 - **AND** as permissões retornadas são idênticas às do modelo atual (por papel)
 
 #### Scenario: Login tolerante a falha de telemetria
