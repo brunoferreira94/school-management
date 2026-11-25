@@ -186,6 +186,23 @@ o cookie depende do proxy same-origin; em produção (Vercel rewrite) é same-or
 **Risco residual**: versionamento é por prefixo (sem implementações paralelas);
 v2 exigirá controllers/handlers próprios ou branch explícito.
 
+## Smoke pós-deploy (25/11)
+
+| Checagem | Resultado |
+|---|---|
+| UI (Vercel) raiz | 200 |
+| UI → API (proxy `/api/support/health`) | 200 |
+| `/api/v1/students` sem auth | 401 |
+| `/api/v1/offline/sync-batch` sem auth | 401 |
+| `/api/students` (alias legado) sem auth | 401 |
+| `/metrics` sem/com token | 401 / 200 |
+| Prometheus targets prod/staging | UP |
+| **Banco de produção** | **0 usuários**, 12 conquistas (baseline aplicado) |
+
+> **Produção ainda não tem nenhum usuário cadastrado** — o produto não é utilizável
+> até o primeiro diretor/secretaria ser provisionado (fluxo de cadastro/registro
+> ou criação manual). O baseline (permissões/papéis/catálogo) já roda no startup.
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
