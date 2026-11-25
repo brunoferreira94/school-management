@@ -260,6 +260,24 @@ drift pré-existente, o dev DB também não tem).
   Postgres 17 descartável; contagens idênticas (1 tenant, 12 conquistas,
   38 permissões, 4 papéis). Procedimento documentado no `DEPLOY.md`.
 
+## Auditoria de acessibilidade/responsividade (25/11)
+
+**Corrigido**:
+- **Overflow horizontal no mobile** (390px → scrollWidth 610): `.layout__main`
+  sem `min-width:0` + topbar com seletor de ano letivo/busca. Agora
+  `min-width:0`, topbar com `flex-wrap` e seletor oculto <900px. Verificado:
+  `scrollWidth == clientWidth == 390` em `/`, `/students`, `/my-area`, `/finance`.
+- **Login sem rótulo associado**: `<label>` sem `for` + input sem `id` (2 campos
+  não anunciados por leitor de tela). Agora `for`/`id` + `autocomplete`
+  (`username`/`current-password`). Verificado: 0 inputs sem label.
+
+**Verificado**: `lang="pt-BR"`, landmarks header/nav/footer, 0 botões sem texto,
+0 overflow nas 4 telas em 390px, cadastro com 7 inputs todos rotulados.
+
+**Menores (não corrigidos)**: H1 duplicado em algumas telas; ausência de
+`<main>`; saltos de heading (H2→H3). **Não auditado**: contraste (precisa de
+axe/visual), leitor de tela completo, armadilha de foco, foco visível.
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
