@@ -24,6 +24,7 @@ services:
       - '--web.enable-lifecycle'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./metrics_token:/etc/prometheus/metrics_token:ro
       - ./prometheus-health-alerts.yml:/etc/prometheus/prometheus-health-alerts.yml:ro
       - ./prometheus-academic-year-alerts.yml:/etc/prometheus/prometheus-academic-year-alerts.yml:ro
       - ./prometheus-support-health-alerts.yml:/etc/prometheus/prometheus-support-health-alerts.yml:ro

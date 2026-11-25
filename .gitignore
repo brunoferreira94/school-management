@@ -17,3 +17,6 @@ graphify-out/
 
 # Backups locais (podem conter dados pessoais)
 backups/
+
+# Token do /metrics (segredo local do Prometheus)
+monitoring-package-api/observability/metrics_token
