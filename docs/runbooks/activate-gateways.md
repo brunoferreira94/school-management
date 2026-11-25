@@ -52,8 +52,42 @@ sandboxes gratuitos, sem depender do staging do Render nem de cartão.
 4. Faça um checkout (PIX sandbox no Asaas, cartão de teste `4242...` no Stripe) e confirme
    `GET /api/subscriptions/tenant` → `Status=Active`. Repita o evento → idempotente.
 
+### Ordem obrigatória do fluxo (change `link-checkout-external-reference`)
+
+```
+POST /api/subscriptions/checkout-intents   (autenticado: Permission:subscriptions.write)
+  1. garante assinatura ativa/trial do tenant (EnsureTrialAsync)
+  2. gera a referência externa  {planSlug}-{ciclo}-{yyyyMMddHHmmss}
+  3. PERSISTE TenantSubscription.ExternalSubscriptionId  ← antes da cobrança
+  4. chama o gateway (Asaas: externalReference | Stripe: client_reference_id/metadata)
+     └─ se falhar, desfaz o vínculo (sem referência órfã)
+webhook (PAYMENT_CONFIRMED / checkout.session.completed)
+  5. localiza a assinatura pela referência externa
+  6. Status=Active  →  aplica o plano/ciclo comprados (premium-monthly-* → Premium/Monthly)
+     Status=pending/overdue → mantém o plano atual
+```
+
+> Por que o passo 3 vem antes do 4: o provedor dispara o webhook (PAYMENT_CREATED) assim que cria
+> a cobrança; sem o vínculo gravado antes, o webhook não encontra a assinatura e o evento se perde.
+> `GET /api/subscriptions/tenant` expõe `externalSubscriptionId` para conferir o vínculo.
+
+### Limitações conhecidas do sandbox Asaas
+
+- O sandbox **não simula o pagador de PIX**: o pagamento fica `PENDING` e não há evento
+  `PAYMENT_CONFIRMED` automático; o checkout de cartão pelo site do sandbox também não fecha em
+  navegador headless (captcha). O caminho "confirmado → `Active` + `Premium`" fica coberto pelo
+  teste de integração `CheckoutLinkageIntegrationTests`, e o que dá para validar ao vivo é:
+  cobrança real com `externalReference` idêntico ao persistido, entrega real do webhook pelo túnel
+  (`User-Agent: Asaas_Hmlg/3.0`), token inválido → `401` e evento `pending` sem alterar o plano.
+- A entrega de webhook no sandbox pode levar **horas** (ou ficar penalizada se a URL estava fora do
+  ar no momento do evento) — confira `penalizedRequestsCount` em `GET /v3/webhooks/{id}`.
+- Se o domínio do túnel (ngrok) atender mais de um túnel, as entregas alternam entre eles:
+  use um túnel exclusivo durante a validação.
+
 > Vantagem: o túnel fecha quando você termina, sem deixar serviço exposto e sem consumir cota do Render.
 > O webhook do provedor precisa alcançar a URL pública — por isso o túnel.
+> Ao final, **desabilite o webhook** (`PUT /v3/webhooks/{id}` com `enabled=false`) e apague os
+> pagamentos de teste do sandbox.
 
 ---
 
