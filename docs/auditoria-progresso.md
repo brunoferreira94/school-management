@@ -220,6 +220,37 @@ novo diretor nascia preso em 428 sem ação de aceite. Corrigido no
 > (diretor@escolapiloto.com, preso no 428 antigo) e `Escola Piloto 3`
 > (diretor3@escolapiloto.com, funcional). Posso removê-los se quiser.
 
+## Bootstrap de banco novo corrigido (25/11) — API `e609631`
+
+**Bug**: qualquer banco **novo** quebrava no startup — `42P07: relation
+"AdhesionContractAudits" already exists` (a migration `20260715174210_AddSetupProgress`,
+gerada pelo EF, recriava tabelas que as migrations irmãs
+`20260712180000`/`20260712190000`/`20260713100000` já criam) e, corrigido isso,
+`42P01: relation "StudentClasses" does not exist` (a chain do School cria a matview
+`mv_retention_by_cohort`, que lê tabelas do Academic).
+
+**Correção** (API `e609631`, submicronô):
+- `AddSetupProgress` não recria mais as tabelas das migrations irmãs (PKs/FKs/índices
+  idênticos — conferidos por teste); o `Down` também deixa de derrubá-las.
+- `Program.cs` migra **Academic antes de School** (ordem obrigatória: a matview do
+  School lê `StudentClasses`/`ClassGroups` do Academic).
+- Backfill de `TenantId` do Academic passou a tolerar `SchoolUnits` ausente
+  (`to_regclass`), já que a chain do Academic roda antes da do School.
+- Novo guard: `MigrationBootstrapIntegrationTests` aplica a **cadeia completa** em
+  banco vazio (tabelas, índices, FKs e matviews) — a suíte usava `EnsureCreated`, por
+  isso nunca exercitou o histórico de migrations.
+
+**Validação**: suíte **1207/0/5**; banco novo via `dotnet ef` (Academic → School) com
+107 tabelas + 2 matviews; API subindo contra ele → `/api/support/health` **200**,
+baseline e default tenant aplicados; schema das migrations comparado com o do
+`EnsureCreated` (só difere nas 3 colunas `TenantId` das tabelas-legada singulares —
+drift pré-existente, o dev DB também não tem).
+
+**Deploy**: staging `dep-dc3asd0m7kps73dnt2u0` e produção `dep-dc3ategm7kps73do01q0`
+(commit `e6096312`, auto-deploy desligado → manual). Smoke: `/api/support/health`
+**200** em staging e produção, `database: Healthy`; `/metrics` **401** sem token
+(comportamento esperado — exige `metrics_token`).
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
