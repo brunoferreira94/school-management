@@ -105,9 +105,10 @@ if mode != "apply":
     print("   (dry-run — use --apply para enviar)")
     sys.exit(0)
 
-payload = {"envVars": [{"key": k, "value": v} for k, v in merged.items()]}
+# O PUT do Render espera um ARRAY JSON cru (não {"envVars": ...}).
+payload = [{"key": k, "value": v} for k, v in merged.items()]
 req("PUT", f"/services/{service_id}/env-vars", payload)
-print(f"   ✓ aplicado ({len(payload['envVars'])} variáveis)")
+print(f"   ✓ aplicado ({len(payload)} variáveis)")
 PY
 done
 
