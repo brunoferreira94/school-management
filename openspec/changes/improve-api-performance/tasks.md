@@ -32,7 +32,7 @@
 ## 5. Infra (adiado — free tier mantido)
 
 - [ ] 5.1 ~~Upgrade do Render para plano pago~~ — **adiado por decisão do dono (25/11)**; manter free tier
-- [ ] 5.2 Medir latência antes/depois dos ajustes 1–3 (mesmos endpoints) e registrar no progresso
+- [x] 5.2 Medir latência antes/depois dos ajustes 1–3 (mesmos endpoints) e registrar no progresso — registrado em `docs/auditoria-progresso.md` (students −43%, concorrência −25%; regressão de login pega e corrigida: `4367feb`)
 
 ## 6. Critérios de aceite
 
@@ -40,4 +40,4 @@
 - [x] 6.2 Login com ≤2 leituras e mesmas permissões de antes
 - [x] 6.3 Mutação não bloqueia no `SaveChanges` de auditoria
 - [x] 6.4 `main` gzip ≤ 1 MB (script verde)
-- [ ] 6.5 Suíte API verde + Karma verde; latência medida no progresso
+- [x] 6.5 Suíte API verde + Karma verde; latência medida no progresso — API **1217/0** (5 skips), Karma **820/820** (1 flaky de `OfflineDraftService` confirmado em isolamento: 7/7); medição em `docs/auditoria-progresso.md`

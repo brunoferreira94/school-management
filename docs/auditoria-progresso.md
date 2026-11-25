@@ -341,6 +341,32 @@ token e `/api/v1/students` **401** sem auth (esperado).
 - P2: instância Render paga (custo) — resolve o overhead base.
 - P3: auditar dependências pesadas no main (2 h).
 
+**Depois (medição 5.2 — staging, serviço quente, mesmos endpoints; deploys de
+`2d7b242`, `8db7cd4`, `8b45471` e correção `4367feb` live em staging e produção
+em 25/11)**:
+
+| Endpoint | Antes | Depois |
+|---|---|---|
+| `GET /api/support/health` | 0,37–0,50 s | 0,30–0,50 s |
+| `POST /api/auth/login` (usuário existente) | 1,67 s | 1,37–1,50 s |
+| `GET /api/students` (`pageSize=50`) | **1,07 s** | **0,56–0,63 s** (−43%) |
+| `GET /api/me/achievements` | 0,62 s | 0,51–0,72 s |
+| `GET /api/achievements/team` | 0,68 s | 0,69–0,72 s |
+| 10 reqs concorrentes em `/api/students` | 1,06 s | **0,80 s** (−25%) |
+
+Notas:
+- 1ª requisição pós-deploy é cold start do free tier (até ~5 s) — medir sempre quente.
+- **Regressão pega na medição**: o deploy quebrou login em staging/produção
+  (`500 Connection is not open`). Causa: `GetRolesAndPermissionsForUserAsync`
+  (claims em 1 consulta, `8db7cd4`) roda SQL cru e o EF abre/fecha a conexão por
+  operação — a query chegava com conexão fechada. A suíte não pegava porque
+  `TestWebApplicationFactory` registra o context com **uma conexão física
+  compartilhada sempre aberta**. Corrigido em `4367feb` (abre se preciso + `finally`
+  fecha só o que abriu); reproduzido e validado com imagens pré/pós-fix em container
+  local; login OK em staging (token) e produção (token).
+- Smoke pós-fix em produção: login 200 + token, `students` 0,70 s quente, health 0,40 s.
+- Suíte: **1217/0** (5 skips).
+
 ## Tabelas-espelho acadêmicas removidas (25/11) — API `f2df155`
 
 **Contexto**: o SchoolContext mapeia as mesmas classes de domínio do AcademicContext
