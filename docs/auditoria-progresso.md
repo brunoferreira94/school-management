@@ -203,6 +203,23 @@ v2 exigirá controllers/handlers próprios ou branch explícito.
 > até o primeiro diretor/secretaria ser provisionado (fluxo de cadastro/registro
 > ou criação manual). O baseline (permissões/papéis/catálogo) já roda no startup.
 
+## Onboarding pela UI (25/11) — validado em produção
+
+| Etapa | Resultado |
+|---|---|
+| `/cadastro` (UI) → submit | **201** → `/login?registered=1` |
+| Login (UI) | **200** → dashboard |
+| `/my-area` | **sem 428**; Central de Conquistas renderiza (Nível 1, 0/12) |
+
+**Bug encontrado e corrigido**: o cadastro não gravava o aceite de termos
+(`TermsOfUseAcceptance`) — o checkbox da UI não virava registro no backend e o
+novo diretor nascia preso em 428 sem ação de aceite. Corrigido no
+`OnboardingController.RegisterSchool` (commit `752954c`).
+
+> Dados de teste criados em produção: `Escola Piloto E2E`
+> (diretor@escolapiloto.com, preso no 428 antigo) e `Escola Piloto 3`
+> (diretor3@escolapiloto.com, funcional). Posso removê-los se quiser.
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
