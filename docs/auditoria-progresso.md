@@ -309,6 +309,38 @@ token e `/api/v1/students` **401** sem auth (esperado).
 > `~/.config/opencode/opencode.json` (backup `.bak`) a partir de `secrets.env`;
 > deploys continuam pelo script `scripts/deploy-render-api.sh` / REST da API.
 
+## Auditoria de performance (25/11)
+
+**Medições (staging/prod, free tier)**:
+
+| Endpoint | Latência média |
+|---|---|
+| `GET /api/support/health` | 0,37–0,50 s (DB 48–69 ms) |
+| `POST /api/auth/login` (usuário inexistente) | 0,49 s |
+| `POST /api/auth/login` (senha errada → PBKDF2) | 0,76–1,42 s |
+| `GET /api/students` | **1,07 s** |
+| `GET /api/me/achievements` | 0,62 s |
+| `GET /api/achievements/team` | 0,68 s |
+| 10 reqs concorrentes em `/api/students` | 10× 200, 1,06 s total (sem erros) |
+
+**Gargalos identificados**:
+1. `StudentsController.ListStudents` carrega **todos** os alunos e pagina **em memória**
+   (`GetStudentsQuery` → `List<Student>` + `PaginationHelper.Paginate`) — O(N).
+   `Students` só tem PK; **sem índice em `TenantId`** (usado por `ListByTenantAsync`).
+2. Login faz **6–8 queries sequenciais** (usuário, papéis, permissões, unidade, auditoria,
+  refresh antigo, refresh novo, update) + PBKDF2 — 0,5–1,6 s.
+3. `AuditLoggingMiddleware` faz `AddAsync` + `SaveChangesAsync` **por requisição mutante**
+  (write síncrono no caminho crítico).
+4. Overhead base ~0,4 s/requisição em free tier (CPU 0,1) — some com instância paga.
+5. Bundle de produção: **4,6 MB** (main 1,3 MB) — aceitável, mas main grande.
+
+**Recomendações** (por esforço):
+- P1: paginação no banco + índice `Students.TenantId` (4–6 h).
+- P1: login em 1–2 queries (batch claims) (3–4 h).
+- P2: auditoria assíncrona (canal) (4–6 h).
+- P2: instância Render paga (custo) — resolve o overhead base.
+- P3: auditar dependências pesadas no main (2 h).
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
