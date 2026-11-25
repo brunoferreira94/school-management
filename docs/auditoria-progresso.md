@@ -191,8 +191,11 @@ v2 exigirá controllers/handlers próprios ou branch explícito.
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
   agendamento/retenção.
 - Nenhuma tarefa do plano de auditoria pendente (1–10 concluídas).
-- **Ação de deploy**: rodar `scripts/render-env-vars.sh --apply` (env vars
-  pendentes já geradas em `school-management-api/.env`) e atualizar o
-  `authorization` do `prometheus.yml` com o mesmo `Metrics__AccessToken`.
+- **Env vars**: `school-management-api/.env` (novos segredos) e
+  `scripts/render-env-vars.sh` (GET→merge→PUT; dry-run por padrão).
+  **Staging aplicado e conferido (21/21, banco `SchoolManagementDBDev`)**;
+  **produção intacta (20 vars) — apply pendente de confirmação**.
+- **Após o apply**: reiniciar os serviços no Render e atualizar o
+  `authorization` do `prometheus.yml` com o `Metrics__AccessToken`.
 - Não auditado: UX em navegador, carga/performance, acessibilidade, upload,
   integrações reais Asaas/Auth0, restore de backup.
