@@ -127,8 +127,31 @@ supabase db dump --project-id cuiurrqwdugajuyaaaef -f backup.sql
 ```
 
 > ⚠️ Pendência de infra: ativar backups gerenciados (Supabase Pro) ou agendar
-> `pg_dump` diário com retenção de 30 dias. **Teste de restore obrigatório
-> antes de vender** (o script acima é o procedimento).
+> `pg_dump` diário com retenção de 30 dias.
+
+### Restore testado (25/11)
+
+```bash
+# 1) Dump (o pg_dump local é 16; o Supabase é 17 — use um container 17)
+URI="postgresql://postgres.<ref>:<senha>@aws-0-<regiao>.pooler.supabase.com:5432/postgres?sslmode=require"
+docker run --rm -i postgres:17 pg_dump "$URI" | gzip > backups/prod-$(date -u +%Y%m%dT%H%M%SZ).sql.gz
+
+# 2) Restore em Postgres descartável
+docker run -d --name restore-test -e POSTGRES_PASSWORD=postgres postgres:17
+docker exec restore-test psql -U postgres -c 'CREATE DATABASE restore'
+gunzip -c backups/prod-<dump>.sql.gz | docker exec -i restore-test psql -U postgres -d restore
+
+# 3) Verificar contagens (devem bater com a origem)
+docker exec restore-test psql -U postgres -d restore -t -A -c \
+  "SELECT (SELECT count(*) FROM \"Tenants\"), (SELECT count(*) FROM \"Achievements\"), (SELECT count(*) FROM \"Permissions\");"
+
+# 4) Remover
+docker rm -f restore-test
+```
+
+> Em Postgres puro (fora do Supabase) os erros `role "supabase_admin"/"pgbouncer" does not exist`
+> e `extension "supabase_vault" is not available` são esperados — não afetam dados/tabelas.
+> Em um restore real para o Supabase, roles/extensões já existem.
 
 ---
 
