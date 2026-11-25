@@ -278,6 +278,37 @@ drift pré-existente, o dev DB também não tem).
 `<main>`; saltos de heading (H2→H3). **Não auditado**: contraste (precisa de
 axe/visual), leitor de tela completo, armadilha de foco, foco visível.
 
+## Drift model-vs-migrations corrigido (25/11) — API `a3e8c4e`
+
+**Achado**: as tabelas-espelho acadêmicas no singular (`"Classroom"`, `"StudentClass"`,
+`"ClassSchedule"`) — criadas pelo SchoolContext via `SkillCompetency.ClassGroup` e
+`StudentSkillEvaluation.ClassGroup` (navegações não ignoradas) — têm `TenantId` no
+**modelo**, mas a cadeia de migrations nunca criou a coluna. Verificado em prod e
+staging: **a coluna não existia** e as tabelas estavam **vazias** (0 linhas) — o app
+não as lê (`UnitOfWork` usa o AcademicContext/plural). Efeito: banco por migrations
+≠ banco por `EnsureCreated` (dev/testes) ≠ modelo, e qualquer migration futura
+dessas entidades geraria DDL contra coluna inexistente em prod.
+
+**Correção**: migration `20261125163311_AddTenantIdToAcademicMirrorTables` (DDL
+idempotente, `ADD COLUMN IF NOT EXISTS` + guard `to_regclass`) — alinhando a cadeia
+ao modelo sem tocar em dados. Guard no `MigrationBootstrapIntegrationTests` (a coluna
+tem que existir no banco criado por migrations).
+
+**Validação**: suíte **1207/0/5**; schema por migrations comparado com o do
+`EnsureCreated` → **zero** colunas/índices divergentes (restam só as PKs das `mv_*`,
+que são matviews no caminho de migrations — diferença intencional pré-existente);
+DDL validado como no-op em banco que já tinha a coluna e como Down→Up.
+
+**Deploy**: staging `dep-dc3h1nvavr4c73fbofvg` e produção `dep-dc3h2v7lot8c73a4k8b0`.
+Smoke: health **200** (DB Healthy) nos dois; migration aplicada (staging/prod: última
+=`20261125163311_AddTenantIdToAcademicMirrorTables`, 36 migrations em prod);
+`TenantId` presente nas 3 tabelas; relíquias seguem vazias; `/metrics` **401** sem
+token e `/api/v1/students` **401** sem auth (esperado).
+
+> **Chave do MCP Render estava revogada** (401) — atualizada em
+> `~/.config/opencode/opencode.json` (backup `.bak`) a partir de `secrets.env`;
+> deploys continuam pelo script `scripts/deploy-render-api.sh` / REST da API.
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
