@@ -251,6 +251,15 @@ drift pré-existente, o dev DB também não tem).
 **200** em staging e produção, `database: Healthy`; `/metrics` **401** sem token
 (comportamento esperado — exige `metrics_token`).
 
+## Limpeza e restore (25/11)
+
+- **Produção limpa**: removidos os tenants de teste `escola-piloto-e2e` e
+  `escola-piloto-3` (com usuários, unidades, períodos e vínculos) em transação.
+  Restou apenas o `default` (placeholder da plataforma) — **0 usuários**.
+- **Restore validado**: dump de produção (pg_dump 17, 80 KB) restaurado em
+  Postgres 17 descartável; contagens idênticas (1 tenant, 12 conquistas,
+  38 permissões, 4 papéis). Procedimento documentado no `DEPLOY.md`.
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
