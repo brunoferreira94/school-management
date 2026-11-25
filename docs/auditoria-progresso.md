@@ -195,8 +195,9 @@ v2 exigirá controllers/handlers próprios ou branch explícito.
   `scripts/render-env-vars.sh` (GET→merge→PUT; dry-run por padrão).
   **Staging aplicado (21/21, banco `SchoolManagementDBDev`)** e
   **produção aplicada (21/21, 7/7 valores conferidos)**.
-- **Após o apply**: reiniciar os serviços no Render (JWT novo invalida sessões)
-  e atualizar o `authorization` do `prometheus.yml` com o `Metrics__AccessToken`
-  (não commitar o token no arquivo).
+- **Aplicado e verificado (24/11)**: serviços reiniciados e re-deployados;
+  `/metrics` **401 sem token** e **200 com token** em prod e staging; health 200.
+  `prometheus.yml` validado com `promtool` e usando `credentials_file`
+  (`monitoring-package-api/observability/metrics_token`, gitignored).
 - Não auditado: UX em navegador, carga/performance, acessibilidade, upload,
   integrações reais Asaas/Auth0, restore de backup.
