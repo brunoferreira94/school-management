@@ -43,9 +43,11 @@
 - [ ] 2.4 Checkout: valor variável criado corretamente no ciclo (Asaas não propaga update de valor
       para charges já geradas — spec `asaas-plan-catalog`)
 - [ ] 2.5 UI: preço "a partir de" + simulador (alunos/unidades) na `/pricing`
-- [ ] 2.6 Modal de upgrade na UI: interceptar `402 subscription_expired` no cliente HTTP e abrir
-      aviso de oferta com planos + CTA `/checkout/:plan` (`design.md` §7) — pré-requisito para ligar
-      `Entitlement:Enforce` (backend já bloqueia escrita e mantém leitura)
+- [x] 2.6 Modal de upgrade na UI: `SubscriptionUpgradeService` + interceptação de `402
+      subscription_expired` no `errorToastInterceptor` (com precedência sobre `SKIP_ERROR_TOAST`)
+      e dialog global com planos do catálogo + CTA `/checkout/:plan` (`design.md` §7) — pré-requisito
+      para ligar `Entitlement:Enforce`. Cypress `subscription-upgrade-modal.cy.ts` 2/2,
+      `error-toast.interceptor.spec.ts` 4/4, Karma 824/824
 - [ ] 2.7 Feature gating por plano (`CheckSubscriptionFeatureAsync` + middleware/UI) e migração dos
       tenants existentes + doc comercial (`docs/plans/pricing-page.md`)
 - [ ] 2.8 Testes: unit (cálculo), integração (limites/gating/402), Cypress (modal de upgrade e
