@@ -12,23 +12,24 @@
 
 ## Fase 1 — Superfícies comerciais coerentes
 
-- [ ] 1.1 Traduzir as ~30 strings placeholder da `/pricing` para pt-BR
+- [x] 1.1 Traduzir as ~30 strings placeholder da `/pricing` para pt-BR
       (`school-management-ui/src/app/i18n-data.ts:752-795`: `HERO_TITLE`, `CTA_START`,
-      `PRICE_ON_REQUEST`, `PLAN_FEATURE_*`, `COMPARISON_*`, `FAQ_*`…)
-- [ ] 1.2 Free exibido como **R$ 0** (não "Price On Request"); CTA "Cta Start"/"Cta Sales" reais
-      (`pricing-page.component.html` + `formatPrice` em `pricing-page.component.ts`)
-- [ ] 1.3 Tabela de comparação da `/pricing` passa a usar **os limites do catálogo** (API), fim do
-      hardcoded `comparisonFeatures` (`pricing-page.component.ts:31-45`)
-- [ ] 1.4 Tela interna "Planos Disponíveis" consome o mesmo catálogo — remover a 3ª tabela
-      (`subscriptions.component.html:35-60`)
+      `PRICE_ON_REQUEST`, `PLAN_FEATURE_*`, `COMPARISON_*`, `FAQ_*`…) — 51 chaves no total
+- [x] 1.2 Free exibido como **R$ 0** (não "Price On Request"); CTA "Começar grátis" (Free) e
+      "Escolher plano" (pagos)
+- [x] 1.3 Tabela de comparação da `/pricing` passou a usar **os limites do catálogo** (API), fim do
+      hardcoded `comparisonFeatures` (`pricing-page.component.ts`)
+- [x] 1.4 Tela interna "Planos Disponíveis" consome o mesmo catálogo — fim da 3ª tabela
+      (`subscriptions.component.html`/`.ts`)
 - [x] 1.5 Corrigir `docs/plans/pricing-page.md`: desconto anual **16,7%** (não 15%), trial
       **14 dias** (não 30) e nota do modelo aprovado (fase 2)
 - [x] 1.6 Aplicar `EnsureSchoolUnitLimitAsync` na criação de unidade escolar
       (`SubscriptionLimitService.cs:54` não tinha callers) + teste
       (API `4990a07`, `SchoolUnitServiceTests` 3/3; suíte 1222/0, 5 skips)
-- [ ] 1.7 Teste de superfície comercial: falha se existir placeholder i18n em inglês na `/pricing`
-      ou preço/limite hardcoded divergente do catálogo (Cypress spec dedicada)
-- [ ] 1.8 Validar: `ng build` + Karma verde; bundle de produção sem placeholders (grep)
+- [x] 1.7 Teste de superfície comercial: `cypress/e2e/pricing-commercial-surface.cy.ts` falha se
+      existir placeholder i18n em inglês/chave crua ou preço divergente do catálogo (2/2)
+- [x] 1.8 Validação: `ng build` (dev + prod) OK; bundle de produção sem placeholders (grep);
+      Karma 820/820 (1 flaky conhecido do OfflineDraftService convergiu na rerun)
 
 ## Fase 2 — Modelo de cobrança (após 0.1)
 
