@@ -70,9 +70,10 @@ por unidade**). Para calibrar a decisão, foi feita uma **pesquisa de preços de
 
 1. ~~**Dono escolhe A, B ou C**~~ → **26/11: aprovada a Opção B (híbrido) com faixa de entrada plana**
    (ver §6).
-2. Regra **trial→Free**: hoje trial vencido = expirado (bloqueia escrita) e o Free não existe como
-   assinatura ativa (Asaas rejeita valor 0). Definir se o tenant expira, cai no Free ou vira
-   somente-leitura — pré-requisito para ligar `Entitlement:Enforce`. **Pendente.**
+2. ~~Regra **trial→Free**~~ → **26/11 (dono): trial vencido = somente-leitura**. Leituras seguem
+   livres (anti-retention), escritas retornam `402 subscription_expired` e a UI abre um aviso de
+   oferta para assinar (upsell) em vez de erro genérico. Ver §6.1. **Decidido; falta implementar o
+   upsell na UI antes de ligar `Entitlement:Enforce`.**
 3. **Feature gating**: quais recursos ficam fora do Free (candidatos: portal do responsável,
    analytics avançado, API). A oferta do Free precisa ser única entre landing, `/pricing` e doc.
    **Pendente.**
@@ -122,3 +123,18 @@ vender e de converter de sistemas por aluno):
 3. Custo marginal por aluno ≈ 0; o custo real é suporte/onboarding → **1 rede vale mais que 20
    escolas pequenas**.
 4. **Sem cliff**: o 501º aluno custa R$ 2,50 (não R$ 700).
+
+## 7. Estado pós-trial — somente leitura com oferta de upgrade (26/11)
+
+**Decisão do dono**: com o trial de 14 dias vencido sem conversão, o tenant **continua lendo** todos
+os seus dados (anti-retention) e **toda ação de escrita abre um aviso de oferta para assinar** —
+não um erro genérico.
+
+- **Backend**: já existe em `EntitlementEnforcementMiddleware` — escrita bloqueada com
+  `402 Payment Required`, corpo `{ error: "subscription_expired", reason, message }`. A flag
+  `Entitlement:Enforce` está `false` em produção/staging; o rollout depende do upsell da UI.
+- **UI (fase 2)**: interceptar o `402 subscription_expired` no cliente HTTP e abrir um modal de
+  upgrade com planos e CTA para `/checkout/:plan` (ou "falar com vendas" para Enterprise), mantendo
+  o usuário na tela e os dados intactos.
+- **Regra de conversão**: o modal é o gatilho de upgrade — substitui o "bloqueio silencioso" de hoje.
+- **Rollout**: só ligar `Entitlement:Enforce` depois do modal aprovado e testado.

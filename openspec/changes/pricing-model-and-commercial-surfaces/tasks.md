@@ -7,7 +7,8 @@
 
 - [x] 0.1 Dono escolhe **A / B / C** e aprova os números-piloto (se B) — registrar no `design.md`
       → **26/11: B (híbrido) com faixa de entrada plana, §6 do `design.md`**
-- [ ] 0.2 Definir regra **trial→Free** (expira / cai no Free / somente-leitura) — `design.md` §4.2
+- [x] 0.2 Definir regra **trial→Free** → **26/11: trial vencido = somente-leitura + upsell** (§7)
+      — backend 402 já existe, falta o modal na UI (task 2.7)
 - [ ] 0.3 Definir **oferta do Free** (quais features ficam de fora) — `design.md` §4.3
 
 ## Fase 1 — Superfícies comerciais coerentes
@@ -40,10 +41,13 @@
 - [ ] 2.4 Checkout: valor variável criado corretamente no ciclo (Asaas não propaga update de valor
       para charges já geradas — spec `asaas-plan-catalog`)
 - [ ] 2.5 UI: preço "a partir de" + simulador (alunos/unidades) na `/pricing`
-- [ ] 2.6 Feature gating por plano (`CheckSubscriptionFeatureAsync` + middleware/UI) e regra
-      trial→Free (0.2) antes de ligar `Entitlement:Enforce`
-- [ ] 2.7 Migração dos tenants existentes + doc comercial (`docs/plans/pricing-page.md`)
-- [ ] 2.8 Testes: unit (cálculo), integração (limites/gating), Cypress (checkout variável)
+- [ ] 2.6 Modal de upgrade na UI: interceptar `402 subscription_expired` no cliente HTTP e abrir
+      aviso de oferta com planos + CTA `/checkout/:plan` (`design.md` §7) — pré-requisito para ligar
+      `Entitlement:Enforce` (backend já bloqueia escrita e mantém leitura)
+- [ ] 2.7 Feature gating por plano (`CheckSubscriptionFeatureAsync` + middleware/UI) e migração dos
+      tenants existentes + doc comercial (`docs/plans/pricing-page.md`)
+- [ ] 2.8 Testes: unit (cálculo), integração (limites/gating/402), Cypress (modal de upgrade e
+      checkout variável)
 
 ## Fase 3 — Cobrança real
 

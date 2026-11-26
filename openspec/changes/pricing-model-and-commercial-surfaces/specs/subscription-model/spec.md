@@ -67,15 +67,30 @@ API and reflected in the UI with an upgrade prompt, instead of being available t
 - **WHEN** the same endpoint is called
 - **THEN** the request succeeds
 
-### Requirement: Post-trial state is defined and safe
+### Requirement: Expired trial is read-only and offers an upgrade
 
-When a trial ends without conversion, the system SHALL resolve the tenant to a documented state
-(Free plan, read-only or expired) and SHALL NOT leave the subscription in an undefined condition
-that blocks the tenant silently. Enabling `Entitlement:Enforce` SHALL be gated on this rule.
+When a trial ends without conversion, the tenant SHALL keep **read** access to all of its data and
+SHALL have every **write** action blocked with `402 Payment Required` and the error code
+`subscription_expired`. The UI SHALL respond to that error by opening an upgrade offer (modal)
+with the available plans and a checkout CTA, instead of showing a generic failure. Enabling
+`Entitlement:Enforce` SHALL be gated on that UI offer being in place.
 
-#### Scenario: Trial expiry resolves to the documented state
+#### Scenario: Expired trial keeps reading available
 
 - **GIVEN** a tenant whose `Trial` subscription ended more than 14 days ago without payment
-- **WHEN** entitlement is evaluated
-- **THEN** the tenant is in the documented post-trial state
-- **AND** the state is the same one exercised by the `Entitlement:Enforce` rollout tests
+- **WHEN** the tenant lists students, grades or reports
+- **THEN** every read succeeds and all data remains accessible
+
+#### Scenario: Write is blocked with an upgrade signal
+
+- **GIVEN** an expired-trial tenant and `Entitlement:Enforce = true`
+- **WHEN** the tenant attempts to create or update a record
+- **THEN** the API responds `402` with `error = subscription_expired` and a `reason`
+- **AND** no write is persisted
+
+#### Scenario: UI opens the upgrade offer instead of a generic error
+
+- **GIVEN** the UI receives `402 subscription_expired` from any write request
+- **WHEN** the response is handled by the HTTP client
+- **THEN** an upgrade modal is shown with the catalog plans and a CTA to `/checkout/:plan`
+- **AND** the user stays on the same screen with data preserved
