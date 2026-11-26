@@ -462,6 +462,15 @@ reaceite no próximo acesso** (fluxo já coberto por testes e E2E).
 **Fonte de consulta ao jurídico**: `docs/terms-of-use.md` (espelho fiel do texto exibido).
 Alterar o texto exige bump de versão + publicação simultânea dos dois artefatos.
 
+**Deploy/evidência (25/11)**: API staging `dep-dc3omnm1egvs73e9pfcg` e produção
+`dep-dc3oniu1egvs73e9rvjg`, ambos live; `GET /api/privacy/terms-of-use/status` (e o alias
+`/api/v1/...`) devolve `currentVersion: 2026.2`, `pendingAcceptance: true` e health 200.
+UI publicada na Vercel nos dois targets: development `dpl_...` (20edabc) e **produção/main**
+`dpl_EgoDdwmcuByYNmnuX91Bru1pNyka` (20edabc) — domínio
+`school-management-ui-three.vercel.app`. Verificação em navegador real na página `/termos` de
+produção: 16 cláusulas renderizadas, versão exibida `2026.2`, banner de rascunho e os marcadores
+de controlador/operador presentes.
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
