@@ -21,10 +21,11 @@
       hardcoded `comparisonFeatures` (`pricing-page.component.ts:31-45`)
 - [ ] 1.4 Tela interna "Planos Disponíveis" consome o mesmo catálogo — remover a 3ª tabela
       (`subscriptions.component.html:35-60`)
-- [ ] 1.5 Corrigir `docs/plans/pricing-page.md`: desconto anual **16,7%** (não 15%) e oferta do
-      Free coerente com o catálogo (portal do responsável)
-- [ ] 1.6 Aplicar `EnsureSchoolUnitLimitAsync` na criação de unidade escolar
-      (`SubscriptionLimitService.cs:54` não tem callers) + teste de limite
+- [x] 1.5 Corrigir `docs/plans/pricing-page.md`: desconto anual **16,7%** (não 15%), trial
+      **14 dias** (não 30) e nota do modelo aprovado (fase 2)
+- [x] 1.6 Aplicar `EnsureSchoolUnitLimitAsync` na criação de unidade escolar
+      (`SubscriptionLimitService.cs:54` não tinha callers) + teste
+      (API `4990a07`, `SchoolUnitServiceTests` 3/3; suíte 1222/0, 5 skips)
 - [ ] 1.7 Teste de superfície comercial: falha se existir placeholder i18n em inglês na `/pricing`
       ou preço/limite hardcoded divergente do catálogo (Cypress spec dedicada)
 - [ ] 1.8 Validar: `ng build` + Karma verde; bundle de produção sem placeholders (grep)

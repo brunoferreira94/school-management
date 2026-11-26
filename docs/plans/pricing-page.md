@@ -35,13 +35,17 @@
 
 ## Pricing details
 
-- Desconto anual: 15% em Premium e Enterprise
-- Trial: 30 dias de Premium sem necessidade de cartão
+- Desconto anual: **16,7%** em Premium e Enterprise (R$ 2.999 vs R$ 3.598,80; R$ 9.999 vs R$ 11.998,80)
+- Trial: **14 dias** no plano Free, sem necessidade de cartão
 - Taxas e impostos são calculados no checkout com transparência
+- **Modelo aprovado (26/11)**: híbrido com faixa de entrada plana — Premium R$ 149 inclui 150 alunos
+  e 1 unidade; Enterprise R$ 499 inclui 500 alunos e 3 unidades (ver
+  `openspec/changes/pricing-model-and-commercial-surfaces/design.md` §6). Os preços acima são o
+  catálogo atual e mudam na fase 2 do change.
 
 ## FAQ
 
-- Como funciona o trial? (30 dias no Premium, sem cartão)
+- Como funciona o trial? (14 dias no plano Free, sem cartão)
 - Posso migrar do Free para Premium a qualquer momento? (sim, instantâneo)
 - Como são cobradas as cobranças financeiras? (o valor do plano é separado dos serviços de gateway e dos impostos)
 
