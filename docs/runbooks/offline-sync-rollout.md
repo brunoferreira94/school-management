@@ -325,9 +325,27 @@ partir daqui — as sondas do próprio gate entram como `missing`):
 `idempotency_key_missing{batch}=1` · `revision_adherence{PUT /api/grading-formulas/{id}} missing=3` /
 `provided=2` · `offline_sync_total=0` (reset do deploy).
 
-**Pegadinhas da execução (26/11)** — valem para os próximos deploys:
+**Fechamento da janela (24h)** — quando a janela fechar (27/11 ~05:30 UTC):
 
-1. **Render: `PUT /env-vars` SUBSTITUI o conjunto e o `GET` pagina em 20.**
+```bash
+# 1) delta da janela contra a base gravada no início
+scripts/check-offline-sync-gate.py --env staging \
+  --baseline docs/runbooks/offline-sync-gate-base-2026-11-26.json
+
+# 2) leitura absoluta da janela (com as sondas do gate já dentro)
+scripts/check-offline-sync-gate.py --env staging --window 24h
+```
+
+O modo `--baseline` julga os **deltas** desde a base — é ele que isola as
+sondas do próprio gate (400/428, gravadas como `missing`). A base está
+versionada em `docs/runbooks/offline-sync-gate-base-2026-11-26.json`
+(2023 lotes batch, 20021/20021 applied, 0 conflitos, 0 alertas).
+
+**Regras de conducto durante a janela**: **não deployar no staging** (o deploy
+zera os contadores em memória e a janela recomeça) e manter a máquina com
+Prometheus + soak no ar (o `soak` tem supervisor: `scripts/run-offline-sync-soak.sh`).
+
+**Pegadinhas da execução (26/11)** — valem para os próximos deploys:1. **Render: `PUT /env-vars` SUBSTITUI o conjunto e o `GET` pagina em 20.**
    Listar sem `?limit=100` devolve só as 20 mais recentes: enviar esse recorte
    no `PUT` **apaga** a 21ª variável (no caso, `Metrics__AccessToken` → o
    scrape do Prometheus cai e o gate fica sem dado). Sempre: `GET

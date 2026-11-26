@@ -1,0 +1,15 @@
+{
+  "environment": "staging",
+  "counters": {
+    "idempotency_key_missing[source=http]": 18.0,
+    "idempotency_key_missing[source=batch]": 1.0,
+    "idempotency_key_provided[source=batch]": 2023.0,
+    "revision_adherence[route=POST /api/grading-formulas|state=missing]": 4.0,
+    "revision_adherence[route=PUT /api/grading-formulas/{id}|state=provided]": 3.0,
+    "revision_adherence[route=PUT /api/grading-formulas/{id}|state=missing]": 3.0,
+    "revision_adherence[route=DELETE /api/grading-formulas/{id}|state=missing]": 8.0,
+    "offline_sync_total[]": 20021.0,
+    "offline_sync_success[]": 20021.0
+  },
+  "alerts": 0
+}
