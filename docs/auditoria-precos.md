@@ -194,7 +194,8 @@ Com fundador solo, **34 clientes exigem 34 onboardings + 34 suportes**; o modelo
 
 ## 9. Próximos passos
 
-1. **Dono decide** entre A (manter fixo), **B (híbrido — recomendado)** ou C (por aluno puro) e aprova os números-piloto.
+1. ~~**Dono decide** entre A (manter fixo), **B (híbrido — recomendado)** ou C (por aluno puro) e aprova os números-piloto.~~
+   → **26/11: aprovada a Opção B (híbrido) com faixa de entrada plana** (`design.md` §6 do change).
 2. Change aberto: **`pricing-model-and-commercial-surfaces`** (proposal + design + deltas em
    `subscription-model`/`public-presence`/`payment-gateways`) — a implementação segue o `tasks.md`
    na ordem (fase 1 independe da decisão; fase 2 só após a escolha).

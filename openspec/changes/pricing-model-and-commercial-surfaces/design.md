@@ -66,15 +66,18 @@ por unidade**). Para calibrar a decisão, foi feita uma **pesquisa de preços de
 - **Add-ons depois** (WhatsApp/SMS a R$ 29,90 como âncora de mercado, relatórios avançados, API
   dedicada) — conforme `monetization-strategy/design.md`; não fragmentar antes de estabilizar billing.
 
-## 4. Decisões abertas
+## 4. Decisões
 
-1. **Dono escolhe A, B ou C** (e aprova os números-piloto da opção B, se escolhida).
+1. ~~**Dono escolhe A, B ou C**~~ → **26/11: aprovada a Opção B (híbrido) com faixa de entrada plana**
+   (ver §6).
 2. Regra **trial→Free**: hoje trial vencido = expirado (bloqueia escrita) e o Free não existe como
    assinatura ativa (Asaas rejeita valor 0). Definir se o tenant expira, cai no Free ou vira
-   somente-leitura — pré-requisito para ligar `Entitlement:Enforce`.
+   somente-leitura — pré-requisito para ligar `Entitlement:Enforce`. **Pendente.**
 3. **Feature gating**: quais recursos ficam fora do Free (candidatos: portal do responsável,
    analytics avançado, API). A oferta do Free precisa ser única entre landing, `/pricing` e doc.
-4. **Taxa de implantação**: cobrar ou não no primeiro cliente.
+   **Pendente.**
+4. **Taxa de implantação**: cobrar ou não no primeiro cliente. **Pendente** (recomendação: R$ 0 no
+   piloto, como arma de conversão).
 
 ## 5. Riscos
 
@@ -85,3 +88,37 @@ por unidade**). Para calibrar a decisão, foi feita uma **pesquisa de preços de
 - **Percepção de preço**: "a partir de" + simulador evita que o cliente veja o teto como preço.
 - **Primeiro cliente**: otimizar aprendizado, não preço — piloto fechado (R$ 399–499/mês por 6
   meses) com cláusula de revisão para o modelo híbrido.
+
+## 6. Decisão do dono (26/11) — Opção B com faixa de entrada plana
+
+**Aprovado**: modelo híbrido, com a base cobrindo uma faixa de alunos (formato mais fácil de
+vender e de converter de sistemas por aluno):
+
+| Plano | Preço | Inclui | Variável |
+|---|---|---|---|
+| **Free** | R$ 0 | 50 alunos, 1 unidade | — |
+| **Premium** | **R$ 149/mês** | **150 alunos + 1 unidade** | R$ 2,50/aluno adicional (teto 500); R$ 49/unidade adicional (até 5) |
+| **Enterprise** | **R$ 499/mês** | **500 alunos + 3 unidades** | R$ 2,00/aluno adicional; R$ 99/unidade adicional; **mínimo R$ 1.499** |
+
+- **Desconto anual 16,7%** (manter; corrigir o doc que diz 15%).
+- **Migração/implantação R$ 0** no piloto — arma de conversão (concorrentes consultivos cobram à parte).
+- **Add-ons depois** (WhatsApp/SMS a R$ 29,90 como âncora de mercado).
+- **Piloto do 1º cliente**: R$ 399–499/mês por 6 meses, com cláusula de revisão para a tabela acima.
+
+### 6.1 Exemplos (para conferência das contas)
+
+| Escola | Alunos | Unid. | Híbrido aprovado | Comparação |
+|---|---|---|---|---|
+| Pequena | 80 | 1 | **R$ 149** | DKSoft R$ 126,50 · Quality Básico R$ 498 |
+| Média | 300 | 1 | **R$ 524** (149 + 150×2,50) | Quality Básico R$ 1.596 |
+| Média+ | 500 | 1 | **R$ 1.024** (149 + 350×2,50) | Quality Completo R$ 2.594 |
+| Grande | 800 | 2 | **R$ 1.499** (mínimo Enterprise) | consultivo R$ 4.000+ |
+| Rede | 9.000 | 20 | **R$ 19.479** | hoje R$ 999,90 fixo |
+
+### 6.2 Guardrails de lucro
+
+1. **Piso por tenant** (R$ 149) cobre infra + suporte mínimo.
+2. **Teto por aluno** evita susto e churn.
+3. Custo marginal por aluno ≈ 0; o custo real é suporte/onboarding → **1 rede vale mais que 20
+   escolas pequenas**.
+4. **Sem cliff**: o 501º aluno custa R$ 2,50 (não R$ 700).

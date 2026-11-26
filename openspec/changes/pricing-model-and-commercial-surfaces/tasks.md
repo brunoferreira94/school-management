@@ -5,7 +5,8 @@
 
 ## Fase 0 — Decisão (bloqueia a fase 2)
 
-- [ ] 0.1 Dono escolhe **A / B / C** e aprova os números-piloto (se B) — registrar no `design.md`
+- [x] 0.1 Dono escolhe **A / B / C** e aprova os números-piloto (se B) — registrar no `design.md`
+      → **26/11: B (híbrido) com faixa de entrada plana, §6 do `design.md`**
 - [ ] 0.2 Definir regra **trial→Free** (expira / cai no Free / somente-leitura) — `design.md` §4.2
 - [ ] 0.3 Definir **oferta do Free** (quais features ficam de fora) — `design.md` §4.3
 
@@ -30,7 +31,8 @@
 
 ## Fase 2 — Modelo de cobrança (após 0.1)
 
-- [ ] 2.1 Seeder/catálogo com o modelo escolhido (`SubscriptionPlanSeeder.cs`) + migration
+- [ ] 2.1 Seeder/catálogo com o modelo aprovado (`design.md` §6): Premium R$ 149 inclui 150
+      alunos + 1 un.; Enterprise R$ 499 inclui 500 alunos + 3 un.; variáveis e mínimos + migration
 - [ ] 2.2 Metering por tenant: contagem de alunos ativos e unidades escolares para cálculo de preço
 - [ ] 2.3 Cálculo de preço (base + R$/aluno com teto + R$/unidade) no backend + endpoint de consulta
 - [ ] 2.4 Checkout: valor variável criado corretamente no ciclo (Asaas não propaga update de valor
