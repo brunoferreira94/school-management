@@ -20,6 +20,17 @@ export SMOKE_OPS_PER_DAY="${SMOKE_OPS_PER_DAY:-10000}"
 
 echo "[$(date -u +%H:%M:%S)] supervisor do soak iniciado (pid $$)" >> "$LOG"
 
+# Trava de instância única: dois soaks dobrariam o tráfego (50k → 100k ops/dia)
+# e poluiriam a leitura do gate. O @reboot do crontab e o start manual podem
+# coexistir no mesmo boot.
+LOCK_FILE="/tmp/opencode/offline-sync-soak.lock"
+mkdir -p "$(dirname "$LOCK_FILE")"
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+  echo "[$(date -u +%H:%M:%S)] outro supervisor já está rodando — sair" >> "$LOG"
+  exit 0
+fi
+
 # Node vem do nvm (fora do shell do agente o PATH não tem node).
 NODE_BIN="$(command -v node || true)"
 if [[ -z "$NODE_BIN" && -s "$HOME/.nvm/nvm.sh" ]]; then
