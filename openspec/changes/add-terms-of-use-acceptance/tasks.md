@@ -30,4 +30,4 @@
 
 - [ ] 5.1 Cobrir cenários de bloqueio sem aceite, aceite inicial, reaceite por versão e links legais no login/cadastro/rodapé (owner: qa).
 - [ ] 5.2 Cobrir cenários de governança B2B no fluxo de ativação de tenant (owner: qa/ops).
-- [ ] 5.3 Executar openspec validate add-terms-of-use-acceptance --strict (owner: product).
+- [x] 5.3 Executar openspec validate add-terms-of-use-acceptance --strict (owner: product) — executado em 26/11: `Change 'add-terms-of-use-acceptance' is valid`.
