@@ -195,7 +195,27 @@ Com fundador solo, **34 clientes exigem 34 onboardings + 34 suportes**; o modelo
 ## 9. Próximos passos
 
 1. **Dono decide** entre A (manter fixo), **B (híbrido — recomendado)** ou C (por aluno puro) e aprova os números-piloto.
-2. Com a opção escolhida, abrir **change OpenSpec** (`pricing-usage-based` ou similar: proposal + design + deltas em `subscription-model`/`checkout-gateway`) — a implementação segue o `tasks.md` na ordem.
+2. Change aberto: **`pricing-model-and-commercial-surfaces`** (proposal + design + deltas em
+   `subscription-model`/`public-presence`/`payment-gateways`) — a implementação segue o `tasks.md`
+   na ordem (fase 1 independe da decisão; fase 2 só após a escolha).
 3. Em paralelo (não depende da decisão): **itens 2, 3 e 7** da §8 — consertar as superfícies comerciais para o primeiro cliente ver preço coerente.
 4. Antes de qualquer cobrança real: **item 1** (gateway de produção) + decisão sobre **item 6** (entitlement × Free).
 5. Calibrar R$/aluno com o **primeiro cliente piloto** antes de publicar tabela por aluno.
+
+## 10. Pesquisa de preços de concorrentes (26/11/2026)
+
+Verificação direta nas páginas dos fornecedores (busca web indisponível neste ambiente — Google/
+Bing/DDG/Brave bloquearam ou degradaram; WPensar não respondeu).
+
+| Concorrente | Modelo | Preço público verificado |
+|---|---|---|
+| **Quality** | base + por aluno | Básico **R$ 99/mês + R$ 4,99/aluno**; Completo **R$ 199/mês + R$ 6,99/aluno** |
+| **DKSoft** | fixo, usuários ilimitados | Local **R$ 96,50**; Online **R$ 126,50**; Online+ **R$ 196,20/mês**; add-ons R$ 9,90–29,90. *"Não cobramos por aluno e não há limite de cadastros"* |
+| **Activesoft** | Básico/Padrão/Avançado | sem preço público; cobra **implantação + migração** além da mensalidade; valor varia com nº de alunos |
+| **SophiA** (ex-Primasoft) | base + por aluno + por unidade | não publica (consultivo) — referência do dono |
+| **Sponte / Didatiko** | consultivo | sem preço público |
+
+**Leitura**: o mercado BR tem os dois polos vivos (fixo DKSoft × por aluno Quality); o segmento
+médio/grande é consultivo e cobra implantação à parte. O **híbrido (B)** fica entre os polos e é o
+que sustenta crescimento sem cliff. Detalhe completo em
+`openspec/changes/pricing-model-and-commercial-surfaces/design.md`.
