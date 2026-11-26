@@ -424,6 +424,44 @@ path traversal contido, download cross-tenant 404). Suíte **1217/0**.
 
 **Pendente**: storage persistente (S3/Supabase Storage) — em Render o disco é efêmero.
 
+## Termo de Uso revisado v2026.2 (25/11)
+
+**Contexto**: o texto exibido (`termos.component.html`) tinha 6 cláusulas genéricas, sem os
+achados do dossiê LGPD (§3/§6) nem cláusulas de um SaaS B2B brasileiro. A versão exibida na
+página era **hardcoded** ("2026.1 — Janeiro de 2026"), podendo divergir do backend
+(`Legal:TermsOfUseVersion`) — violando a decisão de design nº 1 do change
+`add-terms-of-use-acceptance` (fonte de verdade centralizada no backend).
+
+**Revisão (cláusulas 1–16, API/UI/docs no mesmo commit)**:
+- **Controlador × operador** (cláusula 5) — desenho do dossiê §6: escola = controladora dos
+  dados acadêmicos; plataforma = operadora (art. 39) para esses dados e controladora para
+  dados de conta/uso; DPO e prazos do art. 18.
+- **Menores** (cláusula 6) — consentimento parental específico (art. 14 §1º), prova de como foi
+  obtido, gating de funcionalidades e revogação imediata — coerente com o
+  `add-minors-parental-consent` já implementado.
+- **Contratual B2B** — licença de uso, conduta/credenciais, contratação por plano
+  (mensal/anual), operadores de pagamento (Asaas/Stripe), inadimplência → suspensão,
+  contrato de adesão + contrato principal/DPA por tenant (Tenant.DpaDocumentId), suspensão e
+  encerramento, PI, limitação de responsabilidade, foro/lei.
+- **Coerência com a implementação** — evidência de aceite (versão, UTC, canal, IP HMAC,
+  user-agent = `TermsOfUseAcceptance(+Audit)`), modo restrito 428 (middleware + guard), cookies
+  essenciais × opcionais, retenção, art. 46–48.
+- **Placeholders visíveis** para o jurídico: razão social/CNPJ (cláusula 1) e foro (cláusula 16);
+  banner de rascunho na página (mesmo padrão da página de privacidade).
+
+**Drift corrigido**: a página de consulta agora busca a versão vigente do backend
+(`GET /api/privacy/terms-of-use/status`, AllowAnonymous) com fallback local.
+
+**Versionamento**: `Legal:TermsOfUseVersion` → **2026.2** em `appsettings.json`,
+`Development`, `Staging` e `Production` (fallback do `OnboardingController` também). O
+`appsettings.Testing.json` permanece **2026.1** de propósito: o seeder de aceites
+(`TestWebApplicationFactory`/`TestDataSeeder`/isolation tests) semeia com o mesmo valor —
+autoconsistente e imune ao bump. **Efeito esperado em produção: todos os usuários passam por
+reaceite no próximo acesso** (fluxo já coberto por testes e E2E).
+
+**Fonte de consulta ao jurídico**: `docs/terms-of-use.md` (espelho fiel do texto exibido).
+Alterar o texto exige bump de versão + publicação simultânea dos dois artefatos.
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta

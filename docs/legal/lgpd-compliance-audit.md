@@ -129,8 +129,11 @@ elimina o risco; manter guarda quando real (proposal futuro).
 - **Escola (cliente B2B)** = controladora dos dados de alunos/responsáveis/staff dela.
 - **Plataforma (SaaS)** = operadora para esses dados + controladora para dados de conta
   (usuário administrador da escola) e de uso do serviço.
-- Os termos atuais não explicitam esse desenho → lacuna de conteúdo (redação final:
-  advogado; insumo no §3 e §4).
+- **Atualização 25/11/2026**: o desenho está redigido na cláusula 5 do Termo de Uso v2026.2
+  (`docs/terms-of-use.md` e `termos.component.html`), junto com cláusulas de menores (§3),
+  cookies, IA (cláusula 8 — nada de treino de modelo externo sem DPA), segurança (art. 46-48)
+  e evidência de aceite. Pendente apenas revisão jurídica externa (placeholders: razão social,
+  CNPJ e foro).
 
 ---
 
@@ -143,7 +146,7 @@ elimina o risco; manter guarda quando real (proposal futuro).
 | **P1** | Dado sensível (ColorRace) sem documentação de base/gating | Incluir no proposal de menores + aviso art. 9º | Este dossiê §3/§4 |
 | **P1** | DPA com Render/Supabase/Auth0/Asaas | Ação comercial do dono na contratação prod | Este dossiê §5 |
 | **P1** | Política de retenção formal (logs, tokens, backups, escola cancelada) | Em andamento | `fix-lgpd-compliance-gaps` |
-| **P2** | Controlador×operador nos termos | Conteúdo p/ advogado (§6) | Este dossiê |
+| **P2** | Controlador×operador nos termos | **Draft concluído** (Termo v2026.2, cláusula 5 — 25/11/2026); falta revisão jurídica externa | `docs/terms-of-use.md` |
 | **P2** | Regra de PII de aluno × IA externa | Guarda técnica quando IA real | Proposal futuro |
 
 ---
