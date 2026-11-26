@@ -180,3 +180,16 @@ A data do último registro vive em `AchievementProgress.UpdatedAtUtc`.
 e progresso nunca atravessam escolas, mesmo para o mesmo `UserId` (o motor
 grava o tenant do request e as consultas filtram por ele). O catálogo
 (`Achievements`) é global por design.
+
+### Fallback no login (tenant do request vazio)
+
+O `login` é **anônimo**: quando o motor roda (`early-bird`, streak de acesso)
+ainda não existe token, então o tenant do request está vazio
+(`HttpTenantContext` → `ITenantProvider` sem claim `tenant_id`). Nesse caso o
+motor usa o **tenant da própria conta do usuário** (`UserAccounts.TenantId`),
+nunca o de outra escola.
+
+Sem esse fallback o progresso nascia com `TenantId` vazio e ficava invisível
+para o perfil (que filtra por tenant) — o streak de login nunca apareceria nem
+desbloquearia, e o mesmo usuário teria duas linhas de progresso (uma por
+tenant). Implementação: `AchievementService.ResolveTenantIdAsync`.

@@ -92,7 +92,34 @@ curl -s "$API/api/me/achievements" -H "Authorization: Bearer $TOKEN" | jq '{enab
 | 404 em `/api/me/achievements` | rota incorreta/deploy antigo | confirmar `GET /api/me/achievements` (controller `AchievementsController`) |
 | Toast nunca aparece | `localStorage` `sma.achievements.seen` já tem o desbloqueio | é esperado: o toast só dispara para desbloqueios **novos** |
 | Conquista não desbloqueia | listener ausente para o gatilho | conferir `AchievementTrigger` × `docs/api/achievements.md` |
+| Progresso não aparece no perfil | gravado com `TenantId` vazio (login é anônimo) | `SELECT "TenantId", count(*) FROM "AchievementProgresses" GROUP BY 1` — mover para o tenant do usuário (ver "Correção de dados" abaixo) |
 | `enabled: false` sem querer | flag `Achievements__Enabled=false` no ambiente | ajustar a env var e reiniciar |
+
+## Correção de dados — progresso com tenant vazio
+
+Sintoma (antes de 26/11): todo o progresso de `early-bird` (streak de login)
+nascia com `TenantId = 00000000-...`, porque o login é anônimo e o tenant do
+request ainda não existe. O perfil filtra por tenant → o progresso ficava
+invisível e a conquista não desbloqueava.
+
+Correção no código: `AchievementService.ResolveTenantIdAsync` usa o tenant da
+própria conta quando o do request está vazio. Para os dados já gravados:
+
+```sql
+-- move para o tenant do usuário (quando a conta existe)
+UPDATE "AchievementProgresses" p SET "TenantId" = u."TenantId"
+FROM "UserAccounts" u
+WHERE u."Id"::text = p."UserId"
+  AND p."TenantId" = '00000000-0000-0000-0000-000000000000'
+  AND u."TenantId" IS NOT NULL;
+
+-- remove órfãos (conta já excluída)
+DELETE FROM "AchievementProgresses" p
+WHERE p."TenantId" = '00000000-0000-0000-0000-000000000000'
+  AND NOT EXISTS (SELECT 1 FROM "UserAccounts" u WHERE u."Id"::text = p."UserId");
+```
+
+Aplicado em staging (1 linha movida) e produção (3 órfãs removidas) em 26/11.
 
 ## Referências
 

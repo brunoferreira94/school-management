@@ -471,6 +471,39 @@ UI publicada na Vercel nos dois targets: development `dpl_...` (20edabc) e **pro
 produção: 16 cláusulas renderizadas, versão exibida `2026.2`, banner de rascunho e os marcadores
 de controlador/operador presentes.
 
+## Achados de conquistas verificados e corrigidos (26/11)
+
+Verificação item a item dos achados da gamificação (staging + produção):
+
+| Achado | Verificação | Resultado |
+|---|---|---|
+| Rota `/api/me/achievements` | 200 autenticado em staging e prod | ✅ OK |
+| Permissões Coordinator/Teacher | `RolePermissions` nos dois ambientes | ✅ `achievements.read` para Director/Coordinator/Teacher; `achievements.manage` para Director/Coordinator |
+| Toast de desbloqueio | `AchievementNotifierService` (diff no cliente) → `AchievementToastService` → componente global (auto-dismiss 4s), injetado no `app.component` | ✅ implementado e ligado |
+| Listeners (gatilhos) | 12 gatilhos × call sites no código | ⚠️ `ReportExported` só disparava na exportação do censo → **corrigido** |
+| Escopo de tenant | `UserAchievements`/`AchievementProgresses` com `TenantId` + índice único `(TenantId, UserId, AchievementId)` | ⚠️ **bug real** → **corrigido** |
+
+**Bug do escopo de tenant**: o `login` é anônimo — quando o motor roda
+(`early-bird`, streak de acesso) o tenant do request ainda não existe
+(`HttpTenantContext` → `ITenantProvider` sem claim `tenant_id`). O progresso
+nascia com `TenantId = Guid.Empty` e, como o perfil filtra por tenant, ficava
+**invisível**: o streak de login nunca apareceria nem desbloquearia. A suíte
+não pegava porque os testes injetam um `ITenantContext` com tenant fixo.
+
+Correções (API `8253c7b`):
+- `AchievementService.ResolveTenantIdAsync`: com tenant do request vazio, usa o
+  tenant da **própria conta** do usuário (nunca o de outra escola).
+- `ReportTemplatesController`: download (PDF) e batch-download de relatório
+  gerado passam a disparar `ReportExported`.
+- Dados: staging 1 progresso movido para o tenant real; produção 3 linhas
+  órfãs removidas (e o tenant do smoke removido no final).
+- Testes: 2 novos (streak de login com tenant vazio; download desbloqueia
+  `report-exported`) — suíte **1219/0** (5 skips).
+
+Evidência em produção: login → `early-bird` com progresso **1/7** (antes 0/7,
+invisível) e a linha de progresso com o `TenantId` do tenant real. Idem em
+staging (2/7).
+
 ## Problemas ainda pendentes
 
 - ALTA: **automação** do backup em produção (7) — código/script pronto, falta
