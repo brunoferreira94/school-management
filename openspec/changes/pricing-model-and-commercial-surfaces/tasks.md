@@ -9,7 +9,9 @@
       → **26/11: B (híbrido) com faixa de entrada plana, §6 do `design.md`**
 - [x] 0.2 Definir regra **trial→Free** → **26/11: trial vencido = somente-leitura + upsell** (§7)
       — backend 402 já existe, falta o modal na UI (task 2.7)
-- [ ] 0.3 Definir **oferta do Free** (quais features ficam de fora) — `design.md` §4.3
+- [x] 0.3 Definir **oferta do Free** (quais features ficam de fora) — `design.md` §4.3: Free mantém
+      gestão básica + portal admin; sem portal do responsável, financeiro, analytics, API, suporte
+      prioritário e branding
 
 ## Fase 1 — Superfícies comerciais coerentes
 

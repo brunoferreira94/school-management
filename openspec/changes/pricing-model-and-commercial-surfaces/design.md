@@ -74,9 +74,21 @@ por unidade**). Para calibrar a decisão, foi feita uma **pesquisa de preços de
    livres (anti-retention), escritas retornam `402 subscription_expired` e a UI abre um aviso de
    oferta para assinar (upsell) em vez de erro genérico. Ver §6.1. **Decidido; falta implementar o
    upsell na UI antes de ligar `Entitlement:Enforce`.**
-3. **Feature gating**: quais recursos ficam fora do Free (candidatos: portal do responsável,
-   analytics avançado, API). A oferta do Free precisa ser única entre landing, `/pricing` e doc.
-   **Pendente.**
+3. ~~**Feature gating**~~ → **26/11 (dono): conjunto do Free confirmado**. Liberações:
+
+   | Recurso | Free | Premium/Enterprise |
+   |---|---|---|
+   | Gestão de turmas/alunos/notas/frequência | ✅ | ✅ |
+   | Portal **admin** básico | ✅ | ✅ |
+   | Portal do **responsável** | ❌ | ✅ |
+   | Módulo financeiro / cobranças | ❌ | ✅ |
+   | Analytics avançado | ❌ | ✅ |
+   | API pública | ❌ | ✅ |
+   | Suporte prioritário | ❌ | ✅ |
+   | Branding personalizado | ❌ | ✅ |
+
+   Corresponde aos flags do catálogo (`HasFinancialModule`, `HasAdvancedAnalytics`, `HasApiAccess`,
+   `HasPrioritySupport`, `HasCustomBranding`). Tasks 2.7 implementa o enforcement.
 4. **Taxa de implantação**: cobrar ou não no primeiro cliente. **Pendente** (recomendação: R$ 0 no
    piloto, como arma de conversão).
 
