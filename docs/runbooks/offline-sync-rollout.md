@@ -301,6 +301,54 @@ Variáveis (service `school-management-api-dev`, `srv-d9r4shvqj5pc73ap72k0`):
 - `revision_conflict` (412) ~0 nas rotas do `EnforcedPaths`; 428 por rota = clientes que não enviavam `If-Match` (esperado nas rotas recém-incluídas — acompanhar, não é erro)
 - 5.2: janela 24h; 5.4: monitoramento; 5.3: soak ≥24h (log diário)
 
+#### Resultado da execução — 26/11 (staging)
+
+| Verificação | Resultado |
+|---|---|
+| Gate 1 — `missing_key` (batch) | **0%** (série `missing{source="batch"}` ausente; `provided` crescendo) |
+| Gate 2 — `revision_missing` | **0%** (série ausente; `offline_sync_total` = `offline_sync_success`) |
+| Gate 3 — adesão por rota | `PUT /api/grading-formulas/{id}` = **100% `provided`** (UI real em browser: `If-Match: "0-1.0.0-…"` → 200) |
+| Gate 4 — alertas | nenhum `firing` |
+| Pós-ligação | lote sem chave → **400**; lote com chave → 200 `applied`; PUT sem `If-Match` na rota aprovada → **428** `revision-required`; PUT com `If-Match` → 200 + ETag novo; POST (fora da rota) → 200 |
+
+Flags ativas no staging (`srv-d9r4shvqj5pc73ap72k0`, deploy
+`dep-dc3s4it9el5s739fq2kg` live em 26/11 05:24 UTC):
+
+```
+OfflineSync__Idempotency__RequireKey=true
+OfflineSync__Revision__Enforce=true
+OfflineSync__Revision__EnforcedPaths__0=PUT /api/grading-formulas/{id}
+```
+
+Base dos contadores cumulativos no momento da ligação (medir **delta** a
+partir daqui — as sondas do próprio gate entram como `missing`):
+`idempotency_key_missing{batch}=1` · `revision_adherence{PUT /api/grading-formulas/{id}} missing=3` /
+`provided=2` · `offline_sync_total=0` (reset do deploy).
+
+**Pegadinhas da execução (26/11)** — valem para os próximos deploys:
+
+1. **Render: `PUT /env-vars` SUBSTITUI o conjunto e o `GET` pagina em 20.**
+   Listar sem `?limit=100` devolve só as 20 mais recentes: enviar esse recorte
+   no `PUT` **apaga** a 21ª variável (no caso, `Metrics__AccessToken` → o
+   scrape do Prometheus cai e o gate fica sem dado). Sempre: `GET
+   .../env-vars?limit=100` → mesclar → `PUT` com **todas** as variáveis.
+   E: a API **não** tem POST em `/env-vars` (405) — é `PUT` com
+   `[{"key":…,"value":…}]`.
+2. **`EnforcedPaths` casa o path interno, não o cru.** O
+   `ApiVersioningMiddleware` remove `/api/v1` **antes** do
+   `OptimisticRevisionMiddleware`, então `PUT /api/grading-formulas/{id}`
+   cobre o cliente canônico (`/api/v1/...`) e o alias (`/api/...`) — e é
+   também o label da métrica `revision_adherence`.
+3. **Cliente de staging**: o `vercel.json` do branch `development` aponta
+   `/api` para **produção** (o merge do Termo v2026.2 restaurou o de
+   produção) — para medir em staging use o cliente local
+   (`npm run start:staging`, proxy same-origin) ou um preview com
+   `vercel.json` de staging.
+4. **Soak**: precisa do token do `/metrics` (protegido fora de Development) —
+   `SMOKE_METRICS_TOKEN` ou `observability/metrics_token` (gitignored). O
+   harness também tinha um bug de padding do JWT que o fazia trafegar no
+   tenant default (corrigido em 26/11).
+
 ### 5. Rollback
 
 Qualquer regressão: `OfflineSync__Idempotency__RequireKey=false` +
