@@ -38,7 +38,8 @@
 
 - [x] 2.1 Seeder/catálogo com o modelo aprovado (`design.md` §6): Premium R$ 149 inclui 150
       alunos + 1 un.; Enterprise R$ 499 inclui 500 alunos + 3 un.; variáveis e mínimos + migration
-      `20261127073152_AddHybridPricingFields`
+      `20261127073152_AddHybridPricingFields` + `20261127075751_ApplyHybridCatalogPrices`
+      (UPDATE idempotente por slug — o seeder só roda em banco vazio)
 - [x] 2.2 Metering por tenant: `SubscriptionPriceService.CalculateForTenantAsync` conta alunos
       (`ListByTenantPagedAsync`) e unidades (`ListByTenantAsync`)
 - [x] 2.3 Cálculo de preço (base + R$/aluno com teto + R$/unidade + piso) no backend + endpoint
