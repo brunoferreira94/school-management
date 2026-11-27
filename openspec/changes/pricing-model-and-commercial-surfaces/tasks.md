@@ -52,6 +52,9 @@
       tenants existentes + doc comercial (`docs/plans/pricing-page.md`)
 - [ ] 2.8 Testes: unit (cálculo), integração (limites/gating/402), Cypress (modal de upgrade e
       checkout variável)
+- [ ] 2.9 Ativar `Entitlement__Enforce` no **staging** — somente após o fechamento da janela do
+      gate offline (27/11 ~05:24 UTC). Runbook: `docs/runbooks/entitlement-enforce-staging.md`
+      (helper `scripts/render-set-env-var.py`: GET ?limit=100 → merge → PUT, sem imprimir valores)
 
 ## Fase 3 — Cobrança real
 
