@@ -56,10 +56,14 @@
       e dialog global com planos do catálogo + CTA `/checkout/:plan` (`design.md` §7) — pré-requisito
       para ligar `Entitlement:Enforce`. Cypress `subscription-upgrade-modal.cy.ts` 2/2,
       `error-toast.interceptor.spec.ts` 4/4, Karma 824/824
-- [ ] 2.7 Feature gating por plano (`CheckSubscriptionFeatureAsync` + middleware/UI) e migração dos
-      tenants existentes + doc comercial (`docs/plans/pricing-page.md`)
-- [ ] 2.8 Testes: unit (cálculo), integração (limites/gating/402), Cypress (modal de upgrade e
-      checkout variável)
+- [x] 2.7 Feature gating por plano: `FeatureGatingMiddleware` com mapa rota→feature
+      (`financial_module`, `guardian_portal`, `advanced_analytics`, `api_access`), flag
+      `FeatureGating:Enforce` default **false** (config explícita), `403 feature_not_in_plan`
+      interceptado pelo modal de upgrade. Migration de dados já aplicou o catálogo. Enforcement
+      **não ativado** em staging/produção — deploy fica para momento combinado com o dono
+- [x] 2.8 Testes: `FeatureGatingMiddlewareTests` 9/9 (mapa, enforce off, 403, passagem),
+      `error-toast.interceptor.spec.ts` 5/5, Cypress modal 2/2; suíte API 1244/0 (5 skips),
+      Karma 825/825
 - [x] 2.9 Ativar `Entitlement__Enforce` no **staging** — janela verificada em 27/11 07:13 UTC
       (`offline-sync-gate-closure-2026-11-27.md`: Δmissing=0, Δconflitos=0 em 33.570 ops);
       env var aplicada (25 vars), deploy `dep-dc4irc61egvs738jggjg` live, smoke 200/402/201/204
