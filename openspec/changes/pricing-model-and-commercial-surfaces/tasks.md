@@ -44,9 +44,12 @@
 - [x] 2.3 Cálculo de preço (base + R$/aluno com teto + R$/unidade + piso) no backend + endpoint
       `GET /api/v1/subscriptions/price-quote` (cotação por tenant ou simulador público);
       `SubscriptionPriceServiceTests` 12/12, suíte API 1234/0 (5 skips)
-- [ ] 2.4 Checkout: valor variável criado corretamente no ciclo (Asaas não propaga update de valor
-      para charges já geradas — spec `asaas-plan-catalog`)
-- [ ] 2.5 UI: preço "a partir de" + simulador (alunos/unidades) na `/pricing`
+- [x] 2.4 Checkout: `CheckoutIntentService` calcula o preço com metering do tenant e grava
+      `ServerPrice` (JsonIgnore) antes de chamar o gateway; Asaas/Stripe usam esse valor.
+      `CheckoutIntentServiceTests` 4/4 (valor do cliente é ignorado); suíte API 1235/0
+- [x] 2.5 UI: `/pricing` mostra "a partir de" e tem simulador de alunos/unidades/ciclo que
+      consome `GET /subscriptions/price-quote`; Cypress 3/3 (inclui cotação R$ 524 para 300 alunos),
+      Karma 824/824
 - [x] 2.6 Modal de upgrade na UI: `SubscriptionUpgradeService` + interceptação de `402
       subscription_expired` no `errorToastInterceptor` (com precedência sobre `SKIP_ERROR_TOAST`)
       e dialog global com planos do catálogo + CTA `/checkout/:plan` (`design.md` §7) — pré-requisito
