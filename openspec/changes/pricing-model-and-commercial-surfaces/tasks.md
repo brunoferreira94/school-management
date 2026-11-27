@@ -72,6 +72,12 @@
 
 ## Fase 3 — Cobrança real
 
+> **Rollout executado em 27/11/2026**: API `2e962e2` (deploy `dep-dc4vjq7f3r2c73cv0rk0` live),
+> UI Vercel `4ecef1f` (READY/PROMOTED), gateway Asaas de produção ativo e validado. Ver detalhes,
+> URLs corretas e armadilhas em `docs/runbooks/pricing-production-rollout.md`.
+> Catálogo e `price-quote` verificados em produção (Premium 149 / 300 alunos → R$ 524).
+> Cobrança real (3.4) não foi disparada — aguarda o primeiro cliente.
+
 - [x] 3.1 Asaas de produção: `Asaas__ApiBaseUrl=https://api.asaas.com/v3` + chave de produção
       aplicadas nas env vars (merge com `GET ?limit=100`, valores nunca exibidos), deploy
       `dep-dc4vgn17lnhs73a2eepg` **live**, chave validada com GET read-only ao Asaas (200).
