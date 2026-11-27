@@ -51,14 +51,16 @@ por unidade**). Para calibrar a decisão, foi feita uma **pesquisa de preços de
 | **B** | **Híbrido (recomendado)** | Free/Premium/Enterprise viram **camadas de recurso**; preço = **base + R$/aluno (com teto) + R$/unidade** | alinha com Sophia e com os dois polos do mercado; cresce com o cliente; sem cliff; usa o metering já existente | exige limite de unidades implementado, cobrança variável no Asaas e recálculo de preço na UI |
 | **C** | Por aluno puro | como Sophia, sem base | "justo" por valor | receita ≈ 0 em escola pequena; mais difícil de explicar; exige o mesmo metering |
 
-**Recomendação: B**, com calibração-piloto (hipóteses a validar com o primeiro cliente):
+**Recomendação: B**, com calibração-piloto (hipóteses a validar com o primeiro cliente).
+Exemplos preliminares desta tabela foram **supersetidos pela calibração aprovada na §6** (faixa de
+entrada plana):
 
 | | Free | Premium | Enterprise |
 |---|---|---|---|
 | Fórmula | R$ 0 até **50 alunos / 1 unidade** | **R$ 149 + R$ 2,50/aluno** (teto 500) **+ R$ 49/unidade** (até 5) | **a partir de R$ 499 + R$ 2,00/aluno + R$ 99/unidade**, mínimo R$ 1.499 |
-| Ex.: 300 alunos / 1 unid. | — | **R$ 948** (149 + 750 + 49; vs. R$ 299,90 hoje) | — |
-| Ex.: 800 alunos / 2 unid. | — | (→ Enterprise) | **R$ 2.297** |
-| Ex.: 9.000 alunos / 20 unid. | — | — | **R$ 20.479** |
+| Ex.: 300 alunos / 1 unid. | — | **R$ 524** (149 + 150×2,50) | — |
+| Ex.: 800 alunos / 2 unid. | — | (→ Enterprise) | **R$ 1.499** (mínimo) |
+| Ex.: 9.000 alunos / 20 unid. | — | — | **R$ 19.182** |
 
 - **Desconto anual 16,7%** (manter; corrigir o doc que diz 15%).
 - **Taxa de implantação única** (migração de dados): R$ 500–1.500 — o mercado cobra (Activesoft),
@@ -126,7 +128,7 @@ vender e de converter de sistemas por aluno):
 | Média | 300 | 1 | **R$ 524** (149 + 150×2,50) | Quality Básico R$ 1.596 |
 | Média+ | 500 | 1 | **R$ 1.024** (149 + 350×2,50) | Quality Completo R$ 2.594 |
 | Grande | 800 | 2 | **R$ 1.499** (mínimo Enterprise) | consultivo R$ 4.000+ |
-| Rede | 9.000 | 20 | **R$ 19.479** | hoje R$ 999,90 fixo |
+| Rede | 9.000 | 20 | **R$ 19.182** (499 + 8.500×2 + 17×99) | hoje R$ 999,90 fixo |
 
 ### 6.2 Guardrails de lucro
 

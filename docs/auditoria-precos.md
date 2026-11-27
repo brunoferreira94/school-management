@@ -165,7 +165,7 @@ Com fundador solo, **34 clientes exigem 34 onboardings + 34 suportes**; o modelo
 | Fórmula | R$ 0 até **50 alunos / 1 unidade** | **R$ 149 + R$ 2,50/aluno** (teto 500) **+ R$ 49/unidade** (até 5) | **a partir de R$ 499 + R$ 2,00/aluno + R$ 99/unidade**, mínimo R$ 1.499 |
 | Ex.: 300 alunos / 1 unid. | — | **R$ 948** (149 + 750 + 49; vs. R$ 299,90 hoje) | — |
 | Ex.: 800 alunos / 2 unid. | — | (→ Enterprise) **R$ 2.297** | R$ 2.297 |
-| Ex.: 9.000 / 20 | — | — | **R$ 20.479** |
+| Ex.: 9.000 / 20 | — | — | **R$ 19.182** (aprovado na §6 do change) |
 
 - **Desconto anual 16,7%** (manter; corrigir o doc que diz 15%) — melhora cash flow e retenção.
 - **Taxa de implantação única** (migração de dados): R$ 500–1.500 — o mercado cobra (`Pesquisa…:100`), nós cobramos R$ 0.

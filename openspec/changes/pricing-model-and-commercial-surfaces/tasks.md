@@ -36,10 +36,14 @@
 
 ## Fase 2 — Modelo de cobrança (após 0.1)
 
-- [ ] 2.1 Seeder/catálogo com o modelo aprovado (`design.md` §6): Premium R$ 149 inclui 150
+- [x] 2.1 Seeder/catálogo com o modelo aprovado (`design.md` §6): Premium R$ 149 inclui 150
       alunos + 1 un.; Enterprise R$ 499 inclui 500 alunos + 3 un.; variáveis e mínimos + migration
-- [ ] 2.2 Metering por tenant: contagem de alunos ativos e unidades escolares para cálculo de preço
-- [ ] 2.3 Cálculo de preço (base + R$/aluno com teto + R$/unidade) no backend + endpoint de consulta
+      `20261127073152_AddHybridPricingFields`
+- [x] 2.2 Metering por tenant: `SubscriptionPriceService.CalculateForTenantAsync` conta alunos
+      (`ListByTenantPagedAsync`) e unidades (`ListByTenantAsync`)
+- [x] 2.3 Cálculo de preço (base + R$/aluno com teto + R$/unidade + piso) no backend + endpoint
+      `GET /api/v1/subscriptions/price-quote` (cotação por tenant ou simulador público);
+      `SubscriptionPriceServiceTests` 12/12, suíte API 1234/0 (5 skips)
 - [ ] 2.4 Checkout: valor variável criado corretamente no ciclo (Asaas não propaga update de valor
       para charges já geradas — spec `asaas-plan-catalog`)
 - [ ] 2.5 UI: preço "a partir de" + simulador (alunos/unidades) na `/pricing`
