@@ -83,7 +83,10 @@
       `dep-dc4vgn17lnhs73a2eepg` **live**, chave validada com GET read-only ao Asaas (200).
       ⚠️ Código de pricing ainda em `development`: produção segue servindo catálogo antigo
       (R$ 299,90 / 999,90) até promoção para `main`
-- [ ] 3.2 Webhook token cadastrado no painel Asaas (ação manual do dono)
+- [x] 3.2 Webhook token e URL cadastrados no Asaas: token aplicado em produção (deploy
+      `dep-dc50emh7lnhs73a5fts0` live) e webhook `c17af91e-...` corrigido para
+      `/api/v1/subscriptions/webhooks/asaas` (29 eventos e authToken preservados, enabled).
+      Smoke sem cobrança: POST sem token → **401**, com token → **200** `processed:false`
 - [ ] 3.3 Preço-piloto do primeiro cliente (R$ 399–499/mês por 6 meses) com cláusula de revisão
       → **minuta pronta** em `docs/legal/contrato-piloto.md` (revisão jurídica + preenchimento
       dos dados da escola + assinatura ainda pendentes)
