@@ -72,8 +72,11 @@
 
 ## Fase 3 — Cobrança real
 
-- [ ] 3.1 Asaas de produção: `Asaas__ApiBaseUrl=https://api.asaas.com/v3` + chave de produção
-      (Render env vars; **não** `PUT` que substitui o conjunto — merge com `GET ?limit=100`)
+- [x] 3.1 Asaas de produção: `Asaas__ApiBaseUrl=https://api.asaas.com/v3` + chave de produção
+      aplicadas nas env vars (merge com `GET ?limit=100`, valores nunca exibidos), deploy
+      `dep-dc4vgn17lnhs73a2eepg` **live**, chave validada com GET read-only ao Asaas (200).
+      ⚠️ Código de pricing ainda em `development`: produção segue servindo catálogo antigo
+      (R$ 299,90 / 999,90) até promoção para `main`
 - [ ] 3.2 Webhook token cadastrado no painel Asaas (ação manual do dono)
 - [ ] 3.3 Preço-piloto do primeiro cliente (R$ 399–499/mês por 6 meses) com cláusula de revisão
       → **minuta pronta** em `docs/legal/contrato-piloto.md` (revisão jurídica + preenchimento
