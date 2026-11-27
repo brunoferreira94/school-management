@@ -39,7 +39,8 @@
   `/api/v1/subscriptions/webhooks/asaas`, preservando os 29 eventos e o authToken. A URL registrada
   originalmente (`/api/v1/webhook`) não existe na API; o arquivo local de segredos foi corrigido.
   Smoke sem cobrança: POST sem token → **401**, com token → **200** `processed:false`.
-  `interrupted` ainda consta `true` no Asaas — deve limpar após a primeira entrega real; conferir.
+  Webhook reativado manualmente pelo dono e verificado via API: `enabled=true`,
+  `interrupted=false`, 29 eventos, authToken presente.
 - **3.4**: smoke de cobrança real (checkout → webhook → `Active` → reconciliação `ok`) —
   **não executado**, pois criaria cobrança real sem cliente piloto. Fazer no primeiro cliente.
 - **Feature gating**: `FeatureGating:Enforce` segue `false` em produção; ativar só com decisão
