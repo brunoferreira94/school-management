@@ -173,7 +173,7 @@ Com fundador solo, **34 clientes exigem 34 onboardings + 34 suportes**; o modelo
 
 ### Estratégia do primeiro cliente
 
-**Não otimizar preço, otimizar aprendizado:** oferecer **preço-piloto fechado** (ex.: R$ 399–499/mês por 6 meses) com cláusula de revisão para o modelo híbrido. O piloto gera os dados que faltam (alunos reais, unidades, horas de suporte) para calibrar R$/aluno antes de publicar a tabela.
+**Não otimizar preço, otimizar aprendizado:** oferecer **preço-piloto fechado** (ex.: R$ 399–499/mês por 6 meses) com cláusula de revisão para o modelo híbrido. O piloto gera os dados que faltam (alunos reais, unidades, horas de suporte) para calibrar R$/aluno antes de publicar a tabela. Minuta: `docs/legal/contrato-piloto.md` (revisão jurídica obrigatória).
 
 ---
 

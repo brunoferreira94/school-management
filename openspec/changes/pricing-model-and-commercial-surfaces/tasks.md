@@ -76,4 +76,6 @@
       (Render env vars; **não** `PUT` que substitui o conjunto — merge com `GET ?limit=100`)
 - [ ] 3.2 Webhook token cadastrado no painel Asaas (ação manual do dono)
 - [ ] 3.3 Preço-piloto do primeiro cliente (R$ 399–499/mês por 6 meses) com cláusula de revisão
+      → **minuta pronta** em `docs/legal/contrato-piloto.md` (revisão jurídica + preenchimento
+      dos dados da escola + assinatura ainda pendentes)
 - [ ] 3.4 Smoke pós-ativação: checkout → webhook → status `ACTIVE` → reconciliação `ok`
