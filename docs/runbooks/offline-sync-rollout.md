@@ -341,6 +341,13 @@ sondas do próprio gate (400/428, gravadas como `missing`). A base está
 versionada em `docs/runbooks/offline-sync-gate-base-2026-11-26.json`
 (2023 lotes batch, 20021/20021 applied, 0 conflitos, 0 alertas).
 
+> **Executado em 27/11 07:13 UTC**: janela fechada limpa — Δmissing=0, Δrevision=0,
+> Δconflitos=0 em 33.570 ops, 100% de adesão, 0 alertas. Veredito em
+> `docs/runbooks/offline-sync-gate-closure-2026-11-27.md`. Em seguida foi ativado o
+> `Entitlement:Enforce` no staging (deploy `dep-dc4irc61egvs738jggjg`), que **zerou os
+> contadores**: a nova base é `docs/runbooks/offline-sync-gate-base-2026-11-27.json` e
+> a janela de ≥7 dias recomeça a partir desse deploy.
+
 **Regras de conducto durante a janela**: **não deployar no staging** (o deploy
 zera os contadores em memória e a janela recomeça) e manter a máquina com
 Prometheus + soak no ar (o `soak` tem supervisor: `scripts/run-offline-sync-soak.sh`).

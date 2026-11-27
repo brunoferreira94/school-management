@@ -52,9 +52,11 @@
       tenants existentes + doc comercial (`docs/plans/pricing-page.md`)
 - [ ] 2.8 Testes: unit (cálculo), integração (limites/gating/402), Cypress (modal de upgrade e
       checkout variável)
-- [ ] 2.9 Ativar `Entitlement__Enforce` no **staging** — somente após o fechamento da janela do
-      gate offline (27/11 ~05:24 UTC). Runbook: `docs/runbooks/entitlement-enforce-staging.md`
-      (helper `scripts/render-set-env-var.py`: GET ?limit=100 → merge → PUT, sem imprimir valores)
+- [x] 2.9 Ativar `Entitlement__Enforce` no **staging** — janela verificada em 27/11 07:13 UTC
+      (`offline-sync-gate-closure-2026-11-27.md`: Δmissing=0, Δconflitos=0 em 33.570 ops);
+      env var aplicada (25 vars), deploy `dep-dc4irc61egvs738jggjg` live, smoke 200/402/201/204
+      e modal Cypress 2/2. Nova base do gate: `offline-sync-gate-base-2026-11-27.json`.
+      Runbook: `docs/runbooks/entitlement-enforce-staging.md`
 
 ## Fase 3 — Cobrança real
 

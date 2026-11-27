@@ -1,0 +1,12 @@
+{
+  "environment": "staging",
+  "counters": {
+    "idempotency_key_missing[source=http]": 3.0,
+    "idempotency_key_provided[source=batch]": 10.0,
+    "revision_adherence[route=DELETE /api/classrooms/{id}|state=missing]": 1.0,
+    "revision_adherence[route=POST /api/classrooms|state=missing]": 2.0,
+    "offline_sync_total[]": 100.0,
+    "offline_sync_success[]": 100.0
+  },
+  "alerts": 0
+}

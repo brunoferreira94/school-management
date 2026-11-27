@@ -139,7 +139,20 @@ curl -s -X POST -H "Authorization: Bearer $RENDER_API_KEY" -H "Content-Type: app
 
 ---
 
-## 6. Registro após execução
+## 6. Registro da execução (27/11/2026)
 
-Anotar aqui: data/hora UTC do deploy, id do deploy, resultado do smoke (4 itens), e reinício da
-janela do gate offline (nova base para delta em 24h).
+- **07:13 UTC** — janela verificada: ver `offline-sync-gate-closure-2026-11-27.md`
+  (Δmissing=0, Δrevision=0, Δconflitos=0 em 33.570 ops, 0 alertas, 100% adesão).
+- **07:15 UTC** — `Entitlement__Enforce=true` aplicado no staging (24 → 25 vars).
+- **Deploy `dep-dc4irc61egvs738jggjg`** — `build_in_progress → update_in_progress → live`.
+- Smoke (token de validação, tenant `e00b2b67-…`):
+  1. leitura `GET /api/v1/students` → **200**;
+  2. trial do tenant expirado temporariamente (`TrialEndsAtUtc` = agora − 1 dia) → escrita
+     `POST /api/v1/classrooms` → **402** com
+     `{"error":"subscription_expired","reason":"trial_expired", ...}`; trial **restaurado**
+     ao valor original (`2026-12-09 04:40:01.69479+00`) via `trap`;
+  3. modal validado no build de produção com `cypress/e2e/subscription-upgrade-modal.cy.ts` → **2/2**;
+  4. tenant ativo → escrita **201**, registro de teste removido (**204**).
+- **Nova base do gate** após o deploy (contadores zerados):
+  `offline-sync-gate-base-2026-11-27.json` (6 séries). A contagem da janela de ≥7 dias
+  recomeça a partir deste deploy.
