@@ -76,6 +76,8 @@
 > UI Vercel `4ecef1f` (READY/PROMOTED), gateway Asaas de produção ativo e validado. Ver detalhes,
 > URLs corretas e armadilhas em `docs/runbooks/pricing-production-rollout.md`.
 > Catálogo e `price-quote` verificados em produção (Premium 149 / 300 alunos → R$ 524).
+> Nudges promovidos para `main` em seguida (`ea5fef1`), e pricing promovido para staging
+> (`dep-dc534pmc6qcc73fi40p0`); ver `docs/runbooks/pricing-production-rollout.md`.
 > Cobrança real (3.4) não foi disparada — aguarda o primeiro cliente.
 
 - [x] 3.1 Asaas de produção: `Asaas__ApiBaseUrl=https://api.asaas.com/v3` + chave de produção

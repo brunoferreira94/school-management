@@ -32,6 +32,17 @@
 4. **Chave de produção**: lida de `/home/bruno/workspace/secrets.prod.env` (`ASAAS_API_KEY`)
    direto para variável de shell — nunca impressa, nunca versionada.
 
+## Promoções posteriores (27/11, tarde)
+
+- **Nudges de upgrade** (`add-plan-upgrade-nudges`): commit `ea5fef1` promovido para `main` via
+  **cherry-pick** (evita o `vercel.json` de staging entrar em produção). Vercel production
+  READY (`main`, sha `ea5fef16`), bundle `main-56ZR5I4Y.js` com "Mensalidades sem planilha".
+- **Pricing no staging**: deploy `dep-dc534pmc6qcc73fi40p0` **live** (branch `development`).
+  Verificado: catálogo Free 0 / Premium 149 / Enterprise 499 e `price-quote` 300 alunos → 524.
+- **Gate offline**: o deploy zerou os contadores; nova base em
+  `offline-sync-gate-base-2026-11-27-postpricing.json` (6 séries). A janela de ≥7 dias recomeça
+  deste deploy.
+
 ## Pendências após o rollout
 
 - ~~**3.2**: cadastrar URL/token do webhook no painel Asaas~~ → **concluído 27/11**: token aplicado
