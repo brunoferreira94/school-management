@@ -42,6 +42,12 @@
 - **Gate offline**: o deploy zerou os contadores; nova base em
   `offline-sync-gate-base-2026-11-27-postpricing.json` (6 séries). A janela de ≥7 dias recomeça
   deste deploy.
+- **`Entitlement:Enforce = true` em produção**: env var adicionada (21 → 22 vars), deploy
+  `dep-dc53a9p7lnhs73afou10` **live**, verificado `Entitlement__Enforce = true` e API 200 com
+  catálogo 149/499. O modal de upgrade (402 `subscription_expired`) já está em produção desde o
+  rollout de preços. **Não foi feito smoke 402 em produção** (criaria tenant/cobrança real) — o
+  comportamento 200/402/201 foi validado no staging em 27/11 07:xx. `FeatureGating:Enforce`
+  continua `false` em produção.
 
 ## Pendências após o rollout
 
